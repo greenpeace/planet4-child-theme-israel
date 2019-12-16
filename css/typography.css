@@ -3,15 +3,8 @@
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/heebo/v5/NGS6v5_NC0k9P9H0TbFzsQ.woff2) format('woff2');
-  unicode-range: U+0590-05FF, U+20AA, U+25CC, U+FB1D-FB4F;
-}
-
-@font-face {
-  font-family: 'Roboto';
-  font-style: normal;
-  font-weight: 700;
-  src: url(https://fonts.gstatic.com/s/heebo/v5/NGS3v5_NC0k9P9lNaKROkK440A.woff2) format('woff2');
+  font-display: swap;
+  src: local('Assistant'), local('Assistant-Regular'), url(https://fonts.gstatic.com/s/assistant/v4/2sDcZGJYnIjSi6H75xkzamW5Kb8VZBHR.woff2) format('woff2');
   unicode-range: U+0590-05FF, U+20AA, U+25CC, U+FB1D-FB4F;
 }
 
@@ -20,14 +13,67 @@
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/heebo/v5/NGS6v5_NC0k9P9H2TbE.woff2) format('woff2');
+  font-display: swap;
+  src: local('Assistant'), local('Assistant-Regular'), url(https://fonts.gstatic.com/s/assistant/v4/2sDcZGJYnIjSi6H75xkzaGW5Kb8VZA.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* Hebrew */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local('Assistant'), local('Assistant-Regular'), url(https://fonts.gstatic.com/s/assistant/v4/2sDcZGJYnIjSi6H75xkzamW5Kb8VZBHR.woff2) format('woff2');
+  unicode-range: U+0590-05FF, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+
+/* Latin */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local('Assistant'), local('Assistant-Regular'), url(https://fonts.gstatic.com/s/assistant/v4/2sDcZGJYnIjSi6H75xkzaGW5Kb8VZA.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Hebrew */
 @font-face {
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 700;
-  src: url(https://fonts.gstatic.com/s/heebo/v5/NGS3v5_NC0k9P9lNaKRMkK4.woff2) format('woff2');
+  font-display: swap;
+  src: local('Assistant Bold'), local('Assistant-Bold'), url(https://fonts.gstatic.com/s/assistant/v4/2sDZZGJYnIjSi6H75xk700CsBp0YTivYthYl.woff2) format('woff2');
+  unicode-range: U+0590-05FF, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+
+/* Latin */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Assistant Bold'), local('Assistant-Bold'), url(https://fonts.gstatic.com/s/assistant/v4/2sDZZGJYnIjSi6H75xk700CsBJ0YTivYtg.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Hebrew */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: local('Assistant Bold'), local('Assistant-Bold'), url(https://fonts.gstatic.com/s/assistant/v4/2sDZZGJYnIjSi6H75xk700CsBp0YTivYthYl.woff2) format('woff2');
+  unicode-range: U+0590-05FF, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+
+/* Latin */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: local('Assistant Bold'), local('Assistant-Bold'), url(https://fonts.gstatic.com/s/assistant/v4/2sDZZGJYnIjSi6H75xk700CsBJ0YTivYtg.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
