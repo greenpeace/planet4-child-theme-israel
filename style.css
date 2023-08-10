@@ -12,4 +12,14 @@ Tags: light, accessibility-ready
 Text Domain: planet4-child-theme-israel
 */
 
-@import 'css/typography.css';
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;700&display=swap');
+
+:root {
+  --font-family-primary: Assistant, sans-serif;
+  --font-family-secondary: Assistant, sans-serif;
+  --font-family-tertiary: Assistant, sans-serif;
+  --nav-item--font-weight: var(--font-weight-bold);
+  --nav-donate--font-weight: var(--font-weight-bold);
+  --button--font-weight: var(--font-weight-bold);
+  --columns-block--a--not--btn--font-weight: var(--font-weight-bold);
+}
