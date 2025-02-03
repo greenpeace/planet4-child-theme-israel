@@ -13,7 +13,7 @@ function enqueue_child_styles() {
 }
 
 // Gravity Forms pre-submission hook
-add_action('gform_pre_submission', 'my_pre_submission_cleanup'); 
+// add_action('gform_pre_submission', 'my_pre_submission_cleanup'); 
 function my_pre_submission_cleanup($form) {
 
     // Loop through each field in the form
