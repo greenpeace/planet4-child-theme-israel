@@ -6,8 +6,8 @@
 
 add_action( 'wp_enqueue_scripts', 'enqueue_child_styles', 99);
 
-include 'donation.php';
-$donation = new greenpeace_donation();
+//include 'donation.php';
+//$donation = new greenpeace_donation();
 
 function enqueue_child_styles() {
 	$css_creation = filectime(get_stylesheet_directory() . '/style.css');
