@@ -7,8 +7,28 @@
  * ekogoren@gmail.com
  */
 
+ class greenpeace_donation{
+    public function __construct() {
+       
+        add_shortcode("greenpeace_donation_form_test", array($this,'shortCodeTest'));
+    }
 
+    public function shortCodeTest(){
+        echo $this->getFormTest();
+    }
 
+    public function getFormTest(){
+
+        $form = "<form id='test_form'>";
+        $form .= "<div><input type='text' id='test_input' name='test_input' placeholder='Test line'></div>";
+        $form .= "<input type='submit' value='Submit'></form>";
+        
+        return $form;
+    }
+ }
+/***********************************************
+ *  comment the original class
+ ***********************************************
 class greenpeace_donation{
 
     public $fields = array(
@@ -500,3 +520,4 @@ class greenpeace_donation{
         return $iframe_url;
     }
 }
+***********************************************/
