@@ -6,7 +6,7 @@
 
 add_action( 'wp_enqueue_scripts', 'enqueue_child_styles', 99);
 
-include 'Helpers.php';
+//include 'Helpers.php';
 include 'PayPlus.php';
 include 'donation.php';
 
