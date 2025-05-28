@@ -7,6 +7,9 @@
  * ekogoren@gmail.com
  */
 
+ /***********************************************
+ *  comment the original class
+ ***********************************************
  class greenpeace_donation{
     public function __construct() {
        
@@ -26,9 +29,12 @@
         return $form;
     }
  }
+*/
+
+
 /***********************************************
  *  comment the original class
- ***********************************************
+ ***********************************************/
 class greenpeace_donation{
 
     public $fields = array(
@@ -520,4 +526,3 @@ class greenpeace_donation{
         return $iframe_url;
     }
 }
-***********************************************/
