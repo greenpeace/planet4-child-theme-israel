@@ -223,7 +223,7 @@ class greenpeace_donation{
             'ajaxurl' => admin_url('admin-ajax.php'),
             'ajax_nonce' => wp_create_nonce('greenpeace_donation'),
             'id' => $postID,
-            'minSum' => get_post_meta($postID, "min_sum" )[0],
+            'minSum' => 50, //get_post_meta($postID, "min_sum" )[0],
             'payment_type' => $recurring
         );
         wp_localize_script( 'main', 'greenpeace_donation_object', $params );
