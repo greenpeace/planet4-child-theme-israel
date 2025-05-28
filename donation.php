@@ -74,11 +74,11 @@ class greenpeace_donation{
         add_shortcode("greenpeace_donation_form_test", array($this,'shortCodeTest'));
 
         add_shortcode("greenpeace_donation_form", array($this,'shortCode'));
-        add_shortcode("greenpeace_donation_form_en", array($this,'shortCodeEn'));
+        // add_shortcode("greenpeace_donation_form_en", array($this,'shortCodeEn'));
         add_shortcode("greenpeace_username", array($this,'printUser'));
         //[gpf_username]
         add_action('wp_enqueue_scripts', array($this,'enqueue_script'));
-        add_action('wp_enqueue_scripts', array($this,'enqueue_scripten'));
+        // add_action('wp_enqueue_scripts', array($this,'enqueue_scripten'));
         add_action('init', array($this,'redirectStageTwo'));
         //add_filter('show_admin_bar', '__return_false');
         add_action( 'admin_menu', array($this,'register_my_custom_menu_page') );
