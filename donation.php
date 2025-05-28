@@ -216,7 +216,8 @@ class greenpeace_donation{
 
         global $post;
         $postID = $post->ID;
-        $recurring = (!get_field("recurrent"))? "one-off" : "recurring";
+        // temp $recurring = (!get_field("recurrent"))? "one-off" : "recurring";
+        $recurring = "recurring"; // ignore the wp field 
 
         $params = array(
             'ajaxurl' => admin_url('admin-ajax.php'),
@@ -235,7 +236,8 @@ class greenpeace_donation{
 
     public function getForm(){
 
-        $donation_sum_string = (!get_field("recurrent"))? "סכום התרומה החד פעמית:" : "סכום תרומה חודשי:";
+        // $donation_sum_string = (!get_field("recurrent"))? "סכום התרומה החד פעמית:" : "סכום תרומה חודשי:";
+        $donation_sum_string =  "סכום תרומה חודשי:"; // ignore the wp field 
         $sums = array();
 
         if( have_rows('sums') ):
@@ -468,7 +470,8 @@ class greenpeace_donation{
             $language_code = 'en';
         }
 
-        $recurring = (get_field("recurrent", $page));
+        // $recurring = (get_field("recurrent", $page));
+        $recurring = "recurrent"; // ignore the wp field 
 
         $data = [
             "payment_page_uid" => "0b06263c-bc1b-48e2-92f6-bf60cfd38951", //prod terminal: f01f5630-73f7-4955-a4a5-b408247056ca
