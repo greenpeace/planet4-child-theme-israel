@@ -99,6 +99,10 @@ class greenpeace_donation{
         $current_url = esc_url_raw(add_query_arg(null, null)); // Get current URL
         $table_name = $wpdb->prefix . 'green_donations';
 
+        error_log('green donation table name is: ' . $table_name );
+        $total_items = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
+        error_log('green donation table has ' . $total_items . ' items');
+    
         if ( $show_all ) {
             $donations = $wpdb->get_results( "SELECT * FROM $table_name" ); // Fetch all items
         } else {
