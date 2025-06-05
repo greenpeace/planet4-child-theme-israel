@@ -83,6 +83,7 @@ class greenpeace_donation{
         //add_filter('show_admin_bar', '__return_false');
         add_action( 'admin_menu', array($this,'register_my_custom_menu_page') );
         // add_action('wp', array($this,'defrayal_operations'));
+        ensure_green_donations_table_exists(); // create the table if it doesn't exist
         $this->api = new PayPlus();
     }
 
@@ -530,5 +531,50 @@ class greenpeace_donation{
         }
 
         return $iframe_url;
+    }
+}
+
+function ensure_green_donations_table_exists() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'green_donations';
+
+    // Check if the table exists
+    if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) != $table_name ) {
+        // Table does not exist, so create it
+        $sql = "CREATE TABLE $table_name (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `date` timestamp NOT NULL DEFAULT current_timestamp(),
+            `page_id` int(30) DEFAULT NULL,
+            `payment_type` char(10) DEFAULT NULL,
+            `first_name` varchar(30) DEFAULT NULL,
+            `last_name` varchar(30) DEFAULT NULL,
+            `email` varchar(40) DEFAULT NULL,
+            `phone` char(10) DEFAULT NULL,
+            `igul_letova` int(3) DEFAULT NULL,
+            `id_number` char(10) DEFAULT NULL,
+            `amount` int(5) DEFAULT NULL,
+            `token` varchar(40) DEFAULT NULL,
+            `exp` varchar(30) DEFAULT NULL,
+            `cc_holder` varchar(40) DEFAULT NULL,
+            `response` int(3) DEFAULT NULL,
+            `shovar` varchar(100) NOT NULL,
+            `card_type` varchar(100) NOT NULL,
+            `last_four` varchar(100) NOT NULL,
+            `tourist` int(3) NOT NULL,
+            `ccval` varchar(40) NOT NULL,
+            `sale_f_id` varchar(100) NOT NULL,
+            `icount_id` varchar(100) DEFAULT NULL,
+            `utm_campaign` varchar(100) NOT NULL,
+            `utm_source` varchar(100) NOT NULL,
+            `utm_medium` varchar(100) NOT NULL,
+            `utm_content` varchar(100) NOT NULL,
+            `utm_term` varchar(100) NOT NULL,
+            `payplus_callback_response` longtext DEFAULT NULL,
+            `transmited_to_sf` int(1) NOT NULL DEFAULT 0,
+            PRIMARY KEY (`id`)
+          ) AUTO_INCREMENT=12540 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=DYNAMIC;
+
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        dbDelta( $sql );
     }
 }
