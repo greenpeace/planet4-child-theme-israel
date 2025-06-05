@@ -573,7 +573,7 @@ function ensure_green_donations_table_exists() {
             `payplus_callback_response` longtext DEFAULT NULL,
             `transmited_to_sf` int(1) NOT NULL DEFAULT 0,
             PRIMARY KEY (`id`)
-          ) AUTO_INCREMENT=12540 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=DYNAMIC;
+          ) AUTO_INCREMENT=12540 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=DYNAMIC;";
 
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql );
