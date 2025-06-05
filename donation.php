@@ -543,7 +543,7 @@ class greenpeace_donation{
 function ensure_green_donations_table_exists() {
     global $wpdb;
     $table_name = 'green_donations';
-    error_log('green donation table name is: ' . $table_name);
+    error_log('green donation new table name is: ' . $table_name);
     // Check if the table exists
     if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) != $table_name ) {
         error_log('green donation table does not exist, creating it');
