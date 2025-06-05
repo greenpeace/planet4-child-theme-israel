@@ -240,11 +240,14 @@ class greenpeace_donation{
         $donation_sum_string =  "סכום תרומה חודשי:"; // ignore the wp field 
         $sums = array();
 
-        if( have_rows('sums') ):
-            while ( have_rows('sums') ) : the_row();
-                array_push($sums, get_sub_field('sum'));
-            endwhile;
-        endif;
+        //if( have_rows('sums') ):
+        //    while ( have_rows('sums') ) : the_row();
+        //        array_push($sums, get_sub_field('sum'));
+        //    endwhile;
+        //endif;
+        array_push($sums, 100);
+        array_push($sums, 200);
+
 		$head = "<script> function toggleInputField() {
 			const checkbox = document.getElementById('idCheckbox'); 
 			const inputField = document.getElementById('gpf_{$this->idField["name"]}'); 
