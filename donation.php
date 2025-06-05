@@ -542,11 +542,11 @@ class greenpeace_donation{
 
 function ensure_green_donations_table_exists() {
     global $wpdb;
-    $table_name = 'green_donations';
-    error_log('green donation new table name is: ' . $table_name);
+    $table_name = $wpdb->prefix . 'green_donations';
+    error_log('green donation table name is: ' . $table_name . "\n");
     // Check if the table exists
     if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) != $table_name ) {
-        error_log('green donation table does not exist, creating it');
+        error_log($table_name . ' table does not exist, creating it.  \n');
         // Table does not exist, so create it
         $sql = "CREATE TABLE $table_name (
             `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -584,8 +584,7 @@ function ensure_green_donations_table_exists() {
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql );
     } else {
-        error_log('green donation table already exists');
         $total_items = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
-        error_log('green donation table has ' . $total_items . ' items');
+        error_log($table_name . ' exists and has ' . $total_items . ' items.  \n');
     }
 }
