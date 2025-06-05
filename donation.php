@@ -97,20 +97,21 @@ class greenpeace_donation{
         $show_all = isset( $_GET['showall'] );
 
         $current_url = esc_url_raw(add_query_arg(null, null)); // Get current URL
+        $table_name = $wpdb->prefix . 'green_donations';
 
         if ( $show_all ) {
-            $donations = $wpdb->get_results( "SELECT * FROM `green_donations`" ); // Fetch all items
+            $donations = $wpdb->get_results( "SELECT * FROM $table_name" ); // Fetch all items
         } else {
             $items_per_page = 50;
             $page = isset($_GET['pagenum']) ? intval($_GET['pagenum']) : 1;
             (int)$offset = ($page - 1) * $items_per_page;
-            $total_items = $wpdb->get_var("SELECT COUNT(*) FROM `green_donations`");
+            $total_items = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
             $total_pages = ceil($total_items / $items_per_page);
 
             $start_page = max($page - 5, 1); // Start page for pagination links
             $end_page = min($page + 5, $total_pages); // End page for pagination links
 
-            $donations = $wpdb->get_results("SELECT * FROM `green_donations` ORDER BY `id` DESC LIMIT {$offset}, {$items_per_page}");
+            $donations = $wpdb->get_results("SELECT * FROM $table_name ORDER BY `id` DESC LIMIT {$offset}, {$items_per_page}");
         }
 
         ?>
