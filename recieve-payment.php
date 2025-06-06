@@ -7,6 +7,10 @@ session_start();
 
 get_header();
 // ofer: 6.6.2025 remove SF code     global $SalesForce;
+ob_start();                // Start output buffering
+var_dump($_POST);          // Dump your variable
+$output = ob_get_clean();  // Get the output and clean the buffer
+error_log($output);        // Log it to the error log
 //var_dump($_POST);exit;
 
 echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>...נא להמתין</p>";
@@ -152,7 +156,7 @@ if(isset($_GET["initsalesforce"])){
         echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>בעיית חיבור למערכת הסליקה</p>";
     }
 
-
+    error_log("recieve-payment.php  part 2.5");
 
     //Insert data
 
