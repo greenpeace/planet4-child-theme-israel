@@ -6,7 +6,7 @@
 session_start();
 
 get_header();
-global $SalesForce;
+// ofer: 6.6.2025 remove SF code     global $SalesForce;
 //var_dump($_POST);exit;
 
 echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>...נא להמתין</p>";
@@ -15,7 +15,7 @@ error_log("recieve-payment.php  start .... ");
 
 if(isset($_GET["initsalesforce"])){
 
-    salesForce();
+// ofer: 6.6.2025 remove SF code    salesForce();
 
 } elseif(isset($_GET["96"])) { //if page id and returned data then:   ////was $_GET["p96"]
     //$pfsAuthCode = '5c83022bde1b4d34b42e5fa6700c369a';
@@ -91,9 +91,10 @@ if(isset($_GET["initsalesforce"])){
 
 
             global $wpdb;
+            $table_name = $wpdb->prefix . 'green_donations';
             $wpdb->query(
                 $wpdb->prepare(
-                    "UPDATE green_donations SET amount = %d, exp = %s, cc_holder = %s, response = %s, token = %s, shovar = %s, card_type = %s, last_four = %s, tourist = %s, ccval = %s  WHERE id = %d",
+                    "UPDATE $table_name SET amount = %d, exp = %s, cc_holder = %s, response = %s, token = %s, shovar = %s, card_type = %s, last_four = %s, tourist = %s, ccval = %s  WHERE id = %d",
                     $amount, $expiry,$ccHolder,$response, $token, $shovar, $cType, $digits, $tourist, $ccVal, $id
                 )
             );
@@ -218,9 +219,11 @@ if(isset($_GET["initsalesforce"])){
     //var_dump($ipn_response); exit;
 
     global $wpdb;
+    $table_name = $wpdb->prefix . 'green_donations';
+
     $test = $wpdb->query(
         $wpdb->prepare(
-            "UPDATE green_donations SET amount = %d, exp = %s, cc_holder = %s, response = %s, token = %s, shovar = %s, card_type = %s, last_four = %s, tourist = %s, ccval = %s WHERE id = %d",
+            "UPDATE $table_name SET amount = %d, exp = %s, cc_holder = %s, response = %s, token = %s, shovar = %s, card_type = %s, last_four = %s, tourist = %s, ccval = %s WHERE id = %d",
             $amount, $expiry, $ccHolder, $response, $token, $shovar, $cType, $digits, $tourist, $ccVal, $id
         )
     );
@@ -229,7 +232,7 @@ if(isset($_GET["initsalesforce"])){
 
     //Send email to admin and lead to salesforce
 
-    $dbRow = $wpdb->get_row( "SELECT * FROM green_donations WHERE id =" . $id );
+    $dbRow = $wpdb->get_row( "SELECT * FROM $table_name WHERE id =" . $id );
 
     global $SalesForce;
     $sf_response = $SalesForce->SendLeadByDonation($id, $dbRow);
