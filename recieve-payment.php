@@ -137,8 +137,8 @@ if(isset($_GET["initsalesforce"])){
 
             $_SESSION["donation"] = $dbRow;
 
-			$came_from = ( $id == 3680 ) ? get_permalink(591) :  get_permalink(33);
-            //echo '<script> window.top.location = "'.get_permalink(33). "?username=" . $dbRow->first_name  .'"; </script>';
+			$came_from = ( $id == 3680 ) ? get_permalink(591) :  get_permalink(66268);
+            //echo '<script> window.top.location = "'.get_permalink(366268). "?username=" . $dbRow->first_name  .'"; </script>';
             echo '<script> window.top.location = "'. $came_from . "?username=" . $dbRow->first_name  .'"; </script>';
             //salesForceInit();
 

@@ -526,7 +526,7 @@ class greenpeace_donation{
             }
         }
 
-        $this->api->httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', json_encode($data), null, true);
+// ofer: 6.6.2025 remove pipedream        $this->api->httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', json_encode($data), null, true);
 
         $iframe_url = $this->api->apiRequest('/PaymentPages/generateLink', $data);
 
