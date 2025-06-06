@@ -493,7 +493,7 @@ class greenpeace_donation{
             'charge_method' => $recurring ? 3 : 1,
             "refURL_success" => get_permalink(37),
             "refURL_failure" => get_permalink(37),
-            "refURL_callback" => 'https://wordpress-571309-4806948.cloudwaysapps.com/icount/',
+            "refURL_callback" => 'https://www-dev.greenpeace.org/israel/icount/',
             "customer" => [
                 "customer_name" => $clientName,
                 "email" => $email,
