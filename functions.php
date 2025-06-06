@@ -4,13 +4,25 @@
  * Additional code for the child theme goes in here.
  */
 
-add_action( 'wp_enqueue_scripts', 'enqueue_child_styles', 99);
-
+// *******************************************************
+// Donation functunality code  - add by Ofer Or
+// 06-Jun-2025
+// aduped from old donation site code 
+// *******************************************************
 include 'Helpers.php';
 include 'PayPlus.php';
 include 'donation.php';
-
+ 
 $donation = new greenpeace_donation();
+
+define("REDIRECT_URI", "https://www-dev.greenpeace.org/israel/receive-defrayal/");
+
+ 
+// end of donation functunality code (added by ofer or 06-Jun-2025)
+// *******************************************************
+
+
+add_action( 'wp_enqueue_scripts', 'enqueue_child_styles', 99);
 
 function enqueue_child_styles() {
 	$css_creation = filectime(get_stylesheet_directory() . '/style.css');

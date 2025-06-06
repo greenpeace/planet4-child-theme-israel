@@ -10,6 +10,8 @@ global $SalesForce;
 //var_dump($_POST);exit;
 
 echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>...נא להמתין</p>";
+error_log("recieve-payment.php  start .... ");
+
 
 if(isset($_GET["initsalesforce"])){
 
