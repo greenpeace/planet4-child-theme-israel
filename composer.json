@@ -30,6 +30,5 @@
 		}
 	},
 	"require": {
-		"wpackagist-plugin/advanced-custom-fields": "6.4.*"
 	}
 }
