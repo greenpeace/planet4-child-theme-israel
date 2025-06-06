@@ -7,7 +7,7 @@ session_start();
 
 get_header();
 // ofer: 6.6.2025 remove SF code     global $SalesForce;
-error_log($_POST);        // Log it to the error log
+error_log(var_export($_POST, true));     // Log it to the error log
 //var_dump($_POST);exit;
 
 echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>...נא להמתין</p>";
