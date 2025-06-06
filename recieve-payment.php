@@ -14,10 +14,13 @@ error_log("recieve-payment.php  start .... ");
 
 
 if(isset($_GET["initsalesforce"])){
+    error_log("recieve-payment.php  part 1");
 
 // ofer: 6.6.2025 remove SF code    salesForce();
 
 } elseif(isset($_GET["96"])) { //if page id and returned data then:   ////was $_GET["p96"]
+    error_log("recieve-payment.php  part 2");
+
     //$pfsAuthCode = '5c83022bde1b4d34b42e5fa6700c369a';
     $pfsAuthCode = '8bf832811e7f40b78b64287f3e522b38';
     //$pfsAuthUrl = 'https://ws.payplus.co.il/Sites/greenpeacecrm/pfsAuth.aspx';
@@ -154,9 +157,13 @@ if(isset($_GET["initsalesforce"])){
     //Insert data
 
 } elseif(isset($_POST["status"]) && $_POST["status"] === 'approved') {
+    error_log("recieve-payment.php  part 3");
+
     $api = new PayPlus();
 
     if(isset($_POST['transaction_uid'])) {
+        error_log("recieve-payment.php  part 4");
+
         $ipn_response = $api->apiRequest('/PaymentPages/ipn', [
             'transaction_uid' => $_POST['transaction_uid'],
         ]);
@@ -171,6 +178,8 @@ if(isset($_GET["initsalesforce"])){
         $token = $ipn_response->data->token_uid;
         $cType = $ipn_response->data->credit_terms;
     } elseif(isset($_POST['page_request_uid'])) {
+        error_log("recieve-payment.php  part 5");
+
         $ipn_response = $api->apiRequest('/PaymentPages/ipn', [
             'payment_request_uid' => $_POST['page_request_uid'],
             'related_transactions' => true,
@@ -187,20 +196,27 @@ if(isset($_GET["initsalesforce"])){
         $tourist = '';
         $cType = '';
     } else {
+        error_log("recieve-payment.php  part 6");
+
         echo 'משהו השתבש (err 11)';
         exit;
     }
 
     if(!isset($ipn_response->results) || !isset($ipn_response->data)) { //Incorrect data received from ipn
+        error_log("recieve-payment.php  part 7");
+
         echo 'משהו השתבש (err 22)';exit;
     }
 
     if($ipn_response->results->status !== 'success') { //Transaction Failed
+        error_log("recieve-payment.php  part 8");
+
         echo 'משהו השתבש (err 45)';
         var_dump($ipn_response);
         echo $ipn_response->results->description;
         exit;
     }
+    error_log("recieve-payment.php  part 9");
 
     $response = $ipn_response->results->status;
     $title = $amount = $ipn_response->data->amount;
@@ -217,6 +233,7 @@ if(isset($_GET["initsalesforce"])){
     $ccVal = (isset($ccArr[$cc])) ? $ccArr[$cc] : $cc;
 
     //var_dump($ipn_response); exit;
+    error_log("recieve-payment.php  part 10");
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'green_donations';
