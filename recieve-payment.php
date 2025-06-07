@@ -4,7 +4,7 @@
  */
 
 error_log("recieve-payment.php  start .... 001 ");
-error_log(print_r($_POST, true)); // Log it to the error log
+error_log(json_decode($_POST)); // Log it to the error log
 
 session_start();
 
@@ -15,6 +15,7 @@ get_header();
 echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>...נא להמתין</p>";
 error_log("recieve-payment.php  after echo ");
 
+error_log(" POST-status = {" . $_POST["status"] . "}");
 
 if(isset($_GET["initsalesforce"])){
     error_log("recieve-payment.php  part 1");
