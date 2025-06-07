@@ -23,3 +23,203 @@ Text Domain: planet4-child-theme-israel
   --button--font-weight: var(--font-weight-bold);
   --columns-block--a--not--btn--font-weight: var(--font-weight-bold);
 }
+
+
+/* Donation module */
+
+/* theme/elementor */
+
+.donation-top {
+  margin-top: 48px;
+}
+
+.donation-top.donation-thank-you{
+  margin-top: 0px;
+}
+
+.donation.donation-bottom-thank-you .elementor-widget-container{
+  padding: 30px 34px 34px !important;
+}
+
+.donation .elementor-widget-container{
+  padding: 20px 34px 34px !important;
+}
+
+.donation.donation-top .elementor-widget-container {
+  padding: 10px 0 20px !important; /*was 34*/
+}
+
+.donation-top h1{
+  color:white;
+  font-weight: bold;
+  font-size: 45px;
+  font-family: Open Sans Hebrew Condensed, Sans-serif;
+}
+
+.donation-bottom{
+  margin-top: -20px;
+}
+
+.elementor-editor-active #gpf_form, .elementor-editor-active iframe{
+  display: none;
+}
+
+.entry-content{
+  margin-right: 0px;
+  max-width: 636px;
+}
+
+.elementor-editor-active #elementor #gpf_form{
+  display: block;
+}
+
+/* ShortCode */
+
+form#gpf_form{
+  color:black;
+}
+
+form#gpf_form input{
+  border:none;
+  height:50px;
+  font-size: 25px;
+  color:black;
+  background: rgba(255, 255, 255, 0.81);
+}
+
+form#gpf_form input[type="submit"] {
+  width: 100%;
+  color: white;
+  background: #ff7b00;
+  font-weight: normal;
+  margin-top: 18px;
+
+}
+
+form#gpf_form p.gpf_error {
+  height: 24px;
+  margin-bottom: 0px;
+  padding-top: 0px;
+  color: #ff0000;
+  opacity:0;
+  right: 0;
+}
+
+input[type=radio] {
+  display: none;
+}
+
+input[type=radio] + label::before {
+  content: '';
+  display: inline-block;
+  border: 2px solid grey;
+  border-radius: 50%;
+  margin: 0 0.5em;
+  background: white;
+}
+
+input[type=radio]:checked + label::before {
+  background: rgba(255,255,255,1);
+  background: -moz-radial-gradient(center, ellipse cover, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 18%, rgba(63,152,247,1) 58%, rgba(63,152,247,1) 100%);
+  background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, rgba(255,255,255,1)), color-stop(18%, rgba(255,255,255,1)), color-stop(58%, rgba(63,152,247,1)), color-stop(100%, rgba(63,152,247,1)));
+  background: -webkit-radial-gradient(center, ellipse cover, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 18%, rgba(63,152,247,1) 58%, rgba(63,152,247,1) 100%);
+  background: -o-radial-gradient(center, ellipse cover, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 18%, rgba(63,152,247,1) 58%, rgba(63,152,247,1) 100%);
+  background: -ms-radial-gradient(center, ellipse cover, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 18%, rgba(63,152,247,1) 58%, rgba(63,152,247,1) 100%);
+  background: radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 18%, rgba(63,152,247,1) 58%, rgba(63,152,247,1) 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#3f98f7', GradientType=1 );
+}
+
+input[type=radio] + label::before {
+  width: 20px;
+  height: 20px;
+  vertical-align: 12px;
+}
+
+.on-error {
+  border: 2px solid #ff0000 !important;
+}
+
+form#gpf_form input#gpf_other.on-error{
+  border: 1px solid transparent !important;
+}
+
+.gpf_other_cont{
+  position: relative;
+  width: 28%;
+}
+
+.gpf_other_error {
+  position: absolute;
+  top: 34px;
+  left: 35px;
+}
+
+.gpf_error:before {
+  width: 15px;
+  height: 15px;
+  display: block;
+  float: right;
+  background: url(../images/x.png);
+  content: '';
+  background-size: contain;
+  margin-top: 5px;
+  margin-left: 5px;
+  margin-right: 7px;
+}
+
+form#gpf_form .gpf_title{
+  font-size: 30px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+form#gpf_form .gpf_checkbox{
+  font-size: 25px;
+display: flex;
+align-items: center;
+text-indent:5px;
+}
+
+#grf_frame{display: none}
+
+#gpf_radios {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  padding: 0;
+}
+
+#gpf_radios div {
+  width: 25%;
+  float: right;
+  display: flex;
+  align-items: center;
+}
+
+#gpf_radios div label {
+  display: flex;
+}
+
+#gpf_radios div span {
+  margin-right: 10px;
+  vertical-align: 11px;
+  font-size: 30px;
+}
+
+#gpf_radios div span:before{
+  content: "₪";
+  direction: rtl;
+  padding-right: 5px;
+}
+
+form#gpf_form input#gpf_other {
+  width: 75%;
+  float: left;
+  margin-left: 0%;
+  background: none;
+  /* margin-top: -59px; */
+  padding-right: 0px;
+  font-size: 30px !important;
+}
