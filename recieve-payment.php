@@ -11,7 +11,7 @@ error_log(var_export($_POST, true));     // Log it to the error log
 //var_dump($_POST);exit;
 
 echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>...נא להמתין</p>";
-error_log("recieve-payment.php  start .... ");
+error_log("recieve-payment.php  start .... 001 ");
 
 
 if(isset($_GET["initsalesforce"])){
@@ -292,6 +292,10 @@ if(isset($_GET["initsalesforce"])){
     echo '<script> window.top.location = "'. $came_from . "?username=" . $dbRow->first_name  .'"; </script>';
 }
 
+
+error_log("recieve-payment.php  after ifs  ");
+
+
 //TODO
 function salesForceInit(){
 
@@ -415,8 +419,13 @@ function errAdmin($err){
 
     wp_mail( $email, $subject, $HTML, array("Content-type: text/html" ) );
 }
+
+
+error_log("recieve-payment.php  before get_footer ");
+
 get_footer();
 
+error_log("recieve-payment.php  end .... 001 ");
 
 
 
