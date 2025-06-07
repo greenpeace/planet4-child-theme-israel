@@ -3,6 +3,9 @@
  * Template Name: receive defrayal
  */
 
+error_log("recieve-payment.php  start .... 001 ");
+error_log(var_export($_POST, true));     // Log it to the error log
+
 session_start();
 
 get_header();
@@ -11,7 +14,7 @@ error_log(var_export($_POST, true));     // Log it to the error log
 //var_dump($_POST);exit;
 
 echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>...נא להמתין</p>";
-error_log("recieve-payment.php  start .... 001 ");
+error_log("recieve-payment.php  after echo ");
 
 
 if(isset($_GET["initsalesforce"])){
