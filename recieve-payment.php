@@ -4,13 +4,12 @@
  */
 
 error_log("recieve-payment.php  start .... 001 ");
-error_log(var_export($_POST, true));     // Log it to the error log
+error_log(print_r($_POST, true)); // Log it to the error log
 
 session_start();
 
 get_header();
 // ofer: 6.6.2025 remove SF code     global $SalesForce;
-error_log(var_export($_POST, true));     // Log it to the error log
 //var_dump($_POST);exit;
 
 echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>...נא להמתין</p>";
@@ -290,13 +289,15 @@ if(isset($_GET["initsalesforce"])){
 
     $_SESSION["donation"] = $dbRow;
 
-    $came_from = ( $id == 3680 ) ? get_permalink(591) :  get_permalink(33);
+    $came_from = ( $id == 3680 ) ? get_permalink(591) :  get_permalink(66268);
     //echo '<script> window.top.location = "'.get_permalink(33). "?username=" . $dbRow->first_name  .'"; </script>';
     echo '<script> window.top.location = "'. $came_from . "?username=" . $dbRow->first_name  .'"; </script>';
 }
 
 
 error_log("recieve-payment.php  after ifs  ");
+// display thankyou page for a test
+echo '<script> window.top.location = "'. get_permalink(66268) . "?username=" . $dbRow->first_name  .'"; </script>';
 
 
 //TODO
