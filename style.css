@@ -77,6 +77,7 @@ Text Domain: planet4-child-theme-israel
 
 form#gpf_form{
     color:black;
+    position: relative;
 }
 
 form#gpf_form input{
