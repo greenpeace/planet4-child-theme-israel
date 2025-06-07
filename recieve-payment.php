@@ -4,7 +4,8 @@
  */
 
 error_log("recieve-payment.php  start .... 001 ");
-error_log(json_decode($_POST)); // Log it to the error log
+$post_string = http_build_query($_POST);
+error_log(" post_string = {" . $post_string . "}"); // Log it to the error log
 
 session_start();
 
