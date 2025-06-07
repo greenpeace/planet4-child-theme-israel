@@ -4,8 +4,8 @@
  */
 
 error_log("recieve-payment.php  start .... 001 ");
-$post_string = http_build_query($_POST);
-error_log(" post_string = {" . $post_string . "}"); // Log it to the error log
+$get_string = http_build_query($_GET);
+error_log(" get_string = {" . $get_string . "}"); // Log it to the error log
 
 session_start();
 
@@ -21,7 +21,7 @@ error_log(" POST-status = {" . $_POST["status"] . "}");
 if(isset($_GET["initsalesforce"])){
     error_log("recieve-payment.php  part 1");
 
-// ofer: 6.6.2025 remove SF code    salesForce();
+ // ofer: 6.6.2025 remove SF code    salesForce();
 
 } elseif(isset($_GET["96"])) { //if page id and returned data then:   ////was $_GET["p96"]
     error_log("recieve-payment.php  part 2");
