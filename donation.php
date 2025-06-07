@@ -491,8 +491,8 @@ class greenpeace_donation{
             "language_code" => $language_code,
             'create_token' => true,
             'charge_method' => $recurring ? 3 : 1,
-            "refURL_success" => get_permalink(37),
-            "refURL_failure" => get_permalink(37),
+            "refURL_success" => get_permalink(66273),
+            "refURL_failure" => get_permalink(66273),
             "refURL_callback" => 'https://www-dev.greenpeace.org/israel/icount/',
             "customer" => [
                 "customer_name" => $clientName,
