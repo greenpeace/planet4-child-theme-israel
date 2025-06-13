@@ -597,23 +597,26 @@ function donation_gform_function($entry, $form) {
     echo "2******** donation_gform_function called **********\n";
 
      // Debug echo at function start
-     echo "*** donation_gform_function started \n";
-     echo "*** Entry data: " . print_r($entry, true) . " \n";
-     echo "*** Form data: " . print_r($form, true) . " \n";
+    //  echo "*** donation_gform_function started \n";
+    //  echo "*** Entry data: " . print_r($entry, true) . " \n";
+    //  echo "*** Form data: " . print_r($form, true) . " \n";
  
      // Security check
-     if (!wp_verify_nonce($_POST['gform_submit'], 'gform_submit_5')) {
+     if (!wp_verify_nonce($_POST['gform_submit'], 'gform_submit_60')) {
          echo "XXX Security check failed XXX\n";
          return;
      }
      echo "<YYY Security check passed YYYn";
 
      // Get the values from the entry
+     $record_id = rgar($entry, 'id');
+     $page = rgar($entry, 'source_id')
      $first_name = rgar($entry, '1');
-     $last_name = rgar($entry, '2');
-     $email = rgar($entry, '3');
-     $phone = rgar($entry, '4');
-     $amount = rgar($entry, '5');
+     $last_name = rgar($entry, '23');
+     $name = $first_name . " " . $last_name;
+     $email = rgar($entry, '7');
+     $phone = rgar($entry, '17');
+     $amount = rgar($entry, '25');
  
      echo "*** Retrieved values:\n";
      echo "*** First Name: " . $first_name . "\n";
@@ -623,7 +626,7 @@ function donation_gform_function($entry, $form) {
      echo "*** Amount: " . $amount . "\n";
      echo "*****************************************";
 
-     // $iFrame = $this->getIframe($unique, $sum, $name, $email, $_POST["phone"], $page);
+     $iFrame = $this->getIframe($record_id, $amount, $name, $email, $phone, $page);
      echo $iFrame;
      exit;
  
