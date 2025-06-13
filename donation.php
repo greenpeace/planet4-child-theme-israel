@@ -9,6 +9,7 @@
 
  /***********************************************
  *  comment the original class
+ 
  ***********************************************
  class greenpeace_donation{
     public function __construct() {
