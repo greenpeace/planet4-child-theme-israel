@@ -475,7 +475,7 @@ class greenpeace_donation{
 
 
     public function getIframe($unique, $amount, $clientName, $email, $phone, $page){
-        echo("get Iframe start .......")
+        echo("get Iframe start .......");
         return(0);
 
         $language_code = 'he';
