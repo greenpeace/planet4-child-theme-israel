@@ -626,7 +626,7 @@ function donation_gform_function($entry, $form) {
      echo "*** Amount: " . $amount . "\n";
      echo "*****************************************";
 
-     $iFrame = $this->getIframe($record_id, $amount, $name, $email, $phone, $page);
+     $iFrame = $donation->getIframe($record_id, $amount, $name, $email, $phone, $page);
      echo $iFrame;
      exit;
  
