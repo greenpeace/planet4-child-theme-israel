@@ -589,3 +589,42 @@ function ensure_green_donations_table_exists() {
 //        error_log($table_name . ' exists and has ' . $total_items . ' items.' . "\n");
     }
 }
+
+
+function donation_gform_function($entry, $form) {
+
+    error_log("********* donation_gform_function called **********\n" );
+    echo "********* donation_gform_function called **********\n";
+
+     // Debug echo at function start
+     echo "<!-- donation_gform_function started -->\n";
+     echo "<!-- Entry data: " . print_r($entry, true) . " -->\n";
+     echo "<!-- Form data: " . print_r($form, true) . " -->\n";
+ 
+     // Security check
+     if (!wp_verify_nonce($_POST['gform_submit'], 'gform_submit_5')) {
+         echo "<!-- Security check failed -->\n";
+         return;
+     }
+     echo "<!-- Security check passed -->\n";
+ 
+     // Get the values from the entry
+     $first_name = rgar($entry, '1');
+     $last_name = rgar($entry, '2');
+     $email = rgar($entry, '3');
+     $phone = rgar($entry, '4');
+     $amount = rgar($entry, '5');
+ 
+     echo "<!-- Retrieved values:\n";
+     echo "First Name: " . $first_name . "\n";
+     echo "Last Name: " . $last_name . "\n";
+     echo "Email: " . $email . "\n";
+     echo "Phone: " . $phone . "\n";
+     echo "Amount: " . $amount . "\n";
+     echo "-->";
+
+     // $iFrame = $this->getIframe($unique, $sum, $name, $email, $_POST["phone"], $page);
+     echo $iFrame;
+     exit;
+ 
+}
