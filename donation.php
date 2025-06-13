@@ -619,7 +619,9 @@ function donation_gform_function($entry, $form) {
      echo "*** Amount: " . $amount . "\n";
      echo "*****************************************";
 
-     $iFrame = $donation->getIframe($record_id, $amount, $name, $email, $phone, $page);
+     $donation1 = new greenpeace_donation();
+
+     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
      echo $iFrame;
      exit;
  
