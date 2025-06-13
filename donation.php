@@ -610,7 +610,7 @@ function donation_gform_function($entry, $form) {
 
      // Get the values from the entry
      $record_id = rgar($entry, 'id');
-     $page = rgar($entry, 'source_id')
+     $page = rgar($entry, 'source_id');
      $first_name = rgar($entry, '1');
      $last_name = rgar($entry, '23');
      $name = $first_name . " " . $last_name;
