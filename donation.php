@@ -601,13 +601,6 @@ function donation_gform_function($entry, $form) {
     //  echo "*** Entry data: " . print_r($entry, true) . " \n";
     //  echo "*** Form data: " . print_r($form, true) . " \n";
  
-     // Security check
-     if (!wp_verify_nonce($_POST['gform_submit'], 'gform_submit_60')) {
-         echo "XXX Security check failed XXX\n";
-         return;
-     }
-     echo "<YYY Security check passed YYYn";
-
      // Get the values from the entry
      $record_id = rgar($entry, 'id');
      $page = rgar($entry, 'source_id');
