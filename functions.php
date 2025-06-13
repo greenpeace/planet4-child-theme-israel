@@ -96,7 +96,7 @@ error_log("********* donation_gform_function added **********\n" );
 add_action('gform_after_submission_60', 'donation_gform_function', 10, 2);
  
 
-function donation_gform_function_to delete($entry, $form) {
+function donation_gform_function_to_delete($entry, $form) {
 
     error_log("********* donation_gform_function called **********\n" );
     echo "********* donation_gform_function called **********\n";
