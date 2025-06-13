@@ -475,7 +475,7 @@ class greenpeace_donation{
 
 
     public function getIframe($unique, $amount, $clientName, $email, $phone, $page){
-        echo("get Iframe start .......\n");
+        echo("get Iframe start ....... <br>");
 
         $language_code = 'he';
 
@@ -488,7 +488,7 @@ class greenpeace_donation{
 
         $data = [
             "payment_page_uid" => "0b06263c-bc1b-48e2-92f6-bf60cfd38951", //prod terminal: f01f5630-73f7-4955-a4a5-b408247056ca
-    //            "payment_page_uid" => "f01f5630-73f7-4955-a4a5-b408247056ca", //test terminal: da8dc348-aae3-43c2-ad9b-6b7a7785a8d2
+            // "payment_page_uid" => "f01f5630-73f7-4955-a4a5-b408247056ca", //test terminal: da8dc348-aae3-43c2-ad9b-6b7a7785a8d2
             "expiry_datetime" => "30",
             "more_info" => $unique,
             "language_code" => $language_code,
@@ -596,9 +596,8 @@ function ensure_green_donations_table_exists() {
 function donation_gform_function($entry, $form) {
 
     error_log("2******** donation_gform_function called **********\n" );
-    echo "2******** donation_gform_function called **********\n";
-    exit;
-    
+    echo "2******** donation_gform_function called **********<br>";
+ 
     // Debug echo at function start
     //  echo "*** donation_gform_function started \n";
     //  echo "*** Entry data: " . print_r($entry, true) . " \n";
@@ -608,19 +607,20 @@ function donation_gform_function($entry, $form) {
      $record_id = rgar($entry, 'id');
      $page = rgar($entry, 'source_id');
      $first_name = rgar($entry, '1');
-     $last_name = rgar($entry, '23');
+     $last_name = rgar($entry, '3');
      $name = $first_name . " " . $last_name;
      $email = rgar($entry, '7');
      $phone = rgar($entry, '17');
      $amount = rgar($entry, '25');
  
-     echo "*** Retrieved values:\n";
-     echo "*** First Name: " . $first_name . "\n";
-     echo "*** Last Name: " . $last_name . "\n";
-     echo "*** Email: " . $email . "\n";
-     echo "*** Phone: " . $phone . "\n";
-     echo "*** Amount: " . $amount . "\n";
-     echo "*****************************************";
+     echo "*** Retrieved values:<br>";
+     echo "*** First Name: " . $first_name . " <br>";
+     echo "*** Last Name: " . $last_name . " <br>";
+     echo "*** Full Name: " . $name . " <br>";
+     echo "*** Email: " . $email . " <br>";
+     echo "*** Phone: " . $phone . " <br>";
+     echo "*** Amount: " . $amount . " <br>";
+     echo "***************************************** <br>";
 
      //$donation1 = new greenpeace_donation();
 
