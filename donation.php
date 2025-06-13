@@ -476,6 +476,8 @@ class greenpeace_donation{
 
     public function getIframe($unique, $amount, $clientName, $email, $phone, $page){
         echo("get Iframe start .......")
+        return(0);
+
         $language_code = 'he';
 
         if ($page == 564){
@@ -597,7 +599,7 @@ function donation_gform_function($entry, $form) {
     error_log("2******** donation_gform_function called **********\n" );
     echo "2******** donation_gform_function called **********\n";
 
-     // Debug echo at function start
+    // Debug echo at function start
     //  echo "*** donation_gform_function started \n";
     //  echo "*** Entry data: " . print_r($entry, true) . " \n";
     //  echo "*** Form data: " . print_r($form, true) . " \n";
@@ -620,9 +622,9 @@ function donation_gform_function($entry, $form) {
      echo "*** Amount: " . $amount . "\n";
      echo "*****************************************";
 
-     $donation1 = new greenpeace_donation();
+     //$donation1 = new greenpeace_donation();
 
-     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
+     //$iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
      //echo $iFrame;
      exit;
  
