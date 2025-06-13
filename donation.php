@@ -597,7 +597,8 @@ function donation_gform_function($entry, $form) {
 
     error_log("2******** donation_gform_function called **********\n" );
     echo "2******** donation_gform_function called **********\n";
-
+    exit;
+    
     // Debug echo at function start
     //  echo "*** donation_gform_function started \n";
     //  echo "*** Entry data: " . print_r($entry, true) . " \n";
