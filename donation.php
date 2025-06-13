@@ -486,7 +486,7 @@ class greenpeace_donation{
 
         $data = [
             "payment_page_uid" => "0b06263c-bc1b-48e2-92f6-bf60cfd38951", //prod terminal: f01f5630-73f7-4955-a4a5-b408247056ca
-//            "payment_page_uid" => "f01f5630-73f7-4955-a4a5-b408247056ca", //test terminal: da8dc348-aae3-43c2-ad9b-6b7a7785a8d2
+    //            "payment_page_uid" => "f01f5630-73f7-4955-a4a5-b408247056ca", //test terminal: da8dc348-aae3-43c2-ad9b-6b7a7785a8d2
             "expiry_datetime" => "30",
             "more_info" => $unique,
             "language_code" => $language_code,
@@ -593,21 +593,21 @@ function ensure_green_donations_table_exists() {
 
 function donation_gform_function($entry, $form) {
 
-    error_log("********* donation_gform_function called **********\n" );
-    echo "********* donation_gform_function called **********\n";
+    error_log("2******** donation_gform_function called **********\n" );
+    echo "2******** donation_gform_function called **********\n";
 
      // Debug echo at function start
-     echo "<!-- donation_gform_function started -->\n";
-     echo "<!-- Entry data: " . print_r($entry, true) . " -->\n";
-     echo "<!-- Form data: " . print_r($form, true) . " -->\n";
+     echo "*** donation_gform_function started \n";
+     echo "*** Entry data: " . print_r($entry, true) . " \n";
+     echo "*** Form data: " . print_r($form, true) . " \n";
  
      // Security check
      if (!wp_verify_nonce($_POST['gform_submit'], 'gform_submit_5')) {
-         echo "<!-- Security check failed -->\n";
+         echo "XXX Security check failed XXX\n";
          return;
      }
-     echo "<!-- Security check passed -->\n";
- 
+     echo "<YYY Security check passed YYYn";
+
      // Get the values from the entry
      $first_name = rgar($entry, '1');
      $last_name = rgar($entry, '2');
@@ -615,13 +615,13 @@ function donation_gform_function($entry, $form) {
      $phone = rgar($entry, '4');
      $amount = rgar($entry, '5');
  
-     echo "<!-- Retrieved values:\n";
-     echo "First Name: " . $first_name . "\n";
-     echo "Last Name: " . $last_name . "\n";
-     echo "Email: " . $email . "\n";
-     echo "Phone: " . $phone . "\n";
-     echo "Amount: " . $amount . "\n";
-     echo "-->";
+     echo "*** Retrieved values:\n";
+     echo "*** First Name: " . $first_name . "\n";
+     echo "*** Last Name: " . $last_name . "\n";
+     echo "*** Email: " . $email . "\n";
+     echo "*** Phone: " . $phone . "\n";
+     echo "*** Amount: " . $amount . "\n";
+     echo "*****************************************";
 
      // $iFrame = $this->getIframe($unique, $sum, $name, $email, $_POST["phone"], $page);
      echo $iFrame;
