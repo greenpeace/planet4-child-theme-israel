@@ -446,7 +446,7 @@
 
 
     public function getIframe($unique, $amount, $clientName, $email, $phone, $page){
-        echo("get Iframe start ....... <br>");
+    //    echo("get Iframe start ....... <br>");
 
         $language_code = 'he';
 
@@ -584,6 +584,7 @@ function donation_gform_function($entry, $form) {
      $phone = rgar($entry, '17');
      $amount = rgar($entry, '25');
  
+     /*
      echo "*** Retrieved values:<br>";
      echo "*** Record Id: " . $record_id . " <br>";
      echo "*** First Name: " . $first_name . " <br>";
@@ -595,6 +596,7 @@ function donation_gform_function($entry, $form) {
      echo "*** Page: " . $page . " <br>";
      
      echo "***************************************** <br>";
+     */
 
     $donation1 = new greenpeace_donation();
 
