@@ -614,17 +614,20 @@ function donation_gform_function($entry, $form) {
      $amount = rgar($entry, '25');
  
      echo "*** Retrieved values:<br>";
+     echo "*** Record Id: " . $record_id . " <br>";
      echo "*** First Name: " . $first_name . " <br>";
      echo "*** Last Name: " . $last_name . " <br>";
      echo "*** Full Name: " . $name . " <br>";
      echo "*** Email: " . $email . " <br>";
      echo "*** Phone: " . $phone . " <br>";
      echo "*** Amount: " . $amount . " <br>";
+     echo "*** Page: " . $page . " <br>";
+     
      echo "***************************************** <br>";
 
      //$donation1 = new greenpeace_donation();
 
-     //$iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
+     $iFrame = $donation->getIframe($record_id, $amount, $name, $email, $phone, $page);
      //echo $iFrame;
      //exit;
  
