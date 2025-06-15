@@ -466,7 +466,7 @@
             'create_token' => true,
             'charge_method' => $recurring ? 3 : 1,
             "refURL_success" => get_permalink(66268),
-            "refURL_failure" => get_permalink(66268),
+            "refURL_failure" => get_permalink(66311),
             "refURL_callback" => 'https://www-dev.greenpeace.org/israel/icount/',
             "customer" => [
                 "customer_name" => $clientName,
