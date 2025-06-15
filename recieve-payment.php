@@ -3,13 +3,16 @@
  * Template Name: receive defrayal
  */
 
-error_log("recieve-payment.php  start .... 001 ");
-/*
+error_log("recieve-payment.php  start .... 001 \n");
+
 $get_string = http_build_query($_GET);
 error_log(" get_string = {" . $get_string . "}"); // Log it to the error log
 $post_string = http_build_query($_POST);
 error_log(" post_string = {" . $post_string . "}"); // Log it to the error log
-*/
+
+echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>...נא להמתין</p>";
+
+exit;
 
 session_start();
 

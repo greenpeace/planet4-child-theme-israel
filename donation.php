@@ -7,36 +7,7 @@
  * ekogoren@gmail.com
  */
 
- /***********************************************
- *  comment the original class
- 
- ***********************************************
  class greenpeace_donation{
-    public function __construct() {
-       
-        add_shortcode("greenpeace_donation_form_test", array($this,'shortCodeTest'));
-    }
-
-    public function shortCodeTest(){
-        echo $this->getFormTest();
-    }
-
-    public function getFormTest(){
-
-        $form = "<form id='test_form'>";
-        $form .= "<div><input type='text' id='test_input' name='test_input' placeholder='Test line'></div>";
-        $form .= "<input type='submit' value='Submit'></form>";
-        
-        return $form;
-    }
- }
-*/
-
-
-/***********************************************
- *  comment the original class
- ***********************************************/
-class greenpeace_donation{
 
     public $fields = array(
         1 => array("name" => "first_name", "title" => "שם פרטי"),
@@ -494,8 +465,8 @@ class greenpeace_donation{
             "language_code" => $language_code,
             'create_token' => true,
             'charge_method' => $recurring ? 3 : 1,
-            "refURL_success" => get_permalink(66273),
-            "refURL_failure" => get_permalink(66273),
+            "refURL_success" => get_permalink(66268),
+            "refURL_failure" => get_permalink(66268),
             "refURL_callback" => 'https://www-dev.greenpeace.org/israel/icount/',
             "customer" => [
                 "customer_name" => $clientName,
@@ -625,10 +596,10 @@ function donation_gform_function($entry, $form) {
      
      echo "***************************************** <br>";
 
-     $donation1 = new greenpeace_donation();
+    $donation1 = new greenpeace_donation();
 
-     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
-     echo $iFrame;
-     //exit;
+    $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
+    echo $iFrame;
+    //exit;
  
 }
