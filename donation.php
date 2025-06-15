@@ -500,8 +500,6 @@
             }
         }
 
-// ofer: 6.6.2025 remove pipedream        $this->api->httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', json_encode($data), null, true);
-
         $iframe_url = $this->api->apiRequest('/PaymentPages/generateLink', $data);
 
         if(isset($iframe_url->results)) {
@@ -567,7 +565,7 @@ function ensure_green_donations_table_exists() {
 function donation_gform_function($entry, $form) {
 
     error_log("2******** donation_gform_function called **********\n" );
-    echo "2******** donation_gform_function called **********<br>";
+    //echo "2******** donation_gform_function called **********<br>";
  
     // Debug echo at function start
     //  echo "*** donation_gform_function started \n";
@@ -602,6 +600,5 @@ function donation_gform_function($entry, $form) {
 
     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
     echo $iFrame;
-    //exit;
- 
+    exit;
 }
