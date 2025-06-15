@@ -446,7 +446,8 @@
 
 
     public function getIframe($unique, $amount, $clientName, $email, $phone, $page){
-    //    echo("get Iframe start ....... <br>");
+        echo("get Iframe start ....... <br>");
+        error_log('get Iframe start ......\n");
 
         $language_code = 'he';
 
