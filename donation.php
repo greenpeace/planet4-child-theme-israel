@@ -505,7 +505,7 @@
 
         if(isset($iframe_url->results)) {
             if($iframe_url->results->status === 'success') {
-                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="2" scrolling="no"></iframe>';
+                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="window.parent.parent.scrollTo(0,0)"></iframe>';
             }
         }
 
@@ -601,16 +601,17 @@ function donation_gform_function($entry, $form) {
 
     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
 
-    echo 'href test <br>';
+    echo 'on load test <br>';
 
     // Add JavaScript to scroll to anchor 'gravityform_top'
-    echo "<script>
-    const href = 'gravityform_top';
-    const element = document.querySelector('[href=\"#' + href + '\"]');
-    if (element) {
-        element.scrollIntoView({behavior: 'smooth'});
-    }
-    </script>";
+    // echo "<script>
+    // const href = 'gravityform_top';
+    // const element = document.querySelector('[href=\"#' + href + '\"]');
+    // if (element) {
+    //     element.scrollIntoView({behavior: 'smooth'});
+    // }
+    // </script>";
+    
     // present step 2 image
     echo "<img src='https://joinus.greenpeace.org.il/wp-content/uploads/2018/05/stage2.jpg' alt='step 2'>";
     // present payplus iframe
