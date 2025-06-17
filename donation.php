@@ -601,5 +601,6 @@ function donation_gform_function($entry, $form) {
 
     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
     echo $iFrame;
+    echo "<script>window.scrollBy(0, -750);</script>";  // scroll to the top of the iframe
     //exit;
 }
