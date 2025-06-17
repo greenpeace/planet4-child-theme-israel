@@ -505,8 +505,10 @@
 
         if(isset($iframe_url->results)) {
             if($iframe_url->results->status === 'success') {
-                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="window.parent.scrollTo(0,0)"></iframe>';
-//                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="window.parent.parent.scrollTo(0,0)"></iframe>';
+                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no"></iframe>';
+//              return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="window.parent.parent.scrollTo(0,0)"></iframe>';
+//              return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="window.parent.scrollTo(0,0)"></iframe>';
+
             }
         }
 
