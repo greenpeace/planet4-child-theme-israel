@@ -604,7 +604,7 @@ function donation_gform_function($entry, $form) {
 
     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
 
-    echo 'on load scrol 200 test 1<br>';
+    echo 'scrolling to anchor 1<br>';
 
     // Add JavaScript to scroll to anchor 'gravityform_top'
     // echo "<script>
@@ -619,6 +619,11 @@ function donation_gform_function($entry, $form) {
     echo "<img src='https://joinus.greenpeace.org.il/wp-content/uploads/2018/05/stage2.jpg' alt='step 2'>";
     // present payplus iframe
     echo $iFrame;
+
+    $anchor = "gravityform_top";
+    <script type="text/javascript">
+        window.location.hash = "<?= $anchor; ?>";
+    </script>
 
     //exit;
 }
