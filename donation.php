@@ -600,6 +600,7 @@ function donation_gform_function($entry, $form) {
     $donation1 = new greenpeace_donation();
 
     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
+    echo "*** scrill test <br>";
     echo $iFrame;
     echo "<script>window.scrollBy(0, -750);</script>";  // scroll to the top of the iframe
     //exit;
