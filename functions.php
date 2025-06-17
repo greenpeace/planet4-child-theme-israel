@@ -92,6 +92,6 @@ function my_autocorrect_domain($domain) {
 }
 
 // Gravity Forms after-submission hook for form id 60 - added by Ofer Or 13-6-2025
-error_log("********* donation_gform_function added **********\n" );
+// error_log("********* donation_gform_function added **********\n" );
 add_action('gform_after_submission_60', 'donation_gform_function', 10, 2);
  

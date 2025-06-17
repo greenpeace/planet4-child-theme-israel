@@ -600,8 +600,20 @@ function donation_gform_function($entry, $form) {
     $donation1 = new greenpeace_donation();
 
     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
-    echo "*** scrill test <br>";
+
+    echo 'iframe top test <br>';
+
+    // Add an anchor at the top
+    echo '<a name="iframe_top"></a>';
+    // Add JavaScript to scroll to anchor
+    echo '<script>
+        window.onload = function() {
+            window.location.href = "#iframe_top";
+        };
+    </script>';
+    
+    // present payplus iframe
     echo $iFrame;
-    echo "<script>window.scrollBy(0, -750);</script>";  // scroll to the top of the iframe
+
     //exit;
 }
