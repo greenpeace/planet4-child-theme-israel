@@ -447,16 +447,16 @@
 
     public function getIframe($unique, $amount, $clientName, $email, $phone, $page){
         // echo("get Iframe start ....... <br>");
-        error_log("*** get Iframe start ......\n");
+        // error_log("*** get Iframe start ......\n");
 
         $language_code = 'he';
 
-        if ($page == 564){
-            $language_code = 'en';
-        }
+        // if ($page == 564){    // not in use planet 4
+        //     $language_code = 'en';
+        // }
 
         // $recurring = (get_field("recurrent", $page));
-        $recurring = "recurrent"; // ignore the wp field 
+        $recurring = "recurrent"; // ignore the wp field - to be replaced by form field value
 
         $data = [
             "payment_page_uid" => "0b06263c-bc1b-48e2-92f6-bf60cfd38951", //prod terminal: f01f5630-73f7-4955-a4a5-b408247056ca
@@ -504,19 +504,26 @@
         $iframe_url = $this->api->apiRequest('/PaymentPages/generateLink', $data);
 
         if(isset($iframe_url->results)) {
-            error_log("*** iframe_url_results......\n");
+            // error_log("*** iframe_url_results......\n");
 
             if($iframe_url->results->status === 'success') {
-                error_log("*** iframe_url_results_status_success....\n");
+                // error_log("*** iframe_url_results_status_success....\n");
 
-//                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no"></iframe>';
-//                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="window.parent.parent.scrollTo(0,0)"></iframe>';
-// syntax error:  return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="document.getElementById('iframe_top').scrollIntoView({behavior: 'instant', block: 'start'})"></iframe>';
+                // Adjust iframe size based on screen size
+                $screen_width = $_SESSION['viewport_width'] ?? 1024;
+                if ($screen_width < 768) {
+                    $iframe_width = '100%';
+                    $iframe_height = '600';
+                } else {
+                    $iframe_width = '800';
+                    $iframe_height = '750';
+                }
+
                 return <<<HTML
                 <iframe id="payplus-new-iframe" 
                     src="{$iframe_url->data->payment_page_link}" 
-                    width="800" 
-                    height="750" 
+                    width="{$iframe_width}"
+                    height="{$iframe_height}" 
                     name="defrayal" 
                     frameBorder="0" 
                     scrolling="no" 
@@ -582,8 +589,8 @@ function ensure_green_donations_table_exists() {
 
 function donation_gform_function($entry, $form) {
 
-    //error_log("2******** donation_gform_function called **********\n" );
-    //echo "2******** donation_gform_function called **********<br>";
+    // error_log("2******** donation_gform_function called **********\n" );
+    // echo "2******** donation_gform_function called **********<br>";
  
     // Debug echo at function start
     //  echo "*** donation_gform_function started \n";
@@ -600,7 +607,7 @@ function donation_gform_function($entry, $form) {
      $phone = rgar($entry, '17');
      $amount = rgar($entry, '25');
  
-     /*
+     /* for debug only
      echo "*** Retrieved values:<br>";
      echo "*** Record Id: " . $record_id . " <br>";
      echo "*** First Name: " . $first_name . " <br>";
@@ -610,7 +617,6 @@ function donation_gform_function($entry, $form) {
      echo "*** Phone: " . $phone . " <br>";
      echo "*** Amount: " . $amount . " <br>";
      echo "*** Page: " . $page . " <br>";
-     
      echo "***************************************** <br>";
      */
 
@@ -618,57 +624,18 @@ function donation_gform_function($entry, $form) {
 
     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
 
-    echo 'scrolling to iframe_top anchor 5<br>';
-
-    // Add JavaScript to scroll to anchor 'gravityform_top'
-    // echo "<script>
-    // const href = 'gravityform_top';
-    // const element = document.querySelector('[href=\"#' + href + '\"]');
-    // if (element) {
-    //     element.scrollIntoView({behavior: 'smooth'});
-    // }
-    // </script>";
-
+    echo 'scrolling to iframe_top anchor & fix width for mobile 1<br>';
 
     // present step 2 image and set anchor iframe_top
     echo <<<HTML
-<div id='iframe_top'>
-    <img src='https://www.greenpeace.org/static/planet4-israel-stateless-develop/2025/06/5bde545c-stage2.jpg' alt='step 2'>
-</div>
-HTML;
-
-    // echo    "<div id='iframe_top'> 
-    //             <img src='https://www.greenpeace.org/static/planet4-israel-stateless-develop/2025/06/5bde545c-stage2.jpg' alt='step 2'>
-    //             </div>
-    //         ";
+        <div id='iframe_top'>
+            <br>
+            <img src='https://www.greenpeace.org/static/planet4-israel-stateless-develop/2025/06/5bde545c-stage2.jpg' alt='step 2'>
+        </div>
+    HTML;
     
     // present payplus iframe
     echo $iFrame;
-
-//    echo "<script> document.getElementById('iframe_top').scrollIntoView({behavior: 'instant', block: 'start'}); </script>";
-
-//     echo "<script>
-//     const element = document.getElementById('iframe_top');
-//     if (element) {
-//         const offset = 100;
-//         const elementPosition = element.getBoundingClientRect().top;
-//         const offsetPosition = elementPosition + window.pageYOffset - offset;
-//         window.scrollTo({top: offsetPosition, behavior: 'smooth'});
-//     }
-// </script>";
-
-
-// echo <<<SCRIPT
-// <script>
-//     const element = document.getElementById('iframe_top');
-//     if (element) {
-//         const offset = 100;
-//         const elementPosition = element.getBoundingClientRect().top;
-//         const offsetPosition = elementPosition + window.pageYOffset - offset;
-//         window.scrollTo({top: offsetPosition, behavior: 'smooth'});
-//     }
-// </script>
-// SCRIPT;
 
     //exit;
 }
