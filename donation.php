@@ -509,9 +509,9 @@
             if($iframe_url->results->status === 'success') {
                 error_log("*** iframe_url_results_status_success....\n");
 
-                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no"></iframe>';
+//                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no"></iframe>';
 //                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="window.parent.parent.scrollTo(0,0)"></iframe>';
-//                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="window.parent.scrollTo(200,0)"></iframe>';
+                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="document.getElementById('iframe_top').scrollIntoView({behavior: 'instant', block: 'start'})"></iframe>';
 
             }
         }
@@ -635,11 +635,6 @@ HTML;
     // present payplus iframe
     echo $iFrame;
 
-    // jump to anchor  "iframe_top";
-    // echo "<script>
-    //     window.location.hash = '#iframe_top';
-    // </script>";
-
 //    echo "<script> document.getElementById('iframe_top').scrollIntoView({behavior: 'instant', block: 'start'}); </script>";
 
 //     echo "<script>
@@ -653,17 +648,17 @@ HTML;
 // </script>";
 
 
-echo <<<SCRIPT
-<script>
-    const element = document.getElementById('iframe_top');
-    if (element) {
-        const offset = 100;
-        const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - offset;
-        window.scrollTo({top: offsetPosition, behavior: 'smooth'});
-    }
-</script>
-SCRIPT;
+// echo <<<SCRIPT
+// <script>
+//     const element = document.getElementById('iframe_top');
+//     if (element) {
+//         const offset = 100;
+//         const elementPosition = element.getBoundingClientRect().top;
+//         const offsetPosition = elementPosition + window.pageYOffset - offset;
+//         window.scrollTo({top: offsetPosition, behavior: 'smooth'});
+//     }
+// </script>
+// SCRIPT;
 
     //exit;
 }
