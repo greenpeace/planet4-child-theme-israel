@@ -619,7 +619,7 @@ function donation_gform_function($entry, $form) {
     echo "<img src='https://joinus.greenpeace.org.il/wp-content/uploads/2018/05/stage2.jpg' alt='step 2'>";
     // present payplus iframe
     echo $iFrame;
- 
+
     $anchor = "gravityform_top";
     <script type="text/javascript">
         window.location.hash = "<?= $anchor; ?>";
