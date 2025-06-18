@@ -617,6 +617,7 @@ function donation_gform_function($entry, $form) {
 
     // present step 2 image
     echo "<img src='https://joinus.greenpeace.org.il/wp-content/uploads/2018/05/stage2.jpg' alt='step 2'>";
+    
     // present payplus iframe
     echo $iFrame;
 
