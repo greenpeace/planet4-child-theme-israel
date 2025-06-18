@@ -640,5 +640,7 @@ HTML;
     //     window.location.hash = '#iframe_top';
     // </script>";
 
+    echo "<script> document.getElementById('iframe_top').scrollIntoView({behavior: 'instant', block: 'start'}); </script>";
+
     //exit;
 }
