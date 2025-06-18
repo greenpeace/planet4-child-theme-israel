@@ -447,7 +447,7 @@
 
     public function getIframe($unique, $amount, $clientName, $email, $phone, $page){
         // echo("get Iframe start ....... <br>");
-        error_log("get Iframe start ......\n");
+        error_log("*** get Iframe start ......\n");
 
         $language_code = 'he';
 
@@ -504,7 +504,11 @@
         $iframe_url = $this->api->apiRequest('/PaymentPages/generateLink', $data);
 
         if(isset($iframe_url->results)) {
+            error_log("*** iframe_url_results......\n");
+
             if($iframe_url->results->status === 'success') {
+                error_log("*** iframe_url_results_status_success....\n");
+
                 return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no"></iframe>';
 //                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="window.parent.parent.scrollTo(0,0)"></iframe>';
 //                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="window.parent.scrollTo(200,0)"></iframe>';
@@ -619,12 +623,12 @@ function donation_gform_function($entry, $form) {
     // present step 2 image and set anchor iframe_top
     echo <<<HTML
 <div id='iframe_top'>
-    <img src='https://joinus.greenpeace.org.il/wp-content/uploads/2018/05/stage2.jpg' alt='step 2'>
+    <img src='https://www.greenpeace.org/static/planet4-israel-stateless-develop/2025/06/5bde545c-stage2.jpg' alt='step 2'>
 </div>
 HTML;
 
     // echo    "<div id='iframe_top'> 
-    //             <img src='https://joinus.greenpeace.org.il/wp-content/uploads/2018/05/stage2.jpg' alt='step 2'>
+    //             <img src='https://www.greenpeace.org/static/planet4-israel-stateless-develop/2025/06/5bde545c-stage2.jpg' alt='step 2'>
     //             </div>
     //         ";
     
@@ -632,9 +636,9 @@ HTML;
     echo $iFrame;
 
     // jump to anchor  "iframe_top";
-    echo "<script>
-        window.location.hash = '#iframe_top';
-    </script>";
+    // echo "<script>
+    //     window.location.hash = '#iframe_top';
+    // </script>";
 
     //exit;
 }
