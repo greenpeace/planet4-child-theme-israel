@@ -511,8 +511,18 @@
 
 //                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no"></iframe>';
 //                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="window.parent.parent.scrollTo(0,0)"></iframe>';
-                return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="document.getElementById('iframe_top').scrollIntoView({behavior: 'instant', block: 'start'})"></iframe>';
-
+// syntax error:  return '<iframe id="payplus-new-iframe" src="' . $iframe_url->data->payment_page_link . '"  width="800" height="750" name="defrayal" frameBorder="0" scrolling="no" onload="document.getElementById('iframe_top').scrollIntoView({behavior: 'instant', block: 'start'})"></iframe>';
+                return <<<HTML
+                <iframe id="payplus-new-iframe" 
+                    src="{$iframe_url->data->payment_page_link}" 
+                    width="800" 
+                    height="750" 
+                    name="defrayal" 
+                    frameBorder="0" 
+                    scrolling="no" 
+                    onload="document.getElementById('iframe_top').scrollIntoView({behavior: 'instant', block: 'start'})">
+                </iframe>
+                HTML;
             }
         }
 
