@@ -608,7 +608,7 @@ function donation_gform_function($entry, $form) {
 
     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
 
-    echo 'scrolling to iframe_top anchor 1<br>';
+    echo 'scrolling to iframe_top anchor 2<br>';
 
     // Add JavaScript to scroll to anchor 'gravityform_top'
     // echo "<script>
