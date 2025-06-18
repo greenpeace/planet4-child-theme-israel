@@ -620,10 +620,10 @@ function donation_gform_function($entry, $form) {
     // present payplus iframe
     echo $iFrame;
 
-    $anchor = "gravityform_top";
-    <script type="text/javascript">
-        window.location.hash = "<?= $anchor; ?>";
-    </script>
+    // scroll to anchor  "gravityform_top";
+    echo "<script>
+        window.location.hash = 'gravityform_top';
+    </script>";
 
     //exit;
 }
