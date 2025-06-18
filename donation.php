@@ -615,11 +615,18 @@ function donation_gform_function($entry, $form) {
     // }
     // </script>";
 
+
     // present step 2 image and set anchor iframe_top
-    echo    "<div id='iframe_top'> 
-                <img src='https://joinus.greenpeace.org.il/wp-content/uploads/2018/05/stage2.jpg' alt='step 2'>
-                </div>
-            ";
+    echo <<<HTML
+<div id='iframe_top'>
+    <img src='https://joinus.greenpeace.org.il/wp-content/uploads/2018/05/stage2.jpg' alt='step 2'>
+</div>
+HTML;
+
+    // echo    "<div id='iframe_top'> 
+    //             <img src='https://joinus.greenpeace.org.il/wp-content/uploads/2018/05/stage2.jpg' alt='step 2'>
+    //             </div>
+    //         ";
     
     // present payplus iframe
     echo $iFrame;
