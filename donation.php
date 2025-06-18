@@ -608,7 +608,7 @@ function donation_gform_function($entry, $form) {
 
     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
 
-    echo 'scrolling to iframe_top anchor 2<br>';
+    echo 'scrolling to iframe_top anchor 3<br>';
 
     // Add JavaScript to scroll to anchor 'gravityform_top'
     // echo "<script>
@@ -640,7 +640,17 @@ HTML;
     //     window.location.hash = '#iframe_top';
     // </script>";
 
-    echo "<script> document.getElementById('iframe_top').scrollIntoView({behavior: 'instant', block: 'start'}); </script>";
+//    echo "<script> document.getElementById('iframe_top').scrollIntoView({behavior: 'instant', block: 'start'}); </script>";
+
+    echo "<script>
+    const element = document.getElementById('iframe_top');
+    if (element) {
+        const offset = 100;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - offset;
+        window.scrollTo({top: offsetPosition, behavior: 'smooth'});
+    }
+</script>";
 
     //exit;
 }
