@@ -500,7 +500,9 @@
                 $data['recurring_settings']['instant_first_payment'] = false;
             }
         }
-
+// ofer debug 14-11-2025 - start
+        error_log("ofer debug 14-11-2025data: " . print_r($data, true) . "\n");
+// ofer debug 14-11-2025 - end
         $iframe_url = $this->api->apiRequest('/PaymentPages/generateLink', $data);
 
         if(isset($iframe_url->results)) {
