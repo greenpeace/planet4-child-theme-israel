@@ -10,7 +10,10 @@ do_payplus_ipn_min();
 function do_payplus_ipn_min() {
     $request_data = file_get_contents('php://input');
     $data = (object) json_decode($request_data);
-
+// ofer debug 14-11-2025 - start
+error_log("ofer debug 14-11-2025 data: " . print_r($data, true) . "\n");
+echo "ofer debug 14-11-2025 data: " . print_r($data, true) . "<br>";
+// ofer debug 14-11-2025 - end
     if(!is_object($data) || empty($data) || !isset($data->data, $data->transaction)) {
         return false;
     }
