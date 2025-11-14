@@ -5,6 +5,11 @@
 
 set_time_limit(0);
 
+// Load WordPress if needed
+if (!function_exists('wp_mail')) {
+    require_once('../../../wp-load.php');
+}
+
 // Debug email function
 function debugEmail($subject, $data) {
     $email = "oor@greenpeace.org"; // or your email
