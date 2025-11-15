@@ -5,6 +5,7 @@
 
 set_time_limit(0);
 
+echo "ofer debug 15-11-2025 start ... <br>";
 // Load WordPress if needed
 if (!function_exists('wp_mail')) {
     require_once('../../../wp-load.php');
@@ -23,6 +24,7 @@ function do_payplus_ipn_min() {
     $request_data = file_get_contents('php://input');
     $data = (object) json_decode($request_data);
 // ofer debug 14-11-2025 - start
+echo "ofer debug 15-11-2025 data: " . print_r($data, true) . "<br>";
 // Send email with received data
 debugEmail("Data Received", [
     'raw_length' => strlen($request_data),
