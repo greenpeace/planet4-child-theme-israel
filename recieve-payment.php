@@ -18,13 +18,14 @@ error_log(" post_string = {" . $post_string . "}\n"); // Log it to the error log
 var_dump($_POST);
 //exit;
 
-echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>...נא להמתין</p>";
+echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>.. 1 .נא להמתין</p>";
 error_log("recieve-payment.php  after echo \n");
 //exit;
 
 error_log(" POST-status = {" . $_POST["status"] . "}");
-exit;
+//exit;
 
+/*
 if(isset($_GET["initsalesforce"])){
     error_log("recieve-payment.php  part 1");
 
@@ -168,7 +169,8 @@ if(isset($_GET["initsalesforce"])){
 
     //Insert data
 
-} elseif(isset($_POST["status"]) && $_POST["status"] === 'approved') {
+} else */
+if(isset($_POST["status"]) && $_POST["status"] === 'approved') {
     error_log("recieve-payment.php  part 3");
 
     $api = new PayPlus();
@@ -246,7 +248,7 @@ if(isset($_GET["initsalesforce"])){
 
     //var_dump($ipn_response); exit;
     error_log("recieve-payment.php  part 10");
-
+/*
     global $wpdb;
     $table_name = $wpdb->prefix . 'green_donations';
 
@@ -301,12 +303,13 @@ if(isset($_GET["initsalesforce"])){
     $came_from = ( $id == 3680 ) ? get_permalink(591) :  get_permalink(66268);
     //echo '<script> window.top.location = "'.get_permalink(33). "?username=" . $dbRow->first_name  .'"; </script>';
     echo '<script> window.top.location = "'. $came_from . "?username=" . $dbRow->first_name  .'"; </script>';
+    */
 }
 
 
 error_log("recieve-payment.php  after ifs  ");
 // display thankyou page for a test
-echo '<script> window.top.location = "'. get_permalink(66268) . "?username=" . $dbRow->first_name  .'"; </script>';
+// echo '<script> window.top.location = "'. get_permalink(66268) . "?username=" . $dbRow->first_name  .'"; </script>';
 
 
 //TODO
