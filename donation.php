@@ -466,8 +466,8 @@
             "language_code" => $language_code,
             'create_token' => true,
             'charge_method' => $recurring ? 3 : 1,
-            "refURL_success" => 'https://www-dev.greenpeace.org/israel/thankyou-page/',
-            "refURL_failure" => 'https://www-dev.greenpeace.org/israel/thankyou-page/',
+            "refURL_success" => 'https://www-dev.greenpeace.org/israel/joinus-thankyou/',
+            "refURL_failure" => 'https://www-dev.greenpeace.org/israel/joinus-thankyou/',
             "refURL_callback" => 'https://www-dev.greenpeace.org/israel/payplus-callback/',
             "customer" => [
                 "customer_name" => $clientName,
