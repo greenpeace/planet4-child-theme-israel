@@ -71,6 +71,10 @@ debugEmail("Data Received", [
 
     //var_dump($ipn_response); exit;
     echo "ofer debug 08-12-2025 data: " . print_r($data, true) . "<br>";
+    // ofer debug 08-12-2025 - start
+    error_log("ofer debug 08-12-2025data: \n" . print_r($data, true) . "\n");
+    echo "ofer debug 09-12-2025 data: <br>" . print_r($data, true) . "<br>";
+    // ofer debug 08-12-2025 - end
 /*
     global $wpdb;
     $transaction_exists = $wpdb->get_row(
