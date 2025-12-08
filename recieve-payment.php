@@ -15,13 +15,15 @@ $post_string = http_build_query($_POST);
 error_log(" post_string = {" . $post_string . "}\n"); // Log it to the error log
 
 // ofer: 6.6.2025 remove SF code     global $SalesForce;
-// var_dump($_POST);exit;
+var_dump($_POST);
+//exit;
 
 echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wait'>...נא להמתין</p>";
 error_log("recieve-payment.php  after echo \n");
-exit;
+//exit;
 
 error_log(" POST-status = {" . $_POST["status"] . "}");
+exit;
 
 if(isset($_GET["initsalesforce"])){
     error_log("recieve-payment.php  part 1");
