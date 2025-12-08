@@ -1,112 +1,34 @@
 <?php
 /*
- * Template Name: payplus-callback
+ * Template Name: receive invoice
  */
 
 set_time_limit(0);
 
-echo "ofer debug 15-11-2025 start ... <br>";
-// Load WordPress if needed
-if (!function_exists('wp_mail')) {
-    require_once('../../../wp-load.php');
-}
+//$n = "/icount?IcResponse=REQUEST_RECEIVED%3D1%0AREQUEST_OK%3D1%0AICOUNT_CLIENT_ID%3D14319%0ADOCTYPE%3DTREC%0ADOCNUM_RESULT%3D89561%0AORIG_LINK%3Dhttps%3A%2F%2Fapp.icount.co.il%2Fhash%2Fp_print.php%3Fcode%3DL0pOOUl6LzlhbGt1UitYQUI1amhmR1N6VlM3emlkRi91SVptMUhmWUYvcCsvem9SaFpyYndnPT0%253D%0ACOPY_LINK%3Dhttps%3A%2F%2Fapp.icount.co.il%2Fhash%2Fp_print.php%3Fcode%3DL0pOOUl6LzlhbGt1UitYQUI1amhmR1N6VlM3emlkRi9RSXE3VE1UVXFjZmtOdWF0OXdVWVJnPT0%253D%0AEMAIL_LINK%3Dhttps%3A%2F%2Fapp.icount.co.il%2Fhash%2Fp_print.php%3Fcode%3DL0pOOUl6LzlhbGt1UitYQUI1amhmR1N6VlM3emlkRi91SVptMUhmWUYvcCsvem9SaFpyYndnPT0%253D%26utm_campaign%3D20181002%26utm_medium%3Demail%26utm_source%3DDocEmail%26utm_content%3DZWtvZ29yZW5AZ21haWwuY29t%26language%3Dhe%26o%3D1%0AORIG_EMAIL_SENT_OK%3Dekogoren%40gmail.com%0A&p120=1987";
+/*$n = urldecode($_GET['IcResponse']);
+$invoiceNum = get_string_between($n, "DOCNUM_RESULT=", "ORIG_LINK");
+$link = get_string_between($n, "ORIG_LINK=", "PT0");
 
-// Debug email function
-function debugEmail($subject, $data) {
-    $email = "oor@greenpeace.org"; // or your email
-    $html = "<pre>" . print_r($data, true) . "</pre>";
-    wp_mail($email, "PayPlus Callback Debug: " . $subject, $html, array("Content-type: text/html"));
-}
+function get_string_between($string, $start, $end){
+    $string = " ".$string;
+    $ini = strpos($string,$start);
+    if ($ini == 0) return "";
+    $ini += strlen($start);
+    $len = strpos($string,$end,$ini) - $ini;
+    return substr($string,$ini,$len);
+}*/
 
-do_payplus_ipn_min();
+/*$fp = fopen(__DIR__ . '/in_log.txt', 'a');
+fwrite($fp, $invoiceNum . "\n\r");
+fwrite($fp, $link . "\n\r");
+fwrite($fp, $n);
+fclose($fp);*/
 
-function do_payplus_ipn_min() {
-    $request_data = file_get_contents('php://input');
-    $data = (object) json_decode($request_data);
-// ofer debug 14-11-2025 - start
-echo "ofer debug 15-11-2025 data: " . print_r($data, true) . "<br>";
-// Send email with received data
-debugEmail("Data Received", [
-    'raw_length' => strlen($request_data),
-    'is_object' => is_object($data),
-    'has_data' => isset($data->data),
-    'has_transaction' => isset($data->transaction),
-    'data_preview' => substr($request_data, 0, 500), // First 500 chars
-]);
-// ofer debug 14-11-2025 - end
-    if(!is_object($data) || empty($data) || !isset($data->data, $data->transaction)) {
-        return false;
-    }
 
-    $transaction = $data->transaction;
-    $invoice = $data->invoice;
-    $data = $data->data;
+/*$rowId = intval(trim($_GET["p120"]));
+salesForce($rowId, $link, $invoiceNum);*/
 
-    if(!isset($transaction->uid)) {
-        return false;
-    }
-
-    $id = intval(trim( $transaction->more_info ));
-    $expiry = $data->card_information->expiry_month . $data->card_information->expiry_year;
-    $ccHolder = $data->card_information->card_holder_name;
-    $digits = $data->card_information->four_digits;
-    $cc = $data->card_information->issuer_id;
-    $token = $data->card_information->token;
-    $tourist = $data->card_information->card_foreign;
-    $cType = $transaction->credit_terms;
-    $shovar = $transaction->voucher_number;
-    $invoice_url = isset($invoice->original_url) ? $invoice->original_url : '';
-    $invoice_id = isset($invoice->docu_number) ? $invoice->docu_number : '';
-
-    $ccArr = array(
-        "1" => "ישראכרד",
-        "2" => "ויזה כ.א.ל",
-        "3" => "דיינרס",
-        "4" => "אמריקן אקספרס", //TODO
-        "5" => "JCB",
-        "6" => "לאומי כארד"
-    );
-
-    $ccVal = (isset($ccArr[$cc])) ? $ccArr[$cc] : $cc;
-
-    //var_dump($ipn_response); exit;
-    echo "ofer debug 08-12-2025 data: " . print_r($data, true) . "<br>";
-/*
-    global $wpdb;
-    $transaction_exists = $wpdb->get_row(
-        $wpdb->prepare(
-            "SELECT `sale_f_id` from `green_donations` WHERE id = %d",
-            $id
-        )
-    );
-
-    $wpdb->query(
-        $wpdb->prepare(
-            "UPDATE green_donations SET exp = %s, cc_holder = %s, token = %s, shovar = %s, card_type = %s, last_four = %s, tourist = %s, ccval = %s, payplus_callback_response = %s  WHERE id = %d",
-            $expiry, $ccHolder, $token, $shovar, $cType, $digits, $tourist, $ccVal, $id, $request_data
-        )
-    );
-
-    if( empty($transaction_exists->sale_f_id) ) { //Transaction not transmitted to SalesForce yet
-        salesForce($id, $invoice_url, $invoice_id, $data, $transaction);
-        echo ' transaction sent to sf right now. ';
-
-        httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', [
-            'step' => 'callback',
-            'status' => 'transaction sent to sf right now.',
-        ]);
-    } else {
-        echo ' transaction already transmitted to sf, ignoring. ';
-
-        httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', [
-            'step' => 'callback',
-            'status' => 'transaction already transmitted to sf, ignoring.',
-        ]);
-    }
-	*/
-}
-
-/* -----------------------------------------------------------------------------------------------------------------
 function httpRequest($url, $data, $headers = null, $raw = false, $auth = null, $method = 'POST') {
     try {
         $curl = curl_init($url);
@@ -226,6 +148,8 @@ function do_payplus_ipn() {
         ]);
     }
 }
+
+do_payplus_ipn();
 
 function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
 
@@ -380,6 +304,7 @@ function errAdmin($err){
     wp_mail( $email, $subject, $HTML, array("Content-type: text/html" ) );
 }
 
+
 function dataAdmin($err){
 
     $email = array("gpmed-il-admin-group@greenpeace.org", "ekogoren@gmail.com");
@@ -389,6 +314,3 @@ function dataAdmin($err){
 
     wp_mail( $email, $subject, $HTML, array("Content-type: text/html" ) );
 }
-
- -----------------------------------------------------------------------------------------------------------------
- */
