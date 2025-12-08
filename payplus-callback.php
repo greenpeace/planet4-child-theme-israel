@@ -5,42 +5,20 @@
 
 set_time_limit(0);
 
-echo "ofer debug 15-11-2025 start ... <br>";
-// Load WordPress if needed
-if (!function_exists('wp_mail')) {
-    require_once('../../../wp-load.php');
-}
-
-// Debug email function
-function debugEmail($subject, $data) {
-    $email = "oor@greenpeace.org"; // or your email
-    $html = "<pre>" . print_r($data, true) . "</pre>";
-    wp_mail($email, "PayPlus Callback Debug: " . $subject, $html, array("Content-type: text/html"));
-}
-
 do_payplus_ipn_min();
 
 function do_payplus_ipn_min() {
     $request_data = file_get_contents('php://input');
     $data = (object) json_decode($request_data);
-// ofer debug 14-11-2025 - start
-echo "ofer debug 15-11-2025 data: " . print_r($data, true) . "<br>";
-// Send email with received data
-debugEmail("Data Received", [
-    'raw_length' => strlen($request_data),
-    'is_object' => is_object($data),
-    'has_data' => isset($data->data),
-    'has_transaction' => isset($data->transaction),
-    'data_preview' => substr($request_data, 0, 500), // First 500 chars
-]);
-// ofer debug 14-11-2025 - end
+
+    error_log("ofer debug 08-12-2025 data (1): \n" . print_r($data, true) . "\n");
+
     if(!is_object($data) || empty($data) || !isset($data->data, $data->transaction)) {
         return false;
     }
 
     // ofer debug 08-12-2025 - start
-    error_log("ofer debug 08-12-2025data: \n" . print_r($data, true) . "\n");
-    echo "ofer debug 09-12-2025 data: <br>" . print_r($data, true) . "<br>";
+    error_log("ofer debug 08-12-2025 data (2): \n" . print_r($data, true) . "\n");
     // ofer debug 08-12-2025 - end
     
     $transaction = $data->transaction;
