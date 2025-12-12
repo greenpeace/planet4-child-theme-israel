@@ -20,8 +20,8 @@
 
     public $formStrings = array(
         "personal" => "פרטים אישיים:",
-        "checkboxText" => "אני רוצה גם שתצרפו אותי לעיגול לטובה", // Added 2-Dec-2024 - Ofer Or 
-		"consentText" => "בלחיצה על המשך הריני מאשר את תנאי השימוש", // Added 2-Dec-2024 - Ofer Or 
+        "checkboxText" => "אני רוצה גם שתצרפו אותי לעיגול לטובה", // Added 2-Dec-2024 - Ofer Or
+		"consentText" => "בלחיצה על המשך הריני מאשר את תנאי השימוש", // Added 2-Dec-2024 - Ofer Or
     );
 
     public $fieldsEn = array(
@@ -33,7 +33,7 @@
 
     public $formStringsEn = array(
         "personal" => "Contact Details:",
-        "checkboxText" => "Mark for", // Added 2-Dec-2024 - Ofer Or 
+        "checkboxText" => "Mark for", // Added 2-Dec-2024 - Ofer Or
 
     );
 
@@ -74,7 +74,7 @@
         error_log('green donation table name is: ' . $table_name );
         $total_items = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
         error_log('green donation table has ' . $total_items . ' items');
-    
+
         if ( $show_all ) {
             $donations = $wpdb->get_results( "SELECT * FROM $table_name" ); // Fetch all items
         } else {
@@ -195,7 +195,7 @@
         global $post;
         $postID = $post->ID;
         // temp $recurring = (!get_field("recurrent"))? "one-off" : "recurring";
-        $recurring = "recurring"; // ignore the wp field 
+        $recurring = "recurring"; // ignore the wp field
 
         $params = array(
             'ajaxurl' => admin_url('admin-ajax.php'),
@@ -215,7 +215,7 @@
     public function getForm(){
 
         // $donation_sum_string = (!get_field("recurrent"))? "סכום התרומה החד פעמית:" : "סכום תרומה חודשי:";
-        $donation_sum_string =  "סכום תרומה חודשי:"; // ignore the wp field 
+        $donation_sum_string =  "סכום תרומה חודשי:"; // ignore the wp field
         $sums = array();
 
         //if( have_rows('sums') ):
@@ -227,11 +227,11 @@
         array_push($sums, 200);
 
 		$head = "<script> function toggleInputField() {
-			const checkbox = document.getElementById('idCheckbox'); 
-			const inputField = document.getElementById('gpf_{$this->idField["name"]}'); 
+			const checkbox = document.getElementById('idCheckbox');
+			const inputField = document.getElementById('gpf_{$this->idField["name"]}');
 			inputField.style.display = checkbox.checked ? 'block' : 'none'; } </script>
 		";
-		
+
         $form = "<img class='steps-img' src='https://joinus.greenpeace.org.il/wp-content/uploads/2018/05/1-2-3.jpg' alt='step one'>";
 
         $utm_campaign = isset($_GET["utm_campaign"]) ? esc_attr($_GET["utm_campaign"]) : '';
@@ -262,18 +262,18 @@
 
         $form .= "<div class='gpf_other_cont'><input type='radio' name='gpf_sum_radio' value='other'><label></label>";
         $form .= "<input type='text' disabled name='gpf_other' placeholder='סכום אחר' id='gpf_other'><p class='gpf_error gpf_other_error' tabindex='0'></p></div>";
-		
+
 		$form .= "</fieldset>";
-		
+
 		// Added 2-Dec-2024 - Ofer Or  Start =============
-		
+
 		$form .= "<p class='gpf_checkbox'><input type='checkbox' id='gpf_igulLetovaCheckbox' name='igul_Letova_Checkbox' value='checked' >{$this->formStrings["checkboxText"]}</p>";
 		$form .= "<div><input type='text' id='gpf_{$this->idField["name"]}' name='{$this->idField["name"]}' style='display: none;' placeholder='{$this->idField["title"]} '><p class='gpf_error' tabindex='0'></p></div>";
         $form .= "<p class='gpf_checkbox' tabindex='0'>{$this->formStrings["consentText"]}</p>";
 
 		// Added 2-Dec-2024 - Ofer Or  End   =============
-		
-		
+
+
         $form .= "<input type='submit' value='המשך לשלב הבא'></form>";
         $form .= '<svg id="gpf_loader" width=\'120px\' height=\'120px\' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="uil-default"><rect x="0" y="0" width="100" height="100" fill="none" class="bk"></rect><rect  x=\'46.5\' y=\'40\' width=\'7\' height=\'20\' rx=\'5\' ry=\'5\' fill=\'white\' transform=\'rotate(0 50 50) translate(0 -30)\'>  <animate attributeName=\'opacity\' from=\'1\' to=\'0\' dur=\'1s\' begin=\'0s\' repeatCount=\'indefinite\'/></rect><rect  x=\'46.5\' y=\'40\' width=\'7\' height=\'20\' rx=\'5\' ry=\'5\' fill=\'white\' transform=\'rotate(30 50 50) translate(0 -30)\'>  <animate attributeName=\'opacity\' from=\'1\' to=\'0\' dur=\'1s\' begin=\'0.08333333333333333s\' repeatCount=\'indefinite\'/></rect><rect  x=\'46.5\' y=\'40\' width=\'7\' height=\'20\' rx=\'5\' ry=\'5\' fill=\'white\' transform=\'rotate(60 50 50) translate(0 -30)\'>  <animate attributeName=\'opacity\' from=\'1\' to=\'0\' dur=\'1s\' begin=\'0.16666666666666666s\' repeatCount=\'indefinite\'/></rect><rect  x=\'46.5\' y=\'40\' width=\'7\' height=\'20\' rx=\'5\' ry=\'5\' fill=\'white\' transform=\'rotate(90 50 50) translate(0 -30)\'>  <animate attributeName=\'opacity\' from=\'1\' to=\'0\' dur=\'1s\' begin=\'0.25s\' repeatCount=\'indefinite\'/></rect><rect  x=\'46.5\' y=\'40\' width=\'7\' height=\'20\' rx=\'5\' ry=\'5\' fill=\'white\' transform=\'rotate(120 50 50) translate(0 -30)\'>  <animate attributeName=\'opacity\' from=\'1\' to=\'0\' dur=\'1s\' begin=\'0.3333333333333333s\' repeatCount=\'indefinite\'/></rect><rect  x=\'46.5\' y=\'40\' width=\'7\' height=\'20\' rx=\'5\' ry=\'5\' fill=\'white\' transform=\'rotate(150 50 50) translate(0 -30)\'>  <animate attributeName=\'opacity\' from=\'1\' to=\'0\' dur=\'1s\' begin=\'0.4166666666666667s\' repeatCount=\'indefinite\'/></rect><rect  x=\'46.5\' y=\'40\' width=\'7\' height=\'20\' rx=\'5\' ry=\'5\' fill=\'white\' transform=\'rotate(180 50 50) translate(0 -30)\'>  <animate attributeName=\'opacity\' from=\'1\' to=\'0\' dur=\'1s\' begin=\'0.5s\' repeatCount=\'indefinite\'/></rect><rect  x=\'46.5\' y=\'40\' width=\'7\' height=\'20\' rx=\'5\' ry=\'5\' fill=\'white\' transform=\'rotate(210 50 50) translate(0 -30)\'>  <animate attributeName=\'opacity\' from=\'1\' to=\'0\' dur=\'1s\' begin=\'0.5833333333333334s\' repeatCount=\'indefinite\'/></rect><rect  x=\'46.5\' y=\'40\' width=\'7\' height=\'20\' rx=\'5\' ry=\'5\' fill=\'white\' transform=\'rotate(240 50 50) translate(0 -30)\'>  <animate attributeName=\'opacity\' from=\'1\' to=\'0\' dur=\'1s\' begin=\'0.6666666666666666s\' repeatCount=\'indefinite\'/></rect><rect  x=\'46.5\' y=\'40\' width=\'7\' height=\'20\' rx=\'5\' ry=\'5\' fill=\'white\' transform=\'rotate(270 50 50) translate(0 -30)\'>  <animate attributeName=\'opacity\' from=\'1\' to=\'0\' dur=\'1s\' begin=\'0.75s\' repeatCount=\'indefinite\'/></rect><rect  x=\'46.5\' y=\'40\' width=\'7\' height=\'20\' rx=\'5\' ry=\'5\' fill=\'white\' transform=\'rotate(300 50 50) translate(0 -30)\'>  <animate attributeName=\'opacity\' from=\'1\' to=\'0\' dur=\'1s\' begin=\'0.8333333333333334s\' repeatCount=\'indefinite\'/></rect><rect  x=\'46.5\' y=\'40\' width=\'7\' height=\'20\' rx=\'5\' ry=\'5\' fill=\'white\' transform=\'rotate(330 50 50) translate(0 -30)\'>  <animate attributeName=\'opacity\' from=\'1\' to=\'0\' dur=\'1s\' begin=\'0.9166666666666666s\' repeatCount=\'indefinite\'/></rect></svg>';
         $form .= "<div id='grf_frame'></div>";
@@ -286,7 +286,7 @@
         $form = "<form id='test_form'>";
         $form .= "<div><input type='text' id='test_input' name='test_input' placeholder='Test line'></div>";
         $form .= "<input type='submit' value='Submit'></form>";
-        
+
         return $form;
     }
 
@@ -349,7 +349,7 @@
         //Security
         if ( !wp_verify_nonce( $_POST['nonce'], "greenpeace_donation")) exit("No monkey business");
 
-		// added 12-Jan-2025 Ofer Or // 
+		// added 12-Jan-2025 Ofer Or //
 		$igul_Letova_Checkbox = ($_POST["igul_Letova_Checkbox"] === "checked");
 
         global $wpdb;
@@ -362,7 +362,7 @@
                 $_POST["utm_campaign"], $_POST["utm_source"], $_POST["utm_medium"], $_POST["utm_content"], $_POST["utm_term"]
             )
         );
-		// Change end -  12-Jan-2025 Ofer Or // 
+		// Change end -  12-Jan-2025 Ofer Or //
 
         $unique = $wpdb->insert_id;
         $sum = ($_POST["gpf_sum_radio"] !== "other")? $_POST["gpf_sum_radio"] : $_POST["gpf_other"];
@@ -449,7 +449,7 @@
         // echo("get Iframe start ....... <br>");
         // error_log("*** get Iframe start ......\n");
 
-        $language_code = 'he';
+        $language_code = 'he-il';
 
         // if ($page == 564){    // not in use planet 4
         //     $language_code = 'en';
@@ -523,13 +523,13 @@
                 }
 
                 return <<<HTML
-                <iframe id="payplus-new-iframe" 
-                    src="{$iframe_url->data->payment_page_link}" 
+                <iframe id="payplus-new-iframe"
+                    src="{$iframe_url->data->payment_page_link}"
                     width="{$iframe_width}"
-                    height="{$iframe_height}" 
-                    name="defrayal" 
-                    frameBorder="0" 
-                    scrolling="no" 
+                    height="{$iframe_height}"
+                    name="defrayal"
+                    frameBorder="0"
+                    scrolling="no"
                     onload="document.getElementById('iframe_top').scrollIntoView({behavior: 'instant', block: 'start'})">
                 </iframe>
                 HTML;
@@ -594,12 +594,12 @@ function donation_gform_function($entry, $form) {
 
     // error_log("2******** donation_gform_function called **********\n" );
     // echo "2******** donation_gform_function called **********<br>";
- 
+
     // Debug echo at function start
     //  echo "*** donation_gform_function started \n";
     //  echo "*** Entry data: " . print_r($entry, true) . " \n";
     //  echo "*** Form data: " . print_r($form, true) . " \n";
- 
+
      // Get the values from the entry
      $record_id = rgar($entry, 'id');
      $page = rgar($entry, 'source_id');
@@ -609,7 +609,7 @@ function donation_gform_function($entry, $form) {
      $email = rgar($entry, '7');
      $phone = rgar($entry, '17');
      $amount = rgar($entry, '25');
- 
+
      /* for debug only
      echo "*** Retrieved values:<br>";
      echo "*** Record Id: " . $record_id . " <br>";
@@ -636,7 +636,7 @@ function donation_gform_function($entry, $form) {
             <img src='https://www.greenpeace.org/static/planet4-israel-stateless-develop/2025/06/5bde545c-stage2.jpg' alt='step 2'>
         </div>
     HTML;
-    
+
     // present payplus iframe
     echo $iFrame;
 
