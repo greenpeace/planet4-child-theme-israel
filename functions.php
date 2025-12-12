@@ -7,17 +7,17 @@
 // *******************************************************
 // Donation functunality code  - add by Ofer Or
 // 06-Jun-2025
-// aduped from old donation site code 
+// aduped from old donation site code
 // *******************************************************
 include 'Helpers.php';
 include 'PayPlus.php';
 include 'donation.php';
- 
+
 $donation = new greenpeace_donation();
 
 define("REDIRECT_URI", "https://www-dev.greenpeace.org/israel/receive-defrayal/");
 
- 
+
 // end of donation functunality code (added by ofer or 06-Jun-2025)
 // *******************************************************
 
@@ -31,12 +31,12 @@ function enqueue_child_styles() {
 }
 
 // Gravity Forms pre-submission hook
-// add_action('gform_pre_submission', 'my_pre_submission_cleanup'); 
+// add_action('gform_pre_submission', 'my_pre_submission_cleanup');
 function my_pre_submission_cleanup($form) {
 
     // Loop through each field in the form
     foreach ($form['fields'] as $field) {
-        
+
         // 1) If it's a phone field, remove all non-digit characters (including +)
         if ($field->type === 'phone') {
             $field_id    = $field->id;
@@ -94,4 +94,12 @@ function my_autocorrect_domain($domain) {
 // Gravity Forms after-submission hook for form id 60 - added by Ofer Or 13-6-2025
 // error_log("********* donation_gform_function added **********\n" );
 add_action('gform_after_submission_60', 'donation_gform_function', 10, 2);
- 
+
+// Gravity Forms HubSpot feed pre-save hook to set language to Hebrew for new forms
+add_filter( 'gform_hubspot_form_object_pre_save_feed', function ( $hs_form, $feed_meta, $form, $existing_form ) {
+    if ( empty( $existing_form ) ) {
+        $hs_form['configuration']['language'] = 'he-il';
+    }
+
+    return $hs_form;
+}, 10, 4 );
