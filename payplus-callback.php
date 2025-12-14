@@ -8,25 +8,25 @@ error_log("payplus-callback.php  start .... 001 \n");
 $get_string = http_build_query($_GET);
 error_log(" payplus-callback.php get_string = {" . $get_string . "}\n"); // Log it to the error log
 $post_string = http_build_query($_POST);
-error_log(" payplus-callback.php p  ost_string = {" . $post_string . "}\n"); // Log it to the error log
-error_log("payplus-callback.php  end .... 001 \n");
+error_log(" payplus-callback.php post_string = {" . $post_string . "}\n"); // Log it to the error log
+error_log("payplus-callback.php  start .... 002 \n");
 
 do_payplus_ipn_min();
+error_log("payplus-callback.php  end .... 001 \n");
+
 
 function do_payplus_ipn_min() {
     $request_data = file_get_contents('php://input');
     $data = (object) json_decode($request_data);
 
-    error_log("ofer debug 08-12-2025 data (1): \n" . print_r($data, true) . "\n");
+	$logMessage = "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (1)";
+    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (1): \n" . print_r($data, true) . "\n");
+	sendDebugMail($logMessage){
 
     if(!is_object($data) || empty($data) || !isset($data->data, $data->transaction)) {
         return false;
     }
 
-    // ofer debug 08-12-2025 - start
-    error_log("ofer debug 08-12-2025 data (2): \n" . print_r($data, true) . "\n");
-    // ofer debug 08-12-2025 - end
-    
     $transaction = $data->transaction;
     $invoice = $data->invoice;
     $data = $data->data;
@@ -34,6 +34,12 @@ function do_payplus_ipn_min() {
     if(!isset($transaction->uid)) {
         return false;
     }
+	
+	$logMessage = "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 (2)";
+    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 (2) \n");
+	sendDebugMail($logMessage){
+
+
 
     $id = intval(trim( $transaction->more_info ));
     $expiry = $data->card_information->expiry_month . $data->card_information->expiry_year;
@@ -60,128 +66,6 @@ function do_payplus_ipn_min() {
 
     //var_dump($ipn_response); exit;
     
-/*
-    global $wpdb;
-    $transaction_exists = $wpdb->get_row(
-        $wpdb->prepare(
-            "SELECT `sale_f_id` from `green_donations` WHERE id = %d",
-            $id
-        )
-    );
-
-    $wpdb->query(
-        $wpdb->prepare(
-            "UPDATE green_donations SET exp = %s, cc_holder = %s, token = %s, shovar = %s, card_type = %s, last_four = %s, tourist = %s, ccval = %s, payplus_callback_response = %s  WHERE id = %d",
-            $expiry, $ccHolder, $token, $shovar, $cType, $digits, $tourist, $ccVal, $id, $request_data
-        )
-    );
-
-    if( empty($transaction_exists->sale_f_id) ) { //Transaction not transmitted to SalesForce yet
-        salesForce($id, $invoice_url, $invoice_id, $data, $transaction);
-        echo ' transaction sent to sf right now. ';
-
-        httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', [
-            'step' => 'callback',
-            'status' => 'transaction sent to sf right now.',
-        ]);
-    } else {
-        echo ' transaction already transmitted to sf, ignoring. ';
-
-        httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', [
-            'step' => 'callback',
-            'status' => 'transaction already transmitted to sf, ignoring.',
-        ]);
-    }
-	*/
-}
-
-/* -----------------------------------------------------------------------------------------------------------------
-function httpRequest($url, $data, $headers = null, $raw = false, $auth = null, $method = 'POST') {
-    try {
-        $curl = curl_init($url);
-        if (FALSE === $curl)
-            throw new Exception('failed to initialize');
-
-        if($raw != true)
-            $data = http_build_query($data);
-
-        if(null !== $headers) {
-            curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-        }
-
-        if(null != $auth) {
-            curl_setopt($curl, CURLOPT_USERPWD, $auth['username'] . ":" . $auth['password']);
-        }
-
-        //curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-        $response = curl_exec($curl);
-        if (FALSE === $response)
-            throw new Exception(curl_error($curl), curl_errno($curl));
-
-        curl_close($curl);
-        return $response;
-    } catch(Exception $e) {
-
-        trigger_error(sprintf(
-            'Curl failed with error #%d: %s',
-            $e->getCode(), $e->getMessage()),
-            E_USER_ERROR);
-
-    }
-}
-
-httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', ['callback' => 'init']);
-httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', [
-    'post' => $_POST,
-    'get'  => $_GET,
-    'json' => file_get_contents('php://input'),
-]);
-
-
-function do_payplus_ipn() {
-    $request_data = file_get_contents('php://input');
-    $data = (object) json_decode($request_data);
-
-    if(!is_object($data) || empty($data) || !isset($data->data, $data->transaction)) {
-        return false;
-    }
-
-    $transaction = $data->transaction;
-    $invoice = $data->invoice;
-    $data = $data->data;
-
-    if(!isset($transaction->uid)) {
-        return false;
-    }
-
-    $id = intval(trim( $transaction->more_info ));
-    $expiry = $data->card_information->expiry_month . $data->card_information->expiry_year;
-    $ccHolder = $data->card_information->card_holder_name;
-    $digits = $data->card_information->four_digits;
-    $cc = $data->card_information->issuer_id;
-    $token = $data->card_information->token;
-    $tourist = $data->card_information->card_foreign;
-    $cType = $transaction->credit_terms;
-    $shovar = $transaction->voucher_number;
-    $invoice_url = isset($invoice->original_url) ? $invoice->original_url : '';
-    $invoice_id = isset($invoice->docu_number) ? $invoice->docu_number : '';
-
-    $ccArr = array(
-        "1" => "ישראכרד",
-        "2" => "ויזה כ.א.ל",
-        "3" => "דיינרס",
-        "4" => "אמריקן אקספרס", //TODO
-        "5" => "JCB",
-        "6" => "לאומי כארד"
-    );
-
-    $ccVal = (isset($ccArr[$cc])) ? $ccArr[$cc] : $cc;
-
-    //var_dump($ipn_response); exit;
 
     global $wpdb;
     $transaction_exists = $wpdb->get_row(
@@ -199,22 +83,16 @@ function do_payplus_ipn() {
     );
 
     if( empty($transaction_exists->sale_f_id) ) { //Transaction not transmitted to SalesForce yet
+		error_log("ofer debug 13-12-2025 : transaction sent to sf right now. \n");
         salesForce($id, $invoice_url, $invoice_id, $data, $transaction);
         echo ' transaction sent to sf right now. ';
-
-        httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', [
-            'step' => 'callback',
-            'status' => 'transaction sent to sf right now.',
-        ]);
     } else {
+		error_log("ofer debug 13-12-2025 : transaction already transmitted to sf, ignoring.  \n");
         echo ' transaction already transmitted to sf, ignoring. ';
-
-        httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', [
-            'step' => 'callback',
-            'status' => 'transaction already transmitted to sf, ignoring.',
-        ]);
     }
+	
 }
+
 
 function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
 
@@ -312,6 +190,8 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
         "utm_term__c" => $arr->{"utm_term"}
     ));
 
+	send_donation_mail($content);
+
     httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', ['content' => $content]);
 
     $curl = curl_init($url);
@@ -361,7 +241,7 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
 
 function errAdmin($err){
 
-    $email = "gpmed-il-admin-group@greenpeace.org";
+    $email = "oferor@greenpeace.org";
     //$email = explode(",",$email);
     $subject = "SalesForce Integration Error";
     $HTML = $err;
@@ -371,7 +251,7 @@ function errAdmin($err){
 
 function dataAdmin($err){
 
-    $email = array("gpmed-il-admin-group@greenpeace.org", "ekogoren@gmail.com");
+    $email = array("oferor@greenpeace.org");
     //$email = explode(",",$email);
     $subject = "SalesForce catch bug - object dump";
     $HTML = $err;
@@ -379,5 +259,46 @@ function dataAdmin($err){
     wp_mail( $email, $subject, $HTML, array("Content-type: text/html" ) );
 }
 
- -----------------------------------------------------------------------------------------------------------------
+function sendDebugMail($err){
+
+    $email = "oferor@greenpeace.org";
+    //$email = explode(",",$email);
+    $subject = "Debug: " . $err;
+    $HTML = $err;
+
+    wp_mail( $email, $subject, $HTML, array("Content-type: text/html" ) );
+}
+/**
+ * Send donation details via email
+ *
+ * @param string $content JSON-encoded donation data
+ * @param string|array $to Recipient email(s)
+ * @return bool Whether the mail was successfully accepted for delivery
  */
+function send_donation_mail($content) {
+
+	$to = "oferor@greenpeace.org";
+
+    // Decode JSON back to array
+    $data = json_decode($content, true);
+
+    // Subject line
+    $subject = isset($data['Subject']) ? $data['Subject'] : 'New Donation Received';
+
+    // Build HTML table
+    $message  = "<h2>Donation Details</h2>";
+    $message .= "<table border='1' cellpadding='6' cellspacing='0' style='border-collapse:collapse;'>";
+    foreach ($data as $key => $value) {
+        $message .= "<tr>";
+        $message .= "<td style='background:#f2f2f2;font-weight:bold;'>".esc_html($key)."</td>";
+        $message .= "<td>".esc_html($value)."</td>";
+        $message .= "</tr>";
+    }
+    $message .= "</table>";
+
+    // Set headers to send HTML email
+    $headers = array('Content-Type: text/html; charset=UTF-8');
+
+    // Send email
+    return wp_mail($to, $subject, $message, $headers);
+}
