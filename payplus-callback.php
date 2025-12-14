@@ -21,25 +21,33 @@ function do_payplus_ipn_min() {
 
 	$logMessage = "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (1)";
     error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (1): \n" . print_r($data, true) . "\n");
-	sendDebugMail($logMessage){
+	sendDebugMail($logMessage);
 
     if(!is_object($data) || empty($data) || !isset($data->data, $data->transaction)) {
         return false;
     }
+    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (2)");
 
     $transaction = $data->transaction;
     $invoice = $data->invoice;
     $data = $data->data;
 
+    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (3)");
+
+    $logMessage = "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (4)";
+    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (4): \n" . print_r($data, true) . "\n");
+	sendDebugMail($logMessage);
+
+
     if(!isset($transaction->uid)) {
         return false;
     }
 	
-	$logMessage = "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 (2)";
-    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 (2) \n");
-	sendDebugMail($logMessage){
+	$logMessage = "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 (5)";
+    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 (5) \n");
+	sendDebugMail($logMessage);
 
-
+return false;
 
     $id = intval(trim( $transaction->more_info ));
     $expiry = $data->card_information->expiry_month . $data->card_information->expiry_year;
