@@ -4,6 +4,10 @@
  */
 
 set_time_limit(0);
+
+if (!function_exists('wp_mail')) {
+    require_once('../../../wp-load.php');
+}
 error_log("payplus-callback.php  start .... 001 \n");
 $get_string = http_build_query($_GET);
 error_log(" payplus-callback.php get_string = {" . $get_string . "}\n"); // Log it to the error log
