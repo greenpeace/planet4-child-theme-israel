@@ -447,7 +447,9 @@
     public function ensureGreenDonationsTableExists() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'green_donations';
-    //    error_log('green donation table name is: ' . $table_name . "\n");
+ 
+        error_log('ensureGreenDonationsTableExists: green donation table name is: ' . $table_name . "\n");
+
         // Check if the table exists
         if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) != $table_name ) {
             error_log($table_name . ' table does not exist, creating it.' . "\n");
@@ -494,13 +496,15 @@
     }
     
     // Insert to donation table
-    public function InsertToDonationTable($first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type, $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term){
+    public function insertToDonationTable($first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type, $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term){
 
         // Ensure table exists before inserting
         $this->ensureGreenDonationsTableExists();
 
         global $wpdb;
         $table_name = $wpdb->prefix . 'green_donations';
+
+        error_log('insertToDonationTable: green donation table name is: ' . $table_name . "\n");
 
         $wpdb->query(
             $wpdb->prepare(
@@ -611,7 +615,7 @@
 
 function donation_gform_function($entry, $form) {
 
-    // error_log("2******** donation_gform_function called **********\n" );
+    error_log("2******** donation_gform_function called **********\n" );
     // echo "2******** donation_gform_function called **********<br>";
 
     // Debug echo at function start
@@ -652,7 +656,7 @@ function donation_gform_function($entry, $form) {
 
     $donation1 = new greenpeace_donation();
 
-    $donation1->InsertToDonationTable(
+    $donation1->insertToDonationTable(
         $first_name,
         $last_name,
         $phone,
