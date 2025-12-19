@@ -22,7 +22,7 @@ echo "<p style='text-align: center; margin-top: 20px; width:100%' class='gpf_wai
 error_log("recieve-payment.php  after echo \n");
 //exit;
 
-error_log(" POST-status = {" . $_POST["status"] . "}");
+error_log(" POST-status = {" . $_POST["status"] . "}\n");
 //exit;
 
 /*
@@ -171,12 +171,12 @@ if(isset($_GET["initsalesforce"])){
 
 } else */
 if(isset($_POST["status"]) && $_POST["status"] === 'approved') {
-    error_log("recieve-payment.php  part 3");
+    error_log("recieve-payment.php  part 3\n");
 
     $api = new PayPlus();
 
     if(isset($_POST['transaction_uid'])) {
-        error_log("recieve-payment.php  part 4");
+        error_log("recieve-payment.php  part 4\n");
 
         $ipn_response = $api->apiRequest('/PaymentPages/ipn', [
             'transaction_uid' => $_POST['transaction_uid'],
@@ -192,7 +192,7 @@ if(isset($_POST["status"]) && $_POST["status"] === 'approved') {
         $token = $ipn_response->data->token_uid;
         $cType = $ipn_response->data->credit_terms;
     } elseif(isset($_POST['page_request_uid'])) {
-        error_log("recieve-payment.php  part 5");
+        error_log("recieve-payment.php  part 5\n");
 
         $ipn_response = $api->apiRequest('/PaymentPages/ipn', [
             'payment_request_uid' => $_POST['page_request_uid'],
@@ -210,27 +210,27 @@ if(isset($_POST["status"]) && $_POST["status"] === 'approved') {
         $tourist = '';
         $cType = '';
     } else {
-        error_log("recieve-payment.php  part 6");
+        error_log("recieve-payment.php  part 6\n");
 
         echo 'משהו השתבש (err 11)';
         exit;
     }
 
     if(!isset($ipn_response->results) || !isset($ipn_response->data)) { //Incorrect data received from ipn
-        error_log("recieve-payment.php  part 7");
+        error_log("recieve-payment.php  part 7\n");
 
         echo 'משהו השתבש (err 22)';exit;
     }
 
     if($ipn_response->results->status !== 'success') { //Transaction Failed
-        error_log("recieve-payment.php  part 8");
+        error_log("recieve-payment.php  part 8\n");
 
         echo 'משהו השתבש (err 45)';
         var_dump($ipn_response);
         echo $ipn_response->results->description;
         exit;
     }
-    error_log("recieve-payment.php  part 9");
+    error_log("recieve-payment.php  part 9\n");
 
     $response = $ipn_response->results->status;
     $title = $amount = $ipn_response->data->amount;
@@ -247,7 +247,7 @@ if(isset($_POST["status"]) && $_POST["status"] === 'approved') {
     $ccVal = (isset($ccArr[$cc])) ? $ccArr[$cc] : $cc;
 
     //var_dump($ipn_response); exit;
-    error_log("recieve-payment.php  part 10");
+    error_log("recieve-payment.php  part 10\n");
 /*
     global $wpdb;
     $table_name = $wpdb->prefix . 'green_donations';
@@ -307,7 +307,7 @@ if(isset($_POST["status"]) && $_POST["status"] === 'approved') {
 }
 
 
-error_log("recieve-payment.php  after ifs  ");
+error_log("recieve-payment.php  after ifs  \n");
 // display thankyou page for a test
 // echo '<script> window.top.location = "'. get_permalink(66268) . "?username=" . $dbRow->first_name  .'"; </script>';
 
@@ -437,12 +437,8 @@ function errAdmin($err){
 }
 
 
-error_log("recieve-payment.php  before get_footer ");
+error_log("recieve-payment.php  before get_footer \n");
 
 get_footer();
 
-error_log("recieve-payment.php  end .... 001 ");
-
-
-
-
+error_log("recieve-payment.php  end .... 001 \n ");

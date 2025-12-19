@@ -16,7 +16,7 @@ error_log(" payplus-callback.php post_string = {" . $post_string . "}\n"); // Lo
 error_log("payplus-callback.php  start .... 002 \n");
 
 do_payplus_ipn_min();
-error_log("payplus-callback.php  end .... 001 \n");
+error_log("payplus-callback.php  end .... 001   \n");
 
 
 function do_payplus_ipn_min() {
@@ -38,9 +38,9 @@ function do_payplus_ipn_min() {
 
     error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (3)");
 
-    $logMessage = "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (4)";
+    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 transaction (4): \n" . print_r($transaction, true) . "\n");
+    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 invoice (4): \n" . print_r($invoice, true) . "\n");
     error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (4): \n" . print_r($data, true) . "\n");
-	sendDebugMail($logMessage);
 
 
     if(!isset($transaction->uid)) {
