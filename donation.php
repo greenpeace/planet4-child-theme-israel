@@ -596,9 +596,9 @@ function donation_gform_function($entry, $form) {
     // echo "2******** donation_gform_function called **********<br>";
 
     // Debug echo at function start
-    //  echo "*** donation_gform_function started \n";
-    //  echo "*** Entry data: " . print_r($entry, true) . " \n";
-    //  echo "*** Form data: " . print_r($form, true) . " \n";
+    echo "*** donation_gform_function started \n";
+    echo "*** Entry data: " . print_r($entry, true) . " \n";
+    echo "*** Form data: " . print_r($form, true) . " \n";
 
      // Get the values from the entry
      $record_id = rgar($entry, 'id');
@@ -610,7 +610,7 @@ function donation_gform_function($entry, $form) {
      $phone = rgar($entry, '17');
      $amount = rgar($entry, '25');
 
-     /* for debug only
+    // for debug only
      echo "*** Retrieved values:<br>";
      echo "*** Record Id: " . $record_id . " <br>";
      echo "*** First Name: " . $first_name . " <br>";
@@ -621,7 +621,7 @@ function donation_gform_function($entry, $form) {
      echo "*** Amount: " . $amount . " <br>";
      echo "*** Page: " . $page . " <br>";
      echo "***************************************** <br>";
-     */
+     // ... end of debug echo
 
     $donation1 = new greenpeace_donation();
 
