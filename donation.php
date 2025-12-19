@@ -55,7 +55,7 @@
         //add_filter('show_admin_bar', '__return_false');
         add_action( 'admin_menu', array($this,'register_my_custom_menu_page') );
         // add_action('wp', array($this,'defrayal_operations'));
-        ensure_green_donations_table_exists(); // create the table if it doesn't exist
+        ensureGreenDonationsTableExists(); // create the table if it doesn't exist
         $this->api = new PayPlus();
     }
 
@@ -497,9 +497,6 @@
     
     // Insert to donation table
     public function insertToDonationTable($first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type, $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term){
-
-        // Ensure table exists before inserting
-        $this->ensureGreenDonationsTableExists();
 
         global $wpdb;
         $table_name = $wpdb->prefix . 'green_donations';
