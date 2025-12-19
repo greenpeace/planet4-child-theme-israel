@@ -55,8 +55,7 @@
         //add_filter('show_admin_bar', '__return_false');
         add_action( 'admin_menu', array($this,'register_my_custom_menu_page') );
         // add_action('wp', array($this,'defrayal_operations'));
-        ensureGreenDonationsTableExists(); // create the table if it doesn't exist
-        $this->api = new PayPlus();
+        $this->ensureGreenDonationsTableExists(); // create the table if it doesn't exist        $this->api = new PayPlus();
     }
 
     public function register_my_custom_menu_page() {
