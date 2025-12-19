@@ -444,6 +444,73 @@
         add_action("wp_ajax_nopriv_gpf_dbclient", array($this,'dbClient'));
     }
 
+    public function ensureGreenDonationsTableExists() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'green_donations';
+    //    error_log('green donation table name is: ' . $table_name . "\n");
+        // Check if the table exists
+        if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) != $table_name ) {
+            error_log($table_name . ' table does not exist, creating it.' . "\n");
+            // Table does not exist, so create it
+            $sql = "CREATE TABLE $table_name (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `date` timestamp NOT NULL DEFAULT current_timestamp(),
+                `page_id` int(30) DEFAULT NULL,
+                `payment_type` char(10) DEFAULT NULL,
+                `first_name` varchar(30) DEFAULT NULL,
+                `last_name` varchar(30) DEFAULT NULL,
+                `email` varchar(40) DEFAULT NULL,
+                `phone` char(10) DEFAULT NULL,
+                `igul_letova` int(3) DEFAULT NULL,
+                `id_number` char(10) DEFAULT NULL,
+                `amount` int(5) DEFAULT NULL,
+                `token` varchar(40) DEFAULT NULL,
+                `exp` varchar(30) DEFAULT NULL,
+                `cc_holder` varchar(40) DEFAULT NULL,
+                `response` int(3) DEFAULT NULL,
+                `shovar` varchar(100) NOT NULL,
+                `card_type` varchar(100) NOT NULL,
+                `last_four` varchar(100) NOT NULL,
+                `tourist` int(3) NOT NULL,
+                `ccval` varchar(40) NOT NULL,
+                `sale_f_id` varchar(100) NOT NULL,
+                `icount_id` varchar(100) DEFAULT NULL,
+                `utm_campaign` varchar(100) NOT NULL,
+                `utm_source` varchar(100) NOT NULL,
+                `utm_medium` varchar(100) NOT NULL,
+                `utm_content` varchar(100) NOT NULL,
+                `utm_term` varchar(100) NOT NULL,
+                `payplus_callback_response` longtext DEFAULT NULL,
+                `transmited_to_sf` int(1) NOT NULL DEFAULT 0,
+                PRIMARY KEY (`id`)
+              ) AUTO_INCREMENT=12540 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=DYNAMIC;";
+    
+            require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+            dbDelta( $sql );
+    //    } else {
+    //        $total_items = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
+    //        error_log($table_name . ' exists and has ' . $total_items . ' items.' . "\n");
+        }
+    }
+    
+    // Insert to donation table
+    public function InsertToDonationTable($first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type, $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term){
+
+        // Ensure table exists before inserting
+        $this->ensureGreenDonationsTableExists();
+
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'green_donations';
+
+        $wpdb->query(
+            $wpdb->prepare(
+                "INSERT INTO $table_name (first_name, last_name, phone, email, igul_letova, id_number, page_id, payment_type, utm_campaign, utm_source, utm_medium, utm_content, utm_term) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                $first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type,
+                $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term
+            )
+        );
+    }
+
 
     public function getIframe($unique, $amount, $clientName, $email, $phone, $page){
         // echo("get Iframe start ....... <br>");
@@ -540,54 +607,6 @@
     }
 }
 
-function ensure_green_donations_table_exists() {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'green_donations';
-//    error_log('green donation table name is: ' . $table_name . "\n");
-    // Check if the table exists
-    if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) != $table_name ) {
-        error_log($table_name . ' table does not exist, creating it.' . "\n");
-        // Table does not exist, so create it
-        $sql = "CREATE TABLE $table_name (
-            `id` int(11) NOT NULL AUTO_INCREMENT,
-            `date` timestamp NOT NULL DEFAULT current_timestamp(),
-            `page_id` int(30) DEFAULT NULL,
-            `payment_type` char(10) DEFAULT NULL,
-            `first_name` varchar(30) DEFAULT NULL,
-            `last_name` varchar(30) DEFAULT NULL,
-            `email` varchar(40) DEFAULT NULL,
-            `phone` char(10) DEFAULT NULL,
-            `igul_letova` int(3) DEFAULT NULL,
-            `id_number` char(10) DEFAULT NULL,
-            `amount` int(5) DEFAULT NULL,
-            `token` varchar(40) DEFAULT NULL,
-            `exp` varchar(30) DEFAULT NULL,
-            `cc_holder` varchar(40) DEFAULT NULL,
-            `response` int(3) DEFAULT NULL,
-            `shovar` varchar(100) NOT NULL,
-            `card_type` varchar(100) NOT NULL,
-            `last_four` varchar(100) NOT NULL,
-            `tourist` int(3) NOT NULL,
-            `ccval` varchar(40) NOT NULL,
-            `sale_f_id` varchar(100) NOT NULL,
-            `icount_id` varchar(100) DEFAULT NULL,
-            `utm_campaign` varchar(100) NOT NULL,
-            `utm_source` varchar(100) NOT NULL,
-            `utm_medium` varchar(100) NOT NULL,
-            `utm_content` varchar(100) NOT NULL,
-            `utm_term` varchar(100) NOT NULL,
-            `payplus_callback_response` longtext DEFAULT NULL,
-            `transmited_to_sf` int(1) NOT NULL DEFAULT 0,
-            PRIMARY KEY (`id`)
-          ) AUTO_INCREMENT=12540 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=DYNAMIC;";
-
-        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-        dbDelta( $sql );
-//    } else {
-//        $total_items = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
-//        error_log($table_name . ' exists and has ' . $total_items . ' items.' . "\n");
-    }
-}
 
 
 function donation_gform_function($entry, $form) {
@@ -596,9 +615,9 @@ function donation_gform_function($entry, $form) {
     // echo "2******** donation_gform_function called **********<br>";
 
     // Debug echo at function start
-    echo "*** donation_gform_function started \n";
-    echo "*** Entry data: " . print_r($entry, true) . " \n";
-    echo "*** Form data: " . print_r($form, true) . " \n";
+    // echo "*** donation_gform_function started \n";
+    // echo "*** Entry data: " . print_r($entry, true) . " \n";
+    // echo "*** Form data: " . print_r($form, true) . " \n";
 
      // Get the values from the entry
      $record_id = rgar($entry, 'id');
@@ -609,22 +628,46 @@ function donation_gform_function($entry, $form) {
      $email = rgar($entry, '7');
      $phone = rgar($entry, '17');
      $amount = rgar($entry, '25');
+     $igul_letova = rgar($entry, '27');
+     $id_number = rgar($entry, '28');
+     $utm_campaign = rgar($entry, '19');
+     $utm_source = rgar($entry, '18');
+     $utm_medium = rgar($entry, '20');
+     $utm_content = rgar($entry, '24');
+     $utm_term = rgar($entry, '23');
+     $payment_type = rgar($entry, '29');
 
     // for debug only
-     echo "*** Retrieved values:<br>";
-     echo "*** Record Id: " . $record_id . " <br>";
-     echo "*** First Name: " . $first_name . " <br>";
-     echo "*** Last Name: " . $last_name . " <br>";
-     echo "*** Full Name: " . $name . " <br>";
-     echo "*** Email: " . $email . " <br>";
-     echo "*** Phone: " . $phone . " <br>";
-     echo "*** Amount: " . $amount . " <br>";
-     echo "*** Page: " . $page . " <br>";
-     echo "***************************************** <br>";
+     // echo "*** Retrieved values:<br>";
+     // echo "*** Record Id: " . $record_id . " <br>";
+     // echo "*** First Name: " . $first_name . " <br>";
+     // echo "*** Last Name: " . $last_name . " <br>";
+     // echo "*** Full Name: " . $name . " <br>";
+     // echo "*** Email: " . $email . " <br>";
+     // echo "*** Phone: " . $phone . " <br>";
+     // echo "*** Amount: " . $amount . " <br>";
+     // echo "*** Page: " . $page . " <br>";
+     // echo "***************************************** <br>";
      // ... end of debug echo
 
     $donation1 = new greenpeace_donation();
 
+    $donation1->InsertToDonationTable(
+        $first_name,
+        $last_name,
+        $phone,
+        $email,
+        $igul_letova,
+        $id_number,
+        $page,
+        $payment_type,
+        $utm_campaign,
+        $utm_source,
+        $utm_medium,
+        $utm_content,
+        $utm_term
+    );
+    
     $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
 
     echo 'scrolling to iframe_top anchor & fix width for mobile 1<br>';
