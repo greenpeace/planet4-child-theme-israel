@@ -55,7 +55,7 @@
         //add_filter('show_admin_bar', '__return_false');
         add_action( 'admin_menu', array($this,'register_my_custom_menu_page') );
         // add_action('wp', array($this,'defrayal_operations'));
-        $this->ensureGreenDonationsTableExists(); // create the table if it doesn't exist        
+    // moved to be before insert    $this->ensureGreenDonationsTableExists(); // create the table if it doesn't exist        
         $this->api = new PayPlus();
     } 
 
@@ -448,7 +448,7 @@
         global $wpdb;
         $table_name = $wpdb->prefix . 'green_donations';
  
-        error_log('ensureGreenDonationsTableExists: green donation table name is: ' . $table_name . "\n");
+    //    error_log('ensureGreenDonationsTableExists: green donation table name is: ' . $table_name . "\n");
 
         // Check if the table exists
         if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) != $table_name ) {
@@ -498,10 +498,12 @@
     // Insert to donation table
     public function insertToDonationTable($first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type, $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term){
 
+        $this->ensureGreenDonationsTableExists(); // create the table if it doesn't exist        
+
         global $wpdb;
         $table_name = $wpdb->prefix . 'green_donations';
 
-        error_log('insertToDonationTable: green donation table name is: ' . $table_name . "\n");
+        error_log("insertToDonationTable: green donation table name is: " . $table_name . "\n");
 
         $wpdb->query(
             $wpdb->prepare(
@@ -629,7 +631,7 @@ function donation_gform_function($entry, $form) {
      $email = rgar($entry, '7');
      $phone = rgar($entry, '17');
      $amount = rgar($entry, '25');
-     $igul_letova = rgar($entry, '27');
+     $igul_letova = rgar($entry, '27') ? true : false;
      $id_number = rgar($entry, '28');
      $utm_campaign = rgar($entry, '19');
      $utm_source = rgar($entry, '18');
