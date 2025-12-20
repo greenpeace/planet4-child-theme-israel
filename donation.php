@@ -57,7 +57,7 @@
         // add_action('wp', array($this,'defrayal_operations'));
         $this->ensureGreenDonationsTableExists(); // create the table if it doesn't exist        
         $this->api = new PayPlus();
-    }
+    } 
 
     public function register_my_custom_menu_page() {
         add_menu_page( 'Donations', 'תרומות', 'manage_options', 'greenpeace/donations.php', array($this,'donateTable'), 'dashicons-thumbs-up', 10 );
