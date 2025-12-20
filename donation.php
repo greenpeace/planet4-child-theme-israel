@@ -512,7 +512,7 @@
     }
 
 
-    public function getIframe($unique, $amount, $clientName, $email, $phone, $page){
+    public function getIframe($unique, $amount, $clientName, $email, $phone, $page, $payment_type){
         // echo("get Iframe start ....... <br>");
         // error_log("*** get Iframe start ......\n");
 
@@ -522,9 +522,9 @@
         //     $language_code = 'en';
         // }
 
-        // $recurring = (get_field("recurrent", $page));
-        $recurring = "recurrent"; // ignore the wp field - to be replaced by form field value
-
+        // $recurring = (get_field("recurrent", $page)); // ignore the wp field - to be replaced by form field value
+        $recurring = ($payment_type == "recurring");
+        
         $data = [
             "payment_page_uid" => "0b06263c-bc1b-48e2-92f6-bf60cfd38951", //prod terminal: f01f5630-73f7-4955-a4a5-b408247056ca
             // "payment_page_uid" => "f01f5630-73f7-4955-a4a5-b408247056ca", //test terminal: da8dc348-aae3-43c2-ad9b-6b7a7785a8d2
@@ -635,7 +635,7 @@ function donation_gform_function($entry, $form) {
      $utm_medium = rgar($entry, '20');
      $utm_content = rgar($entry, '24');
      $utm_term = rgar($entry, '23');
-     $payment_type = rgar($entry, '29');
+     $payment_type = rgar($entry, '29') ? "recurring" : "one-off";
 
     // for debug only
      // echo "*** Retrieved values:<br>";
@@ -668,7 +668,7 @@ function donation_gform_function($entry, $form) {
         $utm_term
     );
     
-    $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page);
+    $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page, $payment_type);
 
     echo 'scrolling to iframe_top anchor & fix width for mobile 1<br>';
 
