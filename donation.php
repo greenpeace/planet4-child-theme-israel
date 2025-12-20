@@ -55,7 +55,8 @@
         //add_filter('show_admin_bar', '__return_false');
         add_action( 'admin_menu', array($this,'register_my_custom_menu_page') );
         // add_action('wp', array($this,'defrayal_operations'));
-        $this->ensureGreenDonationsTableExists(); // create the table if it doesn't exist        $this->api = new PayPlus();
+        $this->ensureGreenDonationsTableExists(); // create the table if it doesn't exist        
+        $this->api = new PayPlus();
     }
 
     public function register_my_custom_menu_page() {
@@ -524,7 +525,7 @@
 
         // $recurring = (get_field("recurrent", $page)); // ignore the wp field - to be replaced by form field value
         $recurring = ($payment_type == "recurring");
-        
+
         $data = [
             "payment_page_uid" => "0b06263c-bc1b-48e2-92f6-bf60cfd38951", //prod terminal: f01f5630-73f7-4955-a4a5-b408247056ca
             // "payment_page_uid" => "f01f5630-73f7-4955-a4a5-b408247056ca", //test terminal: da8dc348-aae3-43c2-ad9b-6b7a7785a8d2
