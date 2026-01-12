@@ -44,9 +44,10 @@ function set_radio_choices_from_fields( $form ) {
     $val_AA = rgpost( "input_{$field_id_AA}" );
     $val_BB = rgpost( "input_{$field_id_BB}" );
     $val_CC = rgpost( "input_{$field_id_CC}" );
-    $val_AAA = $_POST["input_{$field_id_AA}"];
+    $val_AAA = rgpost( (string)$field_id_AA );
+    $val_BBB = rgpost( (string)$field_id_BB );
 
-    error_log("********* Field values - AA: " . $val_AA . ", AAA: " . $val_AAA . ", BB: " . $val_BB . ", CC: " . $val_CC . " **********\n" );
+    error_log("********* Field values - AA: " . $val_AA . ", AAA: " . $val_AAA . ", BBB: " . $val_BBB . ", CC: " . $val_CC . " **********\n" );
 
     foreach ( $form['fields'] as &$field ) {
         if ( $field->id == $field_id_radio ) {
