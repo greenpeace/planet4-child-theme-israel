@@ -31,6 +31,7 @@ add_filter( 'gform_pre_submission_filter_60', 'set_radio_choices_from_fields' );
 add_filter( 'gform_admin_pre_render_60', 'set_radio_choices_from_fields' );
 
 function set_radio_choices_from_fields( $form ) {
+    error_log("********* set_radio_choices_from_fields function called **********\n" );
 
     // Replace with your actual field IDs
     $field_id_radio = 4; // radio button field
