@@ -29,6 +29,7 @@ add_filter( 'gform_pre_render_60', 'set_radio_choices_from_fields' );
 add_filter( 'gform_pre_validation_60', 'set_radio_choices_from_fields' );
 add_filter( 'gform_pre_submission_filter_60', 'set_radio_choices_from_fields' );
 add_filter( 'gform_admin_pre_render_60', 'set_radio_choices_from_fields' );
+error_log("********* gform_pre_render_60 filter added **********\n" );
 
 function set_radio_choices_from_fields( $form ) {
     error_log("********* set_radio_choices_from_fields function called **********\n" );
@@ -76,8 +77,10 @@ function set_radio_choices_from_fields( $form ) {
 }
 
 //Add “other” checks: 
-add_filter( 'gform_field_validation_60_4', 'validate_other_choice', 10, 4 );
+add_filter( 'gform_field_validation_60_25', 'validate_other_choice', 10, 4 );
 function validate_other_choice( $result, $value, $form, $field ) {
+
+    error_log("********* validate_other_choice function called **********\n" );
 
     // Get DD field value (replace 8 with DD field ID)
     $dd_value = rgpost( 'input_30' );
