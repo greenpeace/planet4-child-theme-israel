@@ -182,11 +182,14 @@
 
     public function enqueue_script(){
 
+        // Use unique handle to avoid overwriting the master theme's 'main' script
+        $script_handle = 'gp-israel-donation';
+
         if ( is_page(564) ){
-            wp_enqueue_script( "main", get_stylesheet_directory_uri() ."/mainen.js", array('jquery'), filemtime(__DIR__ ."/main.js"), true );
+            wp_enqueue_script( $script_handle, get_stylesheet_directory_uri() ."/mainen.js", array('jquery'), filemtime(__DIR__ ."/main.js"), true );
         }
         else{
-            wp_enqueue_script( "main", get_stylesheet_directory_uri() ."/main.js", array('jquery'), filemtime(__DIR__ ."/main.js"), true );
+            wp_enqueue_script( $script_handle, get_stylesheet_directory_uri() ."/main.js", array('jquery'), filemtime(__DIR__ ."/main.js"), true );
         }
 
 
@@ -204,7 +207,7 @@
             'minSum' => 50, //get_post_meta($postID, "min_sum" )[0],
             'payment_type' => $recurring
         );
-        wp_localize_script( 'main', 'greenpeace_donation_object', $params );
+        wp_localize_script( $script_handle, 'greenpeace_donation_object', $params );
     }
 
     public function printUser(){
@@ -639,6 +642,9 @@ function donation_gform_function($entry, $form) {
      $utm_content = rgar($entry, '24');
      $utm_term = rgar($entry, '23');
      $payment_type = rgar($entry, '29') ? "recurring" : "one-off";
+
+
+     error_log("donation_gform_function - payment type : " . rgar($entry, '29') . "\n" );
 
     // for debug only
      // echo "*** Retrieved values:<br>";

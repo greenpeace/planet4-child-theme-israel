@@ -20,6 +20,84 @@ define("REDIRECT_URI", "https://www-dev.greenpeace.org/israel/receive-defrayal/"
 
 // end of donation functunality code (added by ofer or 06-Jun-2025)
 // *******************************************************
+/**
+ * Gravity Forms: Change radio button options based on other field values - added by Ofer Or 12-01-2026
+ */
+
+// Replace 123 with your form ID
+add_filter( 'gform_pre_render_60', 'set_radio_choices_from_fields' );
+add_filter( 'gform_pre_validation_60', 'set_radio_choices_from_fields' );
+add_filter( 'gform_pre_submission_filter_60', 'set_radio_choices_from_fields' );
+add_filter( 'gform_admin_pre_render_60', 'set_radio_choices_from_fields' );
+
+function set_radio_choices_from_fields( $form ) {
+
+    // Replace with your actual field IDs
+    $field_id_radio = 4; // radio button field
+    $field_id_AA    = 31; // text field AA
+    $field_id_BB    = 32; // text field BB
+    $field_id_CC    = 33; // text field CC
+
+    // Get submitted values if available
+    $val_AA = rgpost( "input_{$field_id_AA}" );
+    $val_BB = rgpost( "input_{$field_id_BB}" );
+    $val_CC = rgpost( "input_{$field_id_CC}" );
+
+    foreach ( $form['fields'] as &$field ) {
+        if ( $field->id == $field_id_radio ) {
+            // Build choices dynamically from AA, BB, CC
+            $choices = array();
+
+            if ( !empty( $val_AA ) ) {
+                $choices[] = array( 'text' => $val_AA, 'value' => $val_AA );
+            }
+            if ( !empty( $val_BB ) ) {
+                $choices[] = array( 'text' => $val_BB, 'value' => $val_BB );
+            }
+            if ( !empty( $val_CC ) ) {
+                $choices[] = array( 'text' => $val_CC, 'value' => $val_CC );
+            }
+
+            // If no values yet (first render), you can set defaults
+            if ( empty( $choices ) ) {
+                $choices = array(
+                    array( 'text' => 'Default A', 'value' => 'Default A' ),
+                    array( 'text' => 'Default B', 'value' => 'Default B' ),
+                    array( 'text' => 'Default C', 'value' => 'Default C' ),
+                );
+            }
+
+            $field->choices = $choices;
+        }
+    }
+
+    return $form;
+}
+
+//Add “other” checks: 
+add_filter( 'gform_field_validation_60_4', 'validate_other_choice', 10, 4 );
+function validate_other_choice( $result, $value, $form, $field ) {
+
+    // Get DD field value (replace 8 with DD field ID)
+    $dd_value = rgpost( 'input_30' );
+
+    // If user selected "Other", check the entered value
+    if ( $value == 'Other' ) {
+        // Assume user provides "Other" value in a text field (ID 9)
+        $other_value = rgpost( 'input_25' );
+
+        if ( intval( $other_value ) <= intval( $dd_value ) ) {
+            $result['is_valid'] = false;
+            $result['message']  = 'The "Other" value must be greater than field DD.';
+        }
+    }
+
+    return $result;
+}
+
+// end of Change radio button options functunality code (added by ofer or 12-01-2026)
+// *******************************************************
+
 
 
 add_action( 'wp_enqueue_scripts', 'enqueue_child_styles', 99);
