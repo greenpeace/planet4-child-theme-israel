@@ -21,49 +21,41 @@ define("REDIRECT_URI", "https://www-dev.greenpeace.org/israel/receive-defrayal/"
 // end of donation functunality code (added by ofer or 06-Jun-2025)
 // *******************************************************
 /**
- * Gravity Forms: Change radio button options based on other field values - added by Ofer Or 12-01-2026
+ * Gravity Forms: Change radio button options based on short code data - added by Ofer Or 12-01-2026
  */
 
-add_filter( 'gform_pre_render_60', 'set_radio_choices_from_shortcode' );
-add_filter( 'gform_pre_validation_60', 'set_radio_choices_from_shortcode' );
+ add_filter( 'gform_pre_render_60', 'set_radio_choices_from_shortcode' );
+ add_filter( 'gform_pre_validation_60', 'set_radio_choices_from_shortcode' );
  
-function set_radio_choices_from_shortcode( $form ) {
+ function set_radio_choices_from_shortcode( $form ) {
  
-    $field_id_radio = 25;
+     $field_id_radio = 25;
  
-    // Read values passed via field_values in the shortcode
-    $amount1 = rgget( 'amount1' );
-    $amount2 = rgget( 'amount2' );
-    $amount3 = rgget( 'amount3' );
+     // Read the dynamically populated values from the fields themselves
+     $amount1 = GFFormsModel::get_field_value( GFFormsModel::get_field( $form, 36 ) );
+     $amount2 = GFFormsModel::get_field_value( GFFormsModel::get_field( $form, 32 ) );
+     $amount3 = GFFormsModel::get_field_value( GFFormsModel::get_field( $form, 33 ) );
  
-    error_log("Shortcode values: amount1=$amount1 | amount2=$amount2 | amount3=$amount3");
+     error_log("Shortcode values: amount1=$amount1 | amount2=$amount2 | amount3=$amount3");
  
-    foreach ( $form['fields'] as &$field ) {
+     foreach ( $form['fields'] as &$field ) {
  
-        if ( $field->id == $field_id_radio ) {
+         if ( $field->id == $field_id_radio ) {
  
-            $choices = array();
+             $choices = array();
  
-            if ( $amount1 ) $choices[] = array( 'text' => $amount1, 'value' => $amount1 );
-            if ( $amount2 ) $choices[] = array( 'text' => $amount2, 'value' => $amount2 );
-            if ( $amount3 ) $choices[] = array( 'text' => $amount3, 'value' => $amount3 );
+             if ( $amount1 ) $choices[] = array( 'text' => $amount1, 'value' => $amount1 );
+             if ( $amount2 ) $choices[] = array( 'text' => $amount2, 'value' => $amount2 );
+             if ( $amount3 ) $choices[] = array( 'text' => $amount3, 'value' => $amount3 );
  
-            // Fallback if shortcode didn't pass values
-            if ( empty( $choices ) ) {
-                $choices = array(
-                    array( 'text' => '50', 'value' => '50' ),
-                    array( 'text' => '100', 'value' => '100' ),
-                    array( 'text' => '200', 'value' => '200' ),
-                );
-            }
+             $field->choices = $choices;
+         }
+     }
  
-            $field->choices = $choices;
-        }
-    }
+     return $form;
+ }
  
-    return $form;
-}
- 
+  
 //Add “other” checks: 
 add_filter( 'gform_field_validation_60_25', 'validate_other_choice', 10, 4 );
 function validate_other_choice( $result, $value, $form, $field ) {
