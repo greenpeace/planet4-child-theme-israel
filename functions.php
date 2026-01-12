@@ -24,62 +24,46 @@ define("REDIRECT_URI", "https://www-dev.greenpeace.org/israel/receive-defrayal/"
  * Gravity Forms: Change radio button options based on other field values - added by Ofer Or 12-01-2026
  */
 
-// Replace 123 with your form ID
-add_filter( 'gform_pre_render_60', 'set_radio_choices_from_fields' );
-add_filter( 'gform_pre_validation_60', 'set_radio_choices_from_fields' );
-add_filter( 'gform_pre_submission_filter_60', 'set_radio_choices_from_fields' );
-add_filter( 'gform_admin_pre_render_60', 'set_radio_choices_from_fields' );
-error_log("********* gform_pre_render_60 filter added **********\n" );
-
-function set_radio_choices_from_fields( $form ) {
-    error_log("********* set_radio_choices_from_fields function called **********\n" );
-
-    // Replace with your actual field IDs
-    $field_id_radio = 25; // radio button field
-    $field_id_AA    = 36; // text field AA
-    $field_id_BB    = 32; // text field BB
-    $field_id_CC    = 33; // text field CC
-
-    // Get submitted values if available
-    $val_AA = rgpost( "input_{$field_id_AA}" );
-    $val_BB = rgpost( "input_{$field_id_BB}" );
-    $val_CC = rgpost( "input_{$field_id_CC}" );
-    $val_AAA = rgpost( (string)$field_id_AA );
-    $val_BBB = rgpost( (string)$field_id_BB );
-
-    error_log("********* Field values - AA: " . $val_AA . ", AAA: " . $val_AAA . ", BBB: " . $val_BBB . ", CC: " . $val_CC . " **********\n" );
-
+add_filter( 'gform_pre_render_60', 'set_radio_choices_from_shortcode' );
+add_filter( 'gform_pre_validation_60', 'set_radio_choices_from_shortcode' );
+ 
+function set_radio_choices_from_shortcode( $form ) {
+ 
+    $field_id_radio = 25;
+ 
+    // Read values passed via field_values in the shortcode
+    $amount1 = rgget( 'amount1' );
+    $amount2 = rgget( 'amount2' );
+    $amount3 = rgget( 'amount3' );
+ 
+    error_log("Shortcode values: amount1=$amount1 | amount2=$amount2 | amount3=$amount3");
+ 
     foreach ( $form['fields'] as &$field ) {
+ 
         if ( $field->id == $field_id_radio ) {
-            // Build choices dynamically from AA, BB, CC
+ 
             $choices = array();
-
-            if ( !empty( $val_AA ) ) {
-                $choices[] = array( 'text' => $val_AA, 'value' => $val_AA );
-            }
-            if ( !empty( $val_BB ) ) {
-                $choices[] = array( 'text' => $val_BB, 'value' => $val_BB );
-            }
-            if ( !empty( $val_CC ) ) {
-                $choices[] = array( 'text' => $val_CC, 'value' => $val_CC );
-            }
-
-            // If no values yet (first render), you can set defaults
+ 
+            if ( $amount1 ) $choices[] = array( 'text' => $amount1, 'value' => $amount1 );
+            if ( $amount2 ) $choices[] = array( 'text' => $amount2, 'value' => $amount2 );
+            if ( $amount3 ) $choices[] = array( 'text' => $amount3, 'value' => $amount3 );
+ 
+            // Fallback if shortcode didn't pass values
             if ( empty( $choices ) ) {
                 $choices = array(
-                    array( 'text' => 'Default A', 'value' => 'Default A' ),
-                    array( 'text' => 'Default B', 'value' => 'Default B' ),
-                    array( 'text' => 'Default C', 'value' => 'Default C' ),
+                    array( 'text' => '50', 'value' => '50' ),
+                    array( 'text' => '100', 'value' => '100' ),
+                    array( 'text' => '200', 'value' => '200' ),
                 );
             }
-
+ 
             $field->choices = $choices;
         }
     }
-
+ 
     return $form;
 }
-
+ 
 //Add “other” checks: 
 add_filter( 'gform_field_validation_60_25', 'validate_other_choice', 10, 4 );
 function validate_other_choice( $result, $value, $form, $field ) {
