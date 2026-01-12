@@ -24,37 +24,101 @@ define("REDIRECT_URI", "https://www-dev.greenpeace.org/israel/receive-defrayal/"
  * Gravity Forms: Change radio button options based on short code data - added by Ofer Or 12-01-2026
  */
 
- add_filter( 'gform_pre_render_60', 'set_radio_choices_from_shortcode' );
- add_filter( 'gform_pre_validation_60', 'set_radio_choices_from_shortcode' );
- 
- function set_radio_choices_from_shortcode( $form ) {
- 
-     $field_id_radio = 25;
- 
-     // Read the dynamically populated values from the fields themselves
-     $amount1 = GFFormsModel::get_field_value( GFFormsModel::get_field( $form, 36 ) );
-     $amount2 = GFFormsModel::get_field_value( GFFormsModel::get_field( $form, 32 ) );
-     $amount3 = GFFormsModel::get_field_value( GFFormsModel::get_field( $form, 33 ) );
- 
-     error_log("Shortcode values: amount1=$amount1 | amount2=$amount2 | amount3=$amount3");
- 
-     foreach ( $form['fields'] as &$field ) {
- 
-         if ( $field->id == $field_id_radio ) {
- 
-             $choices = array();
- 
-             if ( $amount1 ) $choices[] = array( 'text' => $amount1, 'value' => $amount1 );
-             if ( $amount2 ) $choices[] = array( 'text' => $amount2, 'value' => $amount2 );
-             if ( $amount3 ) $choices[] = array( 'text' => $amount3, 'value' => $amount3 );
- 
-             $field->choices = $choices;
-         }
-     }
- 
-     return $form;
- }
- 
+add_filter( 'gform_pre_render_60', 'set_radio_choices_from_shortcode' );
+add_filter( 'gform_pre_validation_60', 'set_radio_choices_from_shortcode' );
+
+function set_radio_choices_from_shortcode( $form ) {
+
+    $field_id_radio = 25;
+    $source_ids = array(
+        'amount1' => 36, // field that should receive amount1
+        'amount2' => 32, // field that should receive amount2
+        'amount3' => 33, // field that should receive amount3
+    );
+
+    // helper to find a field object by id
+    $get_field_by_id = function( $form, $id ) {
+        foreach ( $form['fields'] as $f ) {
+            if ( (int) $f->id === (int) $id ) {
+                return $f;
+            }
+        }
+        return null;
+    };
+
+    // collect values with robust fallbacks
+    $values = array();
+    foreach ( $source_ids as $key => $fid ) {
+
+        $field = $get_field_by_id( $form, $fid );
+
+        // default empty
+        $val = '';
+
+        if ( $field ) {
+
+            // 1) If the field has an inputName (parameter name for dynamic population), try rgget()
+            if ( ! empty( $field->inputName ) ) {
+                $val = rgget( $field->inputName );
+            }
+
+            // 2) If still empty, check the field's defaultValue (Gravity may put shortcode value here)
+            if ( empty( $val ) && isset( $field->defaultValue ) && $field->defaultValue !== '' ) {
+                $val = $field->defaultValue;
+            }
+
+            // 3) If still empty, try GFFormsModel::get_field_value (works for many field types)
+            if ( empty( $val ) && class_exists( 'GFFormsModel' ) ) {
+                $maybe = GFFormsModel::get_field_value( $field );
+                if ( ! empty( $maybe ) ) {
+                    $val = $maybe;
+                }
+            }
+
+            // 4) As a last resort, try rgpost for single-input fields
+            if ( empty( $val ) ) {
+                $val = rgpost( "input_{$fid}" );
+            }
+
+            // store
+            $values[ $key ] = $val;
+
+            // debug: log where we found it
+            error_log( "GF DEBUG: field id {$fid} (inputName: " . rgar( $field, 'inputName' ) . ") resolved to: " . var_export( $val, true ) );
+        } else {
+            error_log( "GF DEBUG: field id {$fid} not found in form object." );
+            $values[ $key ] = '';
+        }
+    }
+
+    error_log( "Shortcode values resolved: amount1={$values['amount1']} | amount2={$values['amount2']} | amount3={$values['amount3']}" );
+
+    // Now set radio choices
+    foreach ( $form['fields'] as &$field ) {
+        if ( $field->id == $field_id_radio ) {
+
+            $choices = array();
+
+            if ( ! empty( $values['amount1'] ) ) $choices[] = array( 'text' => $values['amount1'], 'value' => $values['amount1'] );
+            if ( ! empty( $values['amount2'] ) ) $choices[] = array( 'text' => $values['amount2'], 'value' => $values['amount2'] );
+            if ( ! empty( $values['amount3'] ) ) $choices[] = array( 'text' => $values['amount3'], 'value' => $values['amount3'] );
+
+            // fallback defaults if nothing provided
+            if ( empty( $choices ) ) {
+                $choices = array(
+                    array( 'text' => '50', 'value' => '50' ),
+                    array( 'text' => '100', 'value' => '100' ),
+                    array( 'text' => '200', 'value' => '200' ),
+                );
+            }
+
+            $field->choices = $choices;
+        }
+    }
+
+    return $form;
+}
+
   
 //Add “other” checks: 
 add_filter( 'gform_field_validation_60_25', 'validate_other_choice', 10, 4 );
