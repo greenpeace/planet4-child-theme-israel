@@ -118,7 +118,11 @@ function validate_other_choice( $result, $value, $form, $field ) {
     return $result;
 }
 
-// end of Change radio button options functunality code (added by ofer or 12-01-2026)
+// Gravity Forms after-submission hook for form id 60 - added by Ofer Or 13-6-2025
+// error_log("********* donation_gform_function added **********\n" );
+add_action('gform_after_submission_60', 'donation_gform_function', 10, 2);
+
+// end of Change for donation form functunality code (added by ofer or 12-01-2026)
 // *******************************************************
 
 
@@ -191,10 +195,6 @@ function my_autocorrect_domain($domain) {
     }
     return $domain; // No change by default
 }
-
-// Gravity Forms after-submission hook for form id 60 - added by Ofer Or 13-6-2025
-// error_log("********* donation_gform_function added **********\n" );
-add_action('gform_after_submission_60', 'donation_gform_function', 10, 2);
 
 // Gravity Forms HubSpot feed pre-save hook to set language to Hebrew for new forms
 add_filter( 'gform_hubspot_form_object_pre_save_feed', function ( $hs_form, $feed_meta, $form, $existing_form ) {

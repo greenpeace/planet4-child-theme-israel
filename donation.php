@@ -199,6 +199,7 @@
         $postID = $post->ID;
         // temp $recurring = (!get_field("recurrent"))? "one-off" : "recurring";
         $recurring = "recurring"; // ignore the wp field
+        $recurring = get_post_meta( $postID, 'p4_israel_donation_type', true );
 
         $params = array(
             'ajaxurl' => admin_url('admin-ajax.php'),
@@ -625,26 +626,30 @@ function donation_gform_function($entry, $form) {
     // echo "*** Entry data: " . print_r($entry, true) . " \n";
     // echo "*** Form data: " . print_r($form, true) . " \n";
 
-     // Get the values from the entry
-     $record_id = rgar($entry, 'id');
-     $page = rgar($entry, 'source_id');
-     $first_name = rgar($entry, '1');
-     $last_name = rgar($entry, '3');
-     $name = $first_name . " " . $last_name;
-     $email = rgar($entry, '7');
-     $phone = rgar($entry, '17');
-     $amount = rgar($entry, '25');
-     $igul_letova = rgar($entry, '27') ? true : false;
-     $id_number = rgar($entry, '28');
-     $utm_campaign = rgar($entry, '19');
-     $utm_source = rgar($entry, '18');
-     $utm_medium = rgar($entry, '20');
-     $utm_content = rgar($entry, '24');
-     $utm_term = rgar($entry, '23');
-     $payment_type = rgar($entry, '29') ? "recurring" : "one-off";
+    // Get the values from the entry
+    $record_id = rgar($entry, 'id');
+    $page = rgar($entry, 'source_id');
+    $first_name = rgar($entry, '1');
+    $last_name = rgar($entry, '3');
+    $name = $first_name . " " . $last_name;
+    $email = rgar($entry, '7');
+    $phone = rgar($entry, '17');
+    $amount = rgar($entry, '25');
+    $igul_letova = rgar($entry, '27') ? true : false;
+    $id_number = rgar($entry, '28');
+    $utm_campaign = rgar($entry, '19');
+    $utm_source = rgar($entry, '18');
+    $utm_medium = rgar($entry, '20');
+    $utm_content = rgar($entry, '24');
+    $utm_term = rgar($entry, '23');
+     
+    global $post;
+    $postID = $post->ID;
+    // temp $recurring = (!get_field("recurrent"))? "one-off" : "recurring";
+        $recurring = get_post_meta( $postID, 'p4_israel_donation_type', true );
+        $payment_type = ($recurring === "recurring") ? "recurring" : "one-off";
 
-
-     error_log("donation_gform_function - payment type : " . rgar($entry, '29') . "\n" );
+     error_log("donation_gform_function - payment type : " . $payment_type . "\n" );
 
     // for debug only
      // echo "*** Retrieved values:<br>";
