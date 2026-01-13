@@ -112,6 +112,7 @@ function validate_other_choice( $result, $value, $form, $field ) {
     if ( intval( $value ) < intval( $min_amount ) ) {
         $result['is_valid'] = false;
         $result['message']  = 'The donation amount must be greater than the minimum amount.';
+        $result['message']  = 'סכום המינימום לתרומה הוא ' . $min_amount . ' שח.';
     }
 
     return $result;
