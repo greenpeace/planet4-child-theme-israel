@@ -21,7 +21,7 @@ define("REDIRECT_URI", "https://www-dev.greenpeace.org/israel/receive-defrayal/"
 // end of donation functunality code (added by ofer or 06-Jun-2025)
 // *******************************************************
 /**
- * Gravity Forms: Change radio button options based on short code data - added by Ofer Or 12-01-2026
+ * Gravity Forms: Change radio button options based on native custom fields value - added by Ofer Or 12-01-2026
  */
 
 add_filter( 'gform_pre_render_60', 'set_radio_choices_from_shortcode' );
@@ -41,20 +41,29 @@ function set_radio_choices_from_shortcode( $form ) {
      
      // Read native WordPress custom fields
      $values = array(
-         'amount1' => get_post_meta( $post_id, 'donation_amount_1', true ),
-         'amount2' => get_post_meta( $post_id, 'donation_amount_2', true ),
-         'amount3' => get_post_meta( $post_id, 'donation_amount_3', true ),
+         'amount1' => get_post_meta( $post_id, 'p4_israel_donation_amount_1', true ),
+         'amount2' => get_post_meta( $post_id, 'p4_israel_donation_amount_2', true ),
+         'amount3' => get_post_meta( $post_id, 'p4_israel_donation_amount_3', true ),
      );
      
+     // Read donation type custom field
+     $donation_type = get_post_meta( $post_id, 'p4_israel_donation_type', true );
+     
      // Debug logging
-     error_log( "Custom field values - donation_amount_1: " . $values['amount1'] . " | donation_amount_2: " . $values['amount2'] . " | donation_amount_3: " . $values['amount3'] );
      error_log( "Post ID used: " . $post_id );
- 
-    error_log( "Shortcode values resolved: amount1={$values['amount1']} | amount2={$values['amount2']} | amount3={$values['amount3']}" );
+     error_log( "Radio button values : amount1={$values['amount1']} | amount2={$values['amount2']} | amount3={$values['amount3']}" );
+     error_log( "Donation type: " . $donation_type );
 
     // Now set radio choices
     foreach ( $form['fields'] as &$field ) {
         if ( $field->id == $field_id_radio ) {
+            
+            // Set field title based on donation type
+            if ( $donation_type === 'recurring' ) {
+                $field->label = 'סכום תרומה חודשי:';
+            } else {
+                $field->label = 'סכום התרומה החד פעמית:';
+            }
 
             $choices = array();
 
@@ -77,26 +86,32 @@ function set_radio_choices_from_shortcode( $form ) {
 
     return $form;
 }
-
   
-//Add “other” checks: 
+/**
+ * Gravity Forms: donation amount validation based on native custom fields value - added by Ofer Or 12-01-2026
+ */ 
 add_filter( 'gform_field_validation_60_25', 'validate_other_choice', 10, 4 );
 function validate_other_choice( $result, $value, $form, $field ) {
 
     error_log("********* validate_other_choice function called **********\n" );
 
-    // Get DD field value (replace 8 with DD field ID)
-    $dd_value = rgpost( 'input_30' );
+    $field_id_radio = 25;
+     // Get current post/page ID
+     global $post;
+     $post_id = $post ? $post->ID : get_the_ID();
+     
+     // If no post ID, try to get it from the form's page ID
+     if ( empty( $post_id ) && isset( $form['pageId'] ) ) {
+         $post_id = $form['pageId'];
+     }
+     
+     // Read native WordPress custom fields
+     $min_amount = get_post_meta( $post_id, 'p4_israel_donation_min_amount', true );
+     error_log("********* Min amount: " . $min_amount . " **********\n" );
 
-    // If user selected "Other", check the entered value
-    if ( $value == 'Other' ) {
-        // Assume user provides "Other" value in a text field (ID 9)
-        $other_value = rgpost( 'input_25' );
-
-        if ( intval( $other_value ) <= intval( $dd_value ) ) {
-            $result['is_valid'] = false;
-            $result['message']  = 'The "Other" value must be greater than field DD.';
-        }
+    if ( intval( $value ) < intval( $min_amount ) ) {
+        $result['is_valid'] = false;
+        $result['message']  = 'The donation amount must be greater than the minimum amount.';
     }
 
     return $result;
