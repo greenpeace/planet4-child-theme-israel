@@ -30,67 +30,26 @@ add_filter( 'gform_pre_validation_60', 'set_radio_choices_from_shortcode' );
 function set_radio_choices_from_shortcode( $form ) {
 
     $field_id_radio = 25;
-    $source_ids = array(
-        'amount1' => 36, // field that should receive amount1
-        'amount2' => 32, // field that should receive amount2
-        'amount3' => 33, // field that should receive amount3
-    );
-
-    // helper to find a field object by id
-    $get_field_by_id = function( $form, $id ) {
-        foreach ( $form['fields'] as $f ) {
-            if ( (int) $f->id === (int) $id ) {
-                return $f;
-            }
-        }
-        return null;
-    };
-
-    // collect values with robust fallbacks
-    $values = array();
-    foreach ( $source_ids as $key => $fid ) {
-
-        $field = $get_field_by_id( $form, $fid );
-
-        // default empty
-        $val = '';
-
-        if ( $field ) {
-
-            // 1) If the field has an inputName (parameter name for dynamic population), try rgget()
-            if ( ! empty( $field->inputName ) ) {
-                $val = rgget( $field->inputName );
-            }
-
-            // 2) If still empty, check the field's defaultValue (Gravity may put shortcode value here)
-            if ( empty( $val ) && isset( $field->defaultValue ) && $field->defaultValue !== '' ) {
-                $val = $field->defaultValue;
-            }
-
-            // 3) If still empty, try GFFormsModel::get_field_value (works for many field types)
-            if ( empty( $val ) && class_exists( 'GFFormsModel' ) ) {
-                $maybe = GFFormsModel::get_field_value( $field );
-                if ( ! empty( $maybe ) ) {
-                    $val = $maybe;
-                }
-            }
-
-            // 4) As a last resort, try rgpost for single-input fields
-            if ( empty( $val ) ) {
-                $val = rgpost( "input_{$fid}" );
-            }
-
-            // store
-            $values[ $key ] = $val;
-
-            // debug: log where we found it
-            error_log( "GF DEBUG: field id {$fid} (inputName: " . rgar( $field, 'inputName' ) . ") resolved to: " . var_export( $val, true ) );
-        } else {
-            error_log( "GF DEBUG: field id {$fid} not found in form object." );
-            $values[ $key ] = '';
-        }
-    }
-
+     // Get current post/page ID
+     global $post;
+     $post_id = $post ? $post->ID : get_the_ID();
+     
+     // If no post ID, try to get it from the form's page ID
+     if ( empty( $post_id ) && isset( $form['pageId'] ) ) {
+         $post_id = $form['pageId'];
+     }
+     
+     // Read native WordPress custom fields
+     $values = array(
+         'amount1' => get_post_meta( $post_id, 'donation_amout_1', true ),
+         'amount2' => get_post_meta( $post_id, 'donation_amout_2', true ),
+         'amount3' => get_post_meta( $post_id, 'donation_amout_3', true ),
+     );
+     
+     // Debug logging
+     error_log( "Custom field values - donation_amout_1: " . $values['amount1'] . " | donation_amout_2: " . $values['amount2'] . " | donation_amout_3: " . $values['amount3'] );
+     error_log( "Post ID used: " . $post_id );
+ 
     error_log( "Shortcode values resolved: amount1={$values['amount1']} | amount2={$values['amount2']} | amount3={$values['amount3']}" );
 
     // Now set radio choices
