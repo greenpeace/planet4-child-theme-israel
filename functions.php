@@ -41,13 +41,13 @@ function set_radio_choices_from_shortcode( $form ) {
      
      // Read native WordPress custom fields
      $values = array(
-         'amount1' => get_post_meta( $post_id, 'donation_amout_1', true ),
-         'amount2' => get_post_meta( $post_id, 'donation_amout_2', true ),
-         'amount3' => get_post_meta( $post_id, 'donation_amout_3', true ),
+         'amount1' => get_post_meta( $post_id, 'donation_amount_1', true ),
+         'amount2' => get_post_meta( $post_id, 'donation_amount_2', true ),
+         'amount3' => get_post_meta( $post_id, 'donation_amount_3', true ),
      );
      
      // Debug logging
-     error_log( "Custom field values - donation_amout_1: " . $values['amount1'] . " | donation_amout_2: " . $values['amount2'] . " | donation_amout_3: " . $values['amount3'] );
+     error_log( "Custom field values - donation_amount_1: " . $values['amount1'] . " | donation_amount_2: " . $values['amount2'] . " | donation_amount_3: " . $values['amount3'] );
      error_log( "Post ID used: " . $post_id );
  
     error_log( "Shortcode values resolved: amount1={$values['amount1']} | amount2={$values['amount2']} | amount3={$values['amount3']}" );
