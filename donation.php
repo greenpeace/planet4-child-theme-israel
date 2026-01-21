@@ -689,7 +689,7 @@ function donation_gform_function($entry, $form) {
     
     $iFrame = $donation1->getIframe($unique, $amount, $name, $email, $phone, $page, $payment_type);
 
-    echo 'scrolling to iframe_top anchor & fix width for mobile 1<br>';
+    echo 'scrolling to iframe_top anchor & fix width for mobile 2<br> ';
 
     // present step 2 image and set anchor iframe_top
     echo <<<HTML
