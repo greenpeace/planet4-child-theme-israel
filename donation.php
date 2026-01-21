@@ -649,7 +649,10 @@ function donation_gform_function($entry, $form) {
     $payment_type = ($recurring === "recurring") ? "recurring" : "one-off";
 
      error_log("donation_gform_function - payment type : " . $payment_type . "\n" );
-
+     error_log('ENTRY: ' . print_r($entry, true));
+     error_log('Field 27: ' . print_r(rgar($entry, '27'), true));
+     error_log('Field 27.1: ' . print_r(rgar($entry, '27.1'), true));
+     
     // for debug only
      // echo "*** Retrieved values:<br>";
      // echo "*** Record Id: " . $record_id . " <br>";
