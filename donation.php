@@ -511,7 +511,7 @@
 
         $wpdb->query(
             $wpdb->prepare(
-                "INSERT INTO $table_name (icount_id, first_name, last_name, phone, email, igul_letova, id_number, page_id, payment_type, utm_campaign, utm_source, utm_medium, utm_content, utm_term) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO $table_name (icount_id, first_name, last_name, phone, email, igul_letova, id_number, page_id, payment_type, utm_campaign, utm_source, utm_medium, utm_content, utm_term) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 $gform_entry_id, $first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type,
                 $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term
             )
