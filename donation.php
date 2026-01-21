@@ -500,7 +500,7 @@
     }
     
     // Insert to donation table
-    public function insertToDonationTable($first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type, $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term){
+    public function insertToDonationTable($gform_entry_id, $first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type, $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term){
 
         $this->ensureGreenDonationsTableExists(); // create the table if it doesn't exist        
 
@@ -511,11 +511,13 @@
 
         $wpdb->query(
             $wpdb->prepare(
-                "INSERT INTO $table_name (first_name, last_name, phone, email, igul_letova, id_number, page_id, payment_type, utm_campaign, utm_source, utm_medium, utm_content, utm_term) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                $first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type,
+                "INSERT INTO $table_name (icount_idfirst_name, last_name, phone, email, igul_letova, id_number, page_id, payment_type, utm_campaign, utm_source, utm_medium, utm_content, utm_term) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                $gform_entry_id, $first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type,
                 $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term
             )
         );
+        $unique = $wpdb->insert_id;
+        return $unique;
     }
 
 
@@ -668,7 +670,8 @@ function donation_gform_function($entry, $form) {
 
     $donation1 = new greenpeace_donation();
 
-    $donation1->insertToDonationTable(
+    $unique = $donation1->insertToDonationTable(
+        $record_id, 
         $first_name,
         $last_name,
         $phone,
@@ -684,7 +687,7 @@ function donation_gform_function($entry, $form) {
         $utm_term
     );
     
-    $iFrame = $donation1->getIframe($record_id, $amount, $name, $email, $phone, $page, $payment_type);
+    $iFrame = $donation1->getIframe($unique, $amount, $name, $email, $phone, $page, $payment_type);
 
     echo 'scrolling to iframe_top anchor & fix width for mobile 1<br>';
 
