@@ -635,7 +635,7 @@ function donation_gform_function($entry, $form) {
     $email = rgar($entry, '7');
     $phone = rgar($entry, '17');
     $amount = rgar($entry, '25');
-    $igul_letova = rgar($entry, '27') ? true : false;
+    $igul_letova = rgar($entry, '27') ? 1 : 0;
     $id_number = rgar($entry, '28');
     $utm_campaign = rgar($entry, '19');
     $utm_source = rgar($entry, '18');
@@ -645,9 +645,8 @@ function donation_gform_function($entry, $form) {
      
     global $post;
     $postID = $post->ID;
-    // temp $recurring = (!get_field("recurrent"))? "one-off" : "recurring";
-        $recurring = get_post_meta( $postID, 'p4_israel_donation_type', true );
-        $payment_type = ($recurring === "recurring") ? "recurring" : "one-off";
+    $recurring = get_post_meta( $postID, 'p4_israel_donation_type', true );
+    $payment_type = ($recurring === "recurring") ? "recurring" : "one-off";
 
      error_log("donation_gform_function - payment type : " . $payment_type . "\n" );
 
