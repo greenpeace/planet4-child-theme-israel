@@ -5,9 +5,9 @@
 
 set_time_limit(0);
 
-if (!function_exists('wp_mail')) {
-    require_once('../../../wp-load.php');
-}
+//if (!function_exists('wp_mail')) {
+//    require_once('../../../wp-load.php');
+//}
 error_log("payplus-callback.php  start .... 001 \n");
 $get_string = http_build_query($_GET);
 error_log(" payplus-callback.php get_string = {" . $get_string . "}\n"); // Log it to the error log
@@ -47,11 +47,7 @@ function do_payplus_ipn_min() {
         return false;
     }
 	
-	$logMessage = "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 (5)";
     error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 (5) \n");
-	sendDebugMail($logMessage);
-
-return false;
 
     $id = intval(trim( $transaction->more_info ));
     $expiry = $data->card_information->expiry_month . $data->card_information->expiry_year;
@@ -96,7 +92,7 @@ return false;
 
     if( empty($transaction_exists->sale_f_id) ) { //Transaction not transmitted to SalesForce yet
 		error_log("ofer debug 13-12-2025 : transaction sent to sf right now. \n");
-        salesForce($id, $invoice_url, $invoice_id, $data, $transaction);
+        //temp //salesForce($id, $invoice_url, $invoice_id, $data, $transaction);
         echo ' transaction sent to sf right now. ';
     } else {
 		error_log("ofer debug 13-12-2025 : transaction already transmitted to sf, ignoring.  \n");
