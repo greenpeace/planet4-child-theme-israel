@@ -635,7 +635,7 @@ function donation_gform_function($entry, $form) {
     $email = rgar($entry, '7');
     $phone = rgar($entry, '17');
     $amount = rgar($entry, '25');
-    $igul_letova = rgar($entry, '27') ? 1 : 0;
+    $igul_letova = rgar($entry, '27.1') ? 1 : 0;
     $id_number = rgar($entry, '28');
     $utm_campaign = rgar($entry, '19');
     $utm_source = rgar($entry, '18');
