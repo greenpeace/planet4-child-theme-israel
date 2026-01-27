@@ -83,6 +83,8 @@ function do_payplus_ipn_min() {
         )
     );
 
+    error_log(" payplus-callback.php befor update DB: id = " . $id . " *****\n"); // Log it to the error log
+    
     $wpdb->query(
         $wpdb->prepare(
             "UPDATE green_donations SET exp = %s, cc_holder = %s, token = %s, shovar = %s, card_type = %s, last_four = %s, tourist = %s, ccval = %s, payplus_callback_response = %s  WHERE id = %d",
