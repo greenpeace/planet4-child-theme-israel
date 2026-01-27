@@ -695,7 +695,7 @@ function donation_gform_function($entry, $form) {
     echo <<<HTML
         <div id='iframe_top'>
             <br>
-            <img src='https://www.greenpeace.org/static/planet4-israel-stateless-develop/20252526/01/dbb1769d-stage2.jpg' alt='step 2'>
+            <img src='https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/01/dbb1769d-stage2.jpg' alt='step 2'>
         </div>
     HTML;
 

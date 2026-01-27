@@ -86,7 +86,7 @@ function do_payplus_ipn_min() {
     $wpdb->query(
         $wpdb->prepare(
             "UPDATE green_donations SET exp = %s, cc_holder = %s, token = %s, shovar = %s, card_type = %s, last_four = %s, tourist = %s, ccval = %s, payplus_callback_response = %s  WHERE id = %d",
-            $expiry, $ccHolder, $token, $shovar, $cType, $digits, $tourist, $ccVal, $id, $request_data
+            $expiry, $ccHolder, $token, $shovar, $cType, $digits, $tourist, $ccVal, $request_data, $id
         )
     );
 
