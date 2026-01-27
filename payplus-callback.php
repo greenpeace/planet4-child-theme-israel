@@ -50,6 +50,7 @@ function do_payplus_ipn_min() {
     error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 (5) \n");
 
     $id = intval(trim( $transaction->more_info ));
+    $amount = $data->amount;
     $expiry = $data->card_information->expiry_month . $data->card_information->expiry_year;
     $ccHolder = $data->card_information->card_holder_name;
     $digits = $data->card_information->four_digits;
