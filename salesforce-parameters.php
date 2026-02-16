@@ -8,18 +8,16 @@ Author: Ofer Or
 */
 
 // ------------------------------------------------------
-// 1. Create Admin Menu Page
+// 1. Create Settings Submenu Page
 // ------------------------------------------------------
-add_action('admin_menu', 'sfparams_create_menu');
-function sfparams_create_menu() {
-    add_menu_page(
-        'SalesForce Parameters',
-        'SalesForce Params',
-        'manage_options',
-        'salesforce-parameters',
-        'sfparams_settings_page_html',
-        'dashicons-cloud',
-        10.3
+add_action('admin_menu', 'sfparams_create_settings_submenu');
+function sfparams_create_settings_submenu() {
+    add_options_page(
+        'SalesForce Parameters',     // Page title
+        'SalesForce Parameters',     // Menu title under Settings
+        'manage_options',            // Capability
+        'salesforce-parameters',     // Menu slug
+        'sfparams_settings_page_html'// Callback
     );
 }
 
