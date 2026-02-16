@@ -19,7 +19,7 @@ function sfparams_create_menu() {
         'salesforce-parameters',
         'sfparams_settings_page_html',
         'dashicons-cloud',
-        60
+        10.3
     );
 }
 
