@@ -10,6 +10,7 @@
 // aduped from old donation site code
 // *******************************************************
 include 'Helpers.php';
+include 'SalesForce-Parameters.php';
 include 'PayPlus.php';
 include 'donation.php';
 

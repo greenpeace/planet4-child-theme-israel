@@ -5,15 +5,20 @@
 
 set_time_limit(0);
 
-//if (!function_exists('wp_mail')) {
-//    require_once('../../../wp-load.php');
-//}
+require_once 'SalesForce.php';
+include 'DonationMonitor.php';
+
+//    check and include // $donation_monitor = new DonationMonitor($SalesForce);
+
+
+/*
 error_log("payplus-callback.php  start .... 001 \n");
 $get_string = http_build_query($_GET);
 error_log(" payplus-callback.php get_string = {" . $get_string . "}\n"); // Log it to the error log
 $post_string = http_build_query($_POST);
 error_log(" payplus-callback.php post_string = {" . $post_string . "}\n"); // Log it to the error log
-error_log("payplus-callback.php  start .... 002 \n");
+error_log("payplus-callback.php  start .... 002 \n");  
+*/
 
 do_payplus_ipn_min();
 error_log("payplus-callback.php  end .... 001   \n");
@@ -25,7 +30,6 @@ function do_payplus_ipn_min() {
 
 	$logMessage = "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (1)";
     error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (1): \n" . print_r($data, true) . "\n");
-	sendDebugMail($logMessage);
 
     if(!is_object($data) || empty($data) || !isset($data->data, $data->transaction)) {
         return false;
@@ -77,17 +81,22 @@ function do_payplus_ipn_min() {
     
 
     global $wpdb;
+
+    $table_name = $wpdb->prefix . 'green_donations';
     $transaction_exists = $wpdb->get_row(
         $wpdb->prepare(
-            "SELECT `sale_f_id` from `green_donations` WHERE id = %d",
+            "SELECT `sale_f_id` from $table_name WHERE id = %d",
             $id
         )
     );
 
     error_log(" payplus-callback.php befor update DB: id = " . $id . " *****\n"); // Log it to the error log
     error_log(" payplus-callback.php befor update DB: amount = " . $amount . " *****\n"); // Log it to the error log
+<<<<<<< HEAD
 
     $table_name = $wpdb->prefix . 'green_donations';
+=======
+>>>>>>> c836074 (add salesForce 4)
 
     $test = $wpdb->query(
         $wpdb->prepare(
@@ -96,16 +105,10 @@ function do_payplus_ipn_min() {
         )
     );
 
-//    $wpdb->query(
-//        $wpdb->prepare(
-//            "UPDATE green_donations SET exp = %s, cc_holder = %s, token = %s, shovar = %s, card_type = %s, last_four = %s, tourist = %s, ccval = %s, payplus_callback_response = %s  WHERE id = %d",
-//           $expiry, $ccHolder, $token, $shovar, $cType, $digits, $tourist, $ccVal, $request_data, $id
-//        ) 
-//    );
-
+    // Uptade SalesForce 
     if( empty($transaction_exists->sale_f_id) ) { //Transaction not transmitted to SalesForce yet
 		error_log("ofer debug 13-12-2025 : transaction sent to sf right now. \n");
-        //temp //salesForce($id, $invoice_url, $invoice_id, $data, $transaction);
+        salesForce($id, $invoice_url, $invoice_id, $data, $transaction);
         echo ' transaction sent to sf right now. ';
     } else {
 		error_log("ofer debug 13-12-2025 : transaction already transmitted to sf, ignoring.  \n");
@@ -118,6 +121,7 @@ function do_payplus_ipn_min() {
 function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
 
     $params = getSalesforceParams();
+    error_log(" payplus-callback.php salesForce 1 *****\n"); // Log it to the error log
 
     $curl = curl_init(SALESFORCE_LOGIN_URI. "/services/oauth2/token");
     curl_setopt($curl, CURLOPT_HEADER, false);
@@ -135,6 +139,7 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
         //echo '<script> window.top.location = "'.get_permalink(33). "?username=" .  $_SESSION["donation"]->first_name  .'"; </script>';
         exit();
     }
+    error_log(" payplus-callback.php salesForce  2 *****\n"); // Log it to the error log
 
     curl_close($curl);
 
@@ -149,6 +154,7 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
         // echo '<script> window.top.location = "'.get_permalink(33). "?username=" .  $_SESSION["donation"]->first_name  .'"; </script>';
         exit();
     }
+    error_log(" payplus-callback.php salesForce 3 *****\n"); // Log it to the error log
 
     if (!isset($instance_url) || $instance_url == "") {
         //die("Error - instance URL missing from response!");
@@ -161,13 +167,15 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
     //TODO -> FROM DB
     //sleep(10);
     global $wpdb;
+    $table_name = $wpdb->prefix . 'green_donations';
 
     $arr = $wpdb->get_row(
         $wpdb->prepare(
-            "SELECT * FROM `green_donations` WHERE id = %d",
+            "SELECT * FROM $table_name WHERE id = %d",
             $rowId
         )
     );
+    error_log(" payplus-callback.php salesForce 4 *****  id= " . $rowId ."\n"); // Log it to the error log
 
     $url = "$instance_url/services/data/v54.0/sobjects/Case/";
 
@@ -213,7 +221,7 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
 
 	send_donation_mail($content);
 
-    httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', ['content' => $content]);
+    // httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', ['content' => $content]);
 
     $curl = curl_init($url);
     curl_setopt($curl, CURLOPT_HEADER, false);
@@ -237,6 +245,8 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
         echo 'success??';
     }
 
+    error_log(" payplus-callback.php salesForce 5 *****\n"); // Log it to the error log
+
     curl_close($curl);
 
     //dataAdmin($json_response);
@@ -248,9 +258,11 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
 
     if(!$response["success"]) errAdmin("DB record ".$arr->{"id"}." not set. Raw response: " . $json_response);
 
+    error_log(" payplus-callback.php salesForce 10 *****  salesForceId= " . $salesForceId ."\n"); // Log it to the error log
+
     $wpdb->query(
         $wpdb->prepare(
-            "UPDATE green_donations SET sale_f_id = %s, icount_id = %s  WHERE id = %d",
+            "UPDATE $table_name SET sale_f_id = %s, icount_id = %s  WHERE id = %d",
             $salesForceId, $invoiceNum, $arr->{"id"}
         )
     );
