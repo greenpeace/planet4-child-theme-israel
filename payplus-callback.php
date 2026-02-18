@@ -10,6 +10,7 @@ require_once 'SalesForce.php';
 
 //    check and include // $donation_monitor = new DonationMonitor($SalesForce);
 
+const SALESFORCE_LOGIN_URI = 'https://test.salesforce.com'; // 'https://login.salesforce.com';
 
 error_log("payplus-callback.php  start .... 001 \n");
 
@@ -114,8 +115,6 @@ function do_payplus_ipn_min() {
 
 
 function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
-
-    const SALESFORCE_LOGIN_URI = 'https://test.salesforce.com'; // 'https://login.salesforce.com';
 
     $params = getSalesforceParams_new();
     error_log(" payplus-callback.php salesForce 1 *** ***\n"); // Log it to the error log
