@@ -93,8 +93,6 @@ function do_payplus_ipn_min() {
     error_log(" payplus-callback.php befor update DB: id = " . $id . " *****\n"); // Log it to the error log
     error_log(" payplus-callback.php befor update DB: amount = " . $amount . " *****\n"); // Log it to the error log
 
-    $table_name = $wpdb->prefix . 'green_donations';
-
     $test = $wpdb->query(
         $wpdb->prepare(
             "UPDATE $table_name SET amount = %d, exp = %s, cc_holder = %s, response = %s, token = %s, shovar = %s, card_type = %s, last_four = %s, tourist = %s, ccval = %s WHERE id = %d",
@@ -117,8 +115,10 @@ function do_payplus_ipn_min() {
 
 function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
 
+    const SALESFORCE_LOGIN_URI = 'https://test.salesforce.com'; // 'https://login.salesforce.com';
+
     $params = getSalesforceParams_new();
-    error_log(" payplus-callback.php salesForce 1 *****\n"); // Log it to the error log
+    error_log(" payplus-callback.php salesForce 1 *** ***\n"); // Log it to the error log
 
     $curl = curl_init(SALESFORCE_LOGIN_URI. "/services/oauth2/token");
     curl_setopt($curl, CURLOPT_HEADER, false);
