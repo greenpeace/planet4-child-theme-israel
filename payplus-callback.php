@@ -6,14 +6,14 @@
 set_time_limit(0);
 
 require_once 'SalesForce.php';
-include 'DonationMonitor.php';
+// include 'DonationMonitor.php';
 
 //    check and include // $donation_monitor = new DonationMonitor($SalesForce);
 
 
-/*
 error_log("payplus-callback.php  start .... 001 \n");
-$get_string = http_build_query($_GET);
+
+/* $get_string = http_build_query($_GET);
 error_log(" payplus-callback.php get_string = {" . $get_string . "}\n"); // Log it to the error log
 $post_string = http_build_query($_POST);
 error_log(" payplus-callback.php post_string = {" . $post_string . "}\n"); // Log it to the error log
