@@ -93,7 +93,6 @@ function do_payplus_ipn_min() {
     error_log(" payplus-callback.php befor update DB: id = " . $id . " *****\n"); // Log it to the error log
     error_log(" payplus-callback.php befor update DB: amount = " . $amount . " *****\n"); // Log it to the error log
 
-
     $table_name = $wpdb->prefix . 'green_donations';
 
     $test = $wpdb->query(
