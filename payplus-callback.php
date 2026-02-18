@@ -130,7 +130,21 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
     $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
     if ( $status != 200 ) {
-        die("Error: call to token URL $token_url failed with status $status, response $json_response, curl_error " . curl_error($curl) . ", curl_errno " . curl_errno($curl));
+
+        // 1. Build the detailed message
+        $log_message = sprintf(
+            "API Error: Token request failed.\nURL: %s\nStatus: %d\nResponse: %s\ncURL Error (%d): %s",
+            $token_url,
+            $status,
+            $json_response,
+            curl_errno($curl),
+            curl_error($curl)
+        );
+
+        // 2. Send to the system logger
+        error_log($log_message);
+
+        // die("Error: call to token URL $token_url failed with status $status, response $json_response, curl_error " . curl_error($curl) . ", curl_errno " . curl_errno($curl));
         //errAdmin("Error: couldn't get auth-url. response $json_response, curl_error " . curl_error($curl) . ", curl_errno " . curl_errno($curl) . " ID:" . $_SESSION["donation"]->id);
         //echo '<script> window.top.location = "'.get_permalink(33). "?username=" .  $_SESSION["donation"]->first_name  .'"; </script>';
         exit();
