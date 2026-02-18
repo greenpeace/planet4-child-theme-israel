@@ -92,11 +92,9 @@ function do_payplus_ipn_min() {
 
     error_log(" payplus-callback.php befor update DB: id = " . $id . " *****\n"); // Log it to the error log
     error_log(" payplus-callback.php befor update DB: amount = " . $amount . " *****\n"); // Log it to the error log
-<<<<<<< HEAD
+
 
     $table_name = $wpdb->prefix . 'green_donations';
-=======
->>>>>>> c836074 (add salesForce 4)
 
     $test = $wpdb->query(
         $wpdb->prepare(
@@ -120,7 +118,7 @@ function do_payplus_ipn_min() {
 
 function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
 
-    $params = getSalesforceParams();
+    $params = getSalesforceParams_new();
     error_log(" payplus-callback.php salesForce 1 *****\n"); // Log it to the error log
 
     $curl = curl_init(SALESFORCE_LOGIN_URI. "/services/oauth2/token");
