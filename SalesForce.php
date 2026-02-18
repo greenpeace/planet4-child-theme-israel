@@ -6,7 +6,7 @@ class SalesForce
     protected $params;
     const SALESFORCE_LOGIN_URI = 'https://test.salesforce.com'; // 'https://login.salesforce.com';
 
-    public function __construct()
+    public function __construct() {
         $this->params = getSalesforceParams_new();
     }
 
