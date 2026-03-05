@@ -117,11 +117,23 @@ function do_payplus_ipn_min() {
 function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
 
     $params = getSalesforceParams_new();
-    error_log(" payplus-callback.php salesForce 1 *** ***\n"); // Log it to the error log
-    foreach ($params as $key => $value) {
-        $preview = substr((string)$value, 0, 5);
-        error_log("SF Param Preview - $key: $preview...");
+    error_log(" payplus-callback.php salesForce 1 *** ** **\n"); // Log it to the error log
+    // Ensure it's a string
+    if (!is_string($params)) {
+        $type = gettype($params);
+        error_log("SF ERROR: Expected string, got: $type\n");
+        return;
     }
+    // Split into key=value pairs
+    $pairs = explode("&", $params);
+    foreach ($pairs as $pair) {
+        list($key, $value) = explode("=", $pair, 2);
+        $value = urldecode($value); // decode for readability
+        $first3 = substr($value, 0, 3);
+        $last3  = substr($value, -3);
+        error_log("SF Param Preview - $key: {$first3}...{$last3}\n");
+    }
+    error_log(" payplus-callback.php salesForce 2 *** ** **\n"); // Log it to the error log
     $token_url = SALESFORCE_LOGIN_URI . "/services/oauth2/token";
     $curl = curl_init(SALESFORCE_LOGIN_URI . "/services/oauth2/token");
     curl_setopt($curl, CURLOPT_HEADER, false);
