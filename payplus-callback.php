@@ -118,8 +118,12 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
 
     $params = getSalesforceParams_new();
     error_log(" payplus-callback.php salesForce 1 *** ***\n"); // Log it to the error log
-
-    $curl = curl_init(SALESFORCE_LOGIN_URI. "/services/oauth2/token");
+    foreach ($params as $key => $value) {
+        $preview = substr((string)$value, 0, 5);
+        error_log("SF Param Preview - $key: $preview...");
+    }
+    $token_url = SALESFORCE_LOGIN_URI . "/services/oauth2/token";
+    $curl = curl_init(SALESFORCE_LOGIN_URI . "/services/oauth2/token");
     curl_setopt($curl, CURLOPT_HEADER, false);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($curl, CURLOPT_POST, true);
