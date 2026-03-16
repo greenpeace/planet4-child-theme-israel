@@ -65,6 +65,9 @@ class SalesForce
 
     public function SendLeadByDonation($donationID, $donation = null, $send_unsuccessful_transactions = false) {
         global $wpdb;
+		// FIX: use prefixed table name
+		$table_name = $wpdb->prefix . 'green_donations';
+
 
         $this->log([
             'step' => 'SendLeadByDonation',
@@ -74,7 +77,7 @@ class SalesForce
         if($donation == null) {
             $donation = $wpdb->get_row(
                 $wpdb->prepare(
-                    "SELECT * FROM `green_donations` WHERE id = %d",
+                "SELECT * FROM `$table_name` WHERE id = %d",
                     $donationID
                 )
             );
@@ -133,7 +136,7 @@ class SalesForce
 
         $wpdb->query(
             $wpdb->prepare(
-                "UPDATE `green_donations` SET `sale_f_id` = %s, `icount_id` = %s, `transmited_to_sf` = 1  WHERE `id` = %d",
+			    "UPDATE `$table_name` SET `sale_f_id` = %s, `icount_id` = %s, `transmited_to_sf` = 1  WHERE `id` = %d",
                 $salesForceId, $data->invoice_docu_number ?? null, $donation->id
             )
         );
