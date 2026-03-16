@@ -121,7 +121,7 @@ function sfparams_settings_page_html() {
 }
 
 
-function getSalesforceParams_new() {
+function getSalesforceParams_old() {
 
     $client_id     = get_option('sf_client_id');
     $client_secret = get_option('sf_client_secret');
@@ -133,4 +133,15 @@ function getSalesforceParams_new() {
         . "&client_secret=" . urlencode($client_secret)
         . "&username=" . urlencode($username)
         . "&password=" . urlencode($password);
+}
+
+function getSalesforceParams_new() {
+
+    return [
+        'grant_type'    => 'password',
+        'client_id'     => get_option('sf_client_id'),
+        'client_secret' => get_option('sf_client_secret'),
+        'username'      => get_option('sf_username'),
+        'password'      => get_option('sf_password'),
+    ];
 }
