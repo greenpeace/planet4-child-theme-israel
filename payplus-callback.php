@@ -101,15 +101,17 @@ function do_payplus_ipn_min() {
         )
     );
 
-    // Uptade SalesForce 
-    if( empty($transaction_exists->sale_f_id) ) { //Transaction not transmitted to SalesForce yet
-		error_log("ofer debug 13-12-2025 : transaction sent to sf right now. \n");
-        salesForce($id, $invoice_url, $invoice_id, $data, $transaction);
-        echo ' transaction sent to sf right now. ';
-    } else {
-		error_log("ofer debug 13-12-2025 : transaction already transmitted to sf, ignoring.  \n");
-        echo ' transaction already transmitted to sf, ignoring. ';
-    }
+    // skip SalesForce update - Donation monitor will do that if needed - Ofer Or 16-Mar-2026
+    /*    // Uptade SalesForce 
+        if( empty($transaction_exists->sale_f_id) ) { //Transaction not transmitted to SalesForce yet
+            error_log("ofer debug 13-12-2025 : transaction sent to sf right now. \n");
+            salesForce($id, $invoice_url, $invoice_id, $data, $transaction);
+            echo ' transaction sent to sf right now. ';
+        } else {
+            error_log("ofer debug 13-12-2025 : transaction already transmitted to sf, ignoring.  \n");
+            echo ' transaction already transmitted to sf, ignoring. ';
+        }
+    */
 	
 }
 
@@ -246,8 +248,6 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
     ));
 
 	send_donation_mail($content);
-
-    // httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', ['content' => $content]);
 
     $curl = curl_init($url);
     curl_setopt($curl, CURLOPT_HEADER, false);
