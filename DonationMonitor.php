@@ -64,6 +64,12 @@ class DonationMonitor
     protected function MaybeSendLeadToSF($donation) {
         if ($this->isPersonAlreadyDonated($donation)) {
             error_log("Donation {$donation->id} skipped — person already donated");
+            $wpdb->query(
+                $wpdb->prepare(
+                    "UPDATE `$table_name` SET `transmited_to_sf` = 2  WHERE `id` = %d",
+                    $donation->id
+                )
+            );
             return false;
         }
 
