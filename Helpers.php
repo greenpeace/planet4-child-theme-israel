@@ -3,7 +3,11 @@
 trait Helpers
 {
     protected function log($data) {
-        $this->httpRequest('https://91114809e55279db528139e72539b9b2.m.pipedream.net', json_encode($data), null, true);
+        // הפיכת המערך ל‑JSON קריא
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    
+        // כתיבה ל‑debug.log
+        error_log("SalesForce Log: " . $json);
     }
 
     public function httpRequest($url, $data = [], $headers = null, $raw = false, $auth = null, $method = 'POST', $cert = false) {
