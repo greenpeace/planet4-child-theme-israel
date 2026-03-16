@@ -136,8 +136,8 @@ class SalesForce
 
         $wpdb->query(
             $wpdb->prepare(
-			    "UPDATE `$table_name` SET `sale_f_id` = %s, `icount_id` = %s, `transmited_to_sf` = 1  WHERE `id` = %d",
-                $salesForceId, $data->invoice_docu_number ?? null, $donation->id
+			    "UPDATE `$table_name` SET `sale_f_id` = %s, `transmited_to_sf` = 1  WHERE `id` = %d",
+                $salesForceId, $donation->id
             )
         );
 
