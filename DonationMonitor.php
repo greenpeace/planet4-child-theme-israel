@@ -42,9 +42,9 @@ class DonationMonitor
         $query = $this->wpdb->prepare(
             "SELECT * FROM {$this->table_name}
              WHERE transmited_to_sf = %d
-             AND date < DATE_SUB(NOW(), INTERVAL 2 HOUR)",
+             AND date < DATE_SUB(NOW(), INTERVAL 10 MINUTE)",
             0
-        );
+        );  // was date < DATE_SUB(NOW(), INTERVAL 2 HOUR)",
 
         $donations = $this->wpdb->get_results($query);
 
