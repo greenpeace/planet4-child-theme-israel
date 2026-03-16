@@ -27,8 +27,8 @@ define("REDIRECT_URI", "https://www-dev.greenpeace.org/israel/receive-defrayal/"
 // adupted from old donation site code
 // *******************************************************
 
-require_once '/SalesForce.php';
-require_once '/DonationMonitor.php';
+require_once 'SalesForce.php';
+require_once 'DonationMonitor.php';
 
 // יצירת האובייקטים
 $SalesForce = new SalesForce();
