@@ -7,12 +7,12 @@
 // *******************************************************
 // Donation functunality code  - add by Ofer Or
 // 06-Jun-2025
-// aduped from old donation site code
+// adupted from old donation site code
 // *******************************************************
 include 'Helpers.php';
 include 'salesforce-parameters.php';
 include 'PayPlus.php';
-include 'donation.php';
+include 'donation.php'; // build and handle donations table and UI
 
 $donation = new greenpeace_donation();
 
@@ -21,6 +21,28 @@ define("REDIRECT_URI", "https://www-dev.greenpeace.org/israel/receive-defrayal/"
 
 // end of donation functunality code (added by ofer or 06-Jun-2025)
 // *******************************************************
+
+// *******************************************************
+// SalesForce integration functunality code  - add by Ofer Or 16-Mar-2026
+// adupted from old donation site code
+// *******************************************************
+
+require_once '/SalesForce.php';
+require_once '/DonationMonitor.php';
+
+// יצירת האובייקטים
+$SalesForce = new SalesForce();
+$donation_monitor = new DonationMonitor($SalesForce);
+
+// רישום ה-hooks פעם אחת בכל טעינה
+add_action('init', [$donation_monitor, 'scheduler']);
+add_action('send_incomplete_leads_to_sf', [$donation_monitor, 'SendIncompleteLeadsToSF']);
+add_filter('cron_schedules', [$donation_monitor, 'add_custom_schedules']);
+
+
+// end of alesForce integration functunality code (added by ofer or  16-Mar-2026)
+// *******************************************************
+
 /**
  * Gravity Forms: Change radio button options based on native custom fields value - added by Ofer Or 12-01-2026
  */
