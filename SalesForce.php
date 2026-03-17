@@ -89,6 +89,13 @@ class SalesForce
                 'message' => 'transaction already transmitted to sf, ignoring. (352)',
             ]);
 
+            $wpdb->query(
+                $wpdb->prepare(
+                    "UPDATE `$table_name` SET `transmited_to_sf` = 1  WHERE `id` = %d",
+                    donationID
+                )
+            );
+
             return 'transaction already transmitted to sf, ignoring. (352)';
         }
 
