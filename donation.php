@@ -114,7 +114,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 5</h1>
+                <h1>תרומות 7</h1>
             </header >
             <div class="content">
                 <table>
@@ -567,7 +567,7 @@
     
             foreach ($rows as $row) {
                 $row = array_map(function($value) {
-                    return mb_convert_encoding($value, 'UTF-8', 'UTF-8, ISO-8859-1, Windows-1255, ISO-8859-8');
+                    return mb_convert_encoding($value, 'UTF-8', 'UTF-8, ISO-8859-1, CP1255, ISO-8859-8');
                 }, $row);
     
                 fputcsv($output, $row);
