@@ -537,40 +537,63 @@
     
 
     // === ADDED: EXPORT CSV (HEBREW SAFE) ===
-	public function exportCSV() {
-		global $wpdb;
-		$table = $wpdb->prefix . 'green_donations';
-		$rows = $wpdb->get_results("SELECT * FROM $table ORDER BY id DESC", ARRAY_A);
-
-        // Clean all output buffers to prevent corruption
-		while (ob_get_level()) {
-			ob_end_clean();
-		}
-
-		header('Content-Type: text/csv; charset=UTF-8');
-		header('Content-Disposition: attachment; filename=donations_export.csv');
-
-		$output = fopen('php://output', 'w');
-
-		// UTF‑8 BOM for Excel Hebrew support
-		fwrite($output, "\xEF\xBB\xBF");
-
-		if (!empty($rows)) {
-			fputcsv($output, array_keys($rows[0]));
-			foreach ($rows as $row) {
-				// Ensure all fields are UTF‑8
-				$row = array_map(function($value) {
-					return mb_convert_encoding($value, 'UTF-8', 'UTF-8, ISO-8859-1, Windows-1255, ISO-8859-8');
-				}, $row);
-
-				fputcsv($output, $row);
-			}
-		}
-
-		fclose($output);
-		exit;
-	}
-
+    public function exportCSV() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'green_donations';
+    
+        // === 1. Create backup folder ===
+        $upload_dir = wp_upload_dir();
+        $backup_dir = $upload_dir['basedir'] . '/greenpeace-backups';
+    
+        if (!file_exists($backup_dir)) {
+            wp_mkdir_p($backup_dir);
+        }
+    
+        // === 2. Create file path ===
+        $timestamp = date('Y-m-d_H-i-s');
+        $file_path = $backup_dir . "/donations_export_{$timestamp}.csv";
+    
+        // === 3. Fetch data ===
+        $rows = $wpdb->get_results("SELECT * FROM $table ORDER BY id DESC", ARRAY_A);
+    
+        // === 4. Write CSV to server ===
+        $output = fopen($file_path, 'w');
+    
+        // UTF‑8 BOM for Hebrew
+        fwrite($output, "\xEF\xBB\xBF");
+    
+        if (!empty($rows)) {
+            fputcsv($output, array_keys($rows[0]));
+    
+            foreach ($rows as $row) {
+                $row = array_map(function($value) {
+                    return mb_convert_encoding($value, 'UTF-8', 'UTF-8, ISO-8859-1, Windows-1255, ISO-8859-8');
+                }, $row);
+    
+                fputcsv($output, $row);
+            }
+        }
+    
+        fclose($output);
+    
+        // === 5. Clean all output buffers BEFORE sending file ===
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+    
+        // === 6. Force file download ===
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="donations_export_' . $timestamp . '.csv"');
+        header('Content-Length: ' . filesize($file_path));
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Expires: 0');
+    
+        readfile($file_path);
+    
+        // === 7. Stop WordPress from adding HTML ===
+        exit;
+    }
+    
 
 	// === ADDED: IMPORT CSV WITH DEFAULT VALUES (HEBREW SAFE) ===
 	public function importCSV() {
