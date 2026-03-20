@@ -92,7 +92,7 @@ class SalesForce
             $wpdb->query(
                 $wpdb->prepare(
                     "UPDATE `$table_name` SET `transmited_to_sf` = 1  WHERE `id` = %d",
-                    donationID
+                    $donationID
                 )
             );
 
