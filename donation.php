@@ -114,7 +114,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 7</h1>
+                <h1>תרומות 8</h1>
             </header >
             <div class="content">
                 <table>
@@ -632,7 +632,7 @@
 
 			// Convert each field to UTF‑8 (supports Hebrew)
 			$line = array_map(function($value) {
-				return mb_convert_encoding($value, 'UTF-8', 'UTF-8, ISO-8859-1, Windows-1255, ISO-8859-8');
+				return mb_convert_encoding($value, 'UTF-8', 'UTF-8, ISO-8859-1, CP1255, ISO-8859-8');
 			}, $line);
 
 			// Remove ID value if exists
