@@ -114,7 +114,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 2/h1>
+                <h1>תרומות 4</h1>
             </header >
             <div class="content">
                 <table>
@@ -534,77 +534,103 @@
     //        error_log($table_name . ' exists and has ' . $total_items . ' items.' . "\n");
         }
     }
-	// === ADDED: EXPORT CSV ===
-    public function exportCSV() {
-        global $wpdb;
-        $table = $wpdb->prefix . 'green_donations';
+    
 
-        $rows = $wpdb->get_results("SELECT * FROM $table ORDER BY id DESC", ARRAY_A);
+    // === ADDED: EXPORT CSV (HEBREW SAFE) ===
+	public function exportCSV() {
+		global $wpdb;
+		$table = $wpdb->prefix . 'green_donations';
 
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename=donations_export.csv');
+		$rows = $wpdb->get_results("SELECT * FROM $table ORDER BY id DESC", ARRAY_A);
 
-        $output = fopen('php://output', 'w');
+		header('Content-Type: text/csv; charset=UTF-8');
+		header('Content-Disposition: attachment; filename=donations_export.csv');
 
-        if (!empty($rows)) {
-            fputcsv($output, array_keys($rows[0]));
-            foreach ($rows as $row) fputcsv($output, $row);
-        }
+		$output = fopen('php://output', 'w');
 
-        fclose($output);
-        exit;
-    }
+		// UTF‑8 BOM for Excel Hebrew support
+		fwrite($output, "\xEF\xBB\xBF");
 
-    // === ADDED: IMPORT CSV WITH DEFAULT VALUES ===
-    public function importCSV() {
-        if (!isset($_FILES['csv_file'])) wp_die("No file uploaded");
+		if (!empty($rows)) {
+			fputcsv($output, array_keys($rows[0]));
+			foreach ($rows as $row) {
+				// Ensure all fields are UTF‑8
+				$row = array_map(function($value) {
+					return mb_convert_encoding($value, 'UTF-8', 'UTF-8, ISO-8859-1, Windows-1255, ISO-8859-8');
+				}, $row);
 
-        global $wpdb;
-        $table = $wpdb->prefix . 'green_donations';
+				fputcsv($output, $row);
+			}
+		}
 
-        $file = fopen($_FILES['csv_file']['tmp_name'], 'r');
-        $header = fgetcsv($file);
+		fclose($output);
+		exit;
+	}
 
-        // Remove ID column if exists
-        if (strtolower($header[0]) === 'id') array_shift($header);
 
-        // Default values for NOT NULL fields
-        $defaults = array(
-            "shovar" => "",
-            "card_type" => "",
-            "last_four" => "",
-            "tourist" => 0,
-            "ccval" => "",
-            "sale_f_id" => "",
-            "utm_campaign" => "",
-            "utm_source" => "",
-            "utm_medium" => "",
-            "utm_content" => "",
-            "utm_term" => "",
-            "transmited_to_sf" => 0
-        );
+	// === ADDED: IMPORT CSV WITH DEFAULT VALUES (HEBREW SAFE) ===
+	public function importCSV() {
+		if (!isset($_FILES['csv_file'])) wp_die("No file uploaded");
 
-        while (($line = fgetcsv($file)) !== false) {
+		global $wpdb;
+		$table = $wpdb->prefix . 'green_donations';
 
-            if (count($line) === count($header) + 1) array_shift($line);
+		$file = fopen($_FILES['csv_file']['tmp_name'], 'r');
 
-            $data = array_combine($header, $line);
+		// Read header row
+		$header = fgetcsv($file);
 
-            // Apply defaults for missing NOT NULL fields
-            foreach ($defaults as $key => $value) {
-                if (!isset($data[$key]) || $data[$key] === "") {
-                    $data[$key] = $value;
-                }
-            }
+		// Remove ID column if exists
+		if (strtolower($header[0]) === 'id') {
+			array_shift($header);
+		}
 
-            $wpdb->insert($table, $data);
-        }
+		// Default values for NOT NULL fields
+		$defaults = array(
+			"shovar" => "",
+			"card_type" => "",
+			"last_four" => "",
+			"tourist" => 0,
+			"ccval" => "",
+			"sale_f_id" => "",
+			"utm_campaign" => "",
+			"utm_source" => "",
+			"utm_medium" => "",
+			"utm_content" => "",
+			"utm_term" => "",
+			"transmited_to_sf" => 0
+		);
 
-        fclose($file);
+		while (($line = fgetcsv($file)) !== false) {
 
-        wp_redirect(admin_url('admin.php?page=greenpeace/donations.php&import=success'));
-        exit;
-    }
+			// Convert each field to UTF‑8 (supports Hebrew)
+			$line = array_map(function($value) {
+				return mb_convert_encoding($value, 'UTF-8', 'UTF-8, ISO-8859-1, Windows-1255, ISO-8859-8');
+			}, $line);
+
+			// Remove ID value if exists
+			if (count($line) === count($header) + 1) {
+				array_shift($line);
+			}
+
+			$data = array_combine($header, $line);
+
+			// Apply defaults for missing NOT NULL fields
+			foreach ($defaults as $key => $value) {
+				if (!isset($data[$key]) || $data[$key] === "") {
+					$data[$key] = $value;
+				}
+			}
+
+			$wpdb->insert($table, $data);
+		}
+
+		fclose($file);
+
+		wp_redirect(admin_url('admin.php?page=greenpeace/donations.php&import=success'));
+		exit;
+	}
+
 
     // === ADDED: CLEANUP BY DATE ===
     public function cleanupByDate() {
