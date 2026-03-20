@@ -114,7 +114,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 4</h1>
+                <h1>תרומות 5</h1>
             </header >
             <div class="content">
                 <table>
@@ -540,8 +540,12 @@
 	public function exportCSV() {
 		global $wpdb;
 		$table = $wpdb->prefix . 'green_donations';
-
 		$rows = $wpdb->get_results("SELECT * FROM $table ORDER BY id DESC", ARRAY_A);
+
+        // Clean all output buffers to prevent corruption
+		while (ob_get_level()) {
+			ob_end_clean();
+		}
 
 		header('Content-Type: text/csv; charset=UTF-8');
 		header('Content-Disposition: attachment; filename=donations_export.csv');
@@ -633,21 +637,60 @@
 
 
     // === ADDED: CLEANUP BY DATE ===
-    public function cleanupByDate() {
-        if (!isset($_POST['cleanup_date'])) wp_die("Missing date");
+	public function cleanupByDate() {
+		if (!isset($_POST['cleanup_date'])) wp_die("Missing date");
 
-        global $wpdb;
-        $table = $wpdb->prefix . 'green_donations';
+		global $wpdb;
+		$table = $wpdb->prefix . 'green_donations';
 
-        $date = sanitize_text_field($_POST['cleanup_date']);
+		$date = sanitize_text_field($_POST['cleanup_date']);
 
-        $wpdb->query(
-            $wpdb->prepare("DELETE FROM $table WHERE `date` < %s", $date)
-        );
+		// === CLEAN OUTPUT BUFFERS BEFORE SENDING CSV ===
+		while (ob_get_level()) {
+			ob_end_clean();
+		}
 
-        wp_redirect(admin_url('admin.php?page=greenpeace/donations.php&cleanup=done'));
-        exit;
-    }
+		// === CREATE BACKUP FOLDER ===
+		$upload_dir = wp_upload_dir();
+		$backup_dir = $upload_dir['basedir'] . '/greenpeace-backups';
+
+		if (!file_exists($backup_dir)) {
+			wp_mkdir_p($backup_dir);
+		}
+
+		// === BACKUP FILE NAME ===
+		$timestamp = date('Y-m-d_H-i-s');
+		$backup_file = $backup_dir . "/green_donations_BACKUP_{$timestamp}.csv";
+
+		// === FETCH ROWS TO BE DELETED ===
+		$rows = $wpdb->get_results(
+			$wpdb->prepare("SELECT * FROM $table WHERE `date` < %s", $date),
+			ARRAY_A
+		);
+
+		// === WRITE BACKUP CSV TO SERVER ===
+		if (!empty($rows)) {
+			$output = fopen($backup_file, 'w');
+			fputcsv($output, array_keys($rows[0]));
+			foreach ($rows as $row) fputcsv($output, $row);
+			fclose($output);
+		}
+
+		// === SEND FILE TO BROWSER ===
+		if (file_exists($backup_file)) {
+			header('Content-Type: text/csv; charset=utf-8');
+			header('Content-Disposition: attachment; filename="green_donations_BACKUP_' . $timestamp . '.csv"');
+			header('Content-Length: ' . filesize($backup_file));
+			readfile($backup_file);
+		}
+
+		// === DELETE OLD ROWS ===
+		$wpdb->query(
+			$wpdb->prepare("DELETE FROM $table WHERE `date` < %s", $date)
+		);
+
+		exit;
+	}
 
     
     // Insert to donation table
