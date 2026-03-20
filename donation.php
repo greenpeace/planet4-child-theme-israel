@@ -114,7 +114,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות</h1>
+                <h1>תרומות 2/h1>
             </header >
             <div class="content">
                 <table>
