@@ -5,6 +5,7 @@
  * Greenpeace Donation class
  * Built by DgCult - Eko Goren 3/2017
  * ekogoren@gmail.com
+ * updated by Ofer Or 3/2026
  */
 
  class greenpeace_donation{
@@ -56,6 +57,13 @@
         add_action( 'admin_menu', array($this,'register_my_custom_menu_page') );
         // add_action('wp', array($this,'defrayal_operations'));
     // moved to be before insert    $this->ensureGreenDonationsTableExists(); // create the table if it doesn't exist        
+
+	        // === ADDED ===
+        add_action('admin_post_greenpeace_export', array($this,'exportCSV'));
+        add_action('admin_post_greenpeace_import', array($this,'importCSV'));
+        add_action('admin_post_greenpeace_cleanup', array($this,'cleanupByDate'));
+        // === END ADDED ===
+
         $this->api = new PayPlus();
     } 
 
@@ -166,10 +174,38 @@
                     padding: 1px;
                     text-decoration: none;
                 }
-            </style><?php
+            </style>
+
+		<!-- === ADDED: EXPORT / IMPORT / CLEANUP UI === -->
+        <div style="margin-top:40px; padding:20px; border:1px solid #ccc; background:#fafafa;">
+            <h2>Export / Import / Cleanup</h2>
+
+            <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                <input type="hidden" name="action" value="greenpeace_export">
+                <button class="button button-primary">Export CSV</button>
+            </form>
+
+            <br>
+
+            <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="greenpeace_import">
+                <input type="file" name="csv_file" required>
+                <button class="button">Import CSV</button>
+            </form>
+
+            <br>
+
+            <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                <input type="hidden" name="action" value="greenpeace_cleanup">
+                <label>Delete donations before date:</label>
+                <input type="date" name="cleanup_date" required>
+                <button class="button button-danger">Cleanup</button>
+            </form>
+        </div>
+        <!-- === END ADDED === -->
+		<?php
     }
-
-
+		
     public function redirectStageTwo(){
 
         if(strpos($_SERVER['REQUEST_URI'], "stage-2")){
@@ -498,6 +534,95 @@
     //        error_log($table_name . ' exists and has ' . $total_items . ' items.' . "\n");
         }
     }
+	// === ADDED: EXPORT CSV ===
+    public function exportCSV() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'green_donations';
+
+        $rows = $wpdb->get_results("SELECT * FROM $table ORDER BY id DESC", ARRAY_A);
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=donations_export.csv');
+
+        $output = fopen('php://output', 'w');
+
+        if (!empty($rows)) {
+            fputcsv($output, array_keys($rows[0]));
+            foreach ($rows as $row) fputcsv($output, $row);
+        }
+
+        fclose($output);
+        exit;
+    }
+
+    // === ADDED: IMPORT CSV WITH DEFAULT VALUES ===
+    public function importCSV() {
+        if (!isset($_FILES['csv_file'])) wp_die("No file uploaded");
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'green_donations';
+
+        $file = fopen($_FILES['csv_file']['tmp_name'], 'r');
+        $header = fgetcsv($file);
+
+        // Remove ID column if exists
+        if (strtolower($header[0]) === 'id') array_shift($header);
+
+        // Default values for NOT NULL fields
+        $defaults = array(
+            "shovar" => "",
+            "card_type" => "",
+            "last_four" => "",
+            "tourist" => 0,
+            "ccval" => "",
+            "sale_f_id" => "",
+            "utm_campaign" => "",
+            "utm_source" => "",
+            "utm_medium" => "",
+            "utm_content" => "",
+            "utm_term" => "",
+            "transmited_to_sf" => 0
+        );
+
+        while (($line = fgetcsv($file)) !== false) {
+
+            if (count($line) === count($header) + 1) array_shift($line);
+
+            $data = array_combine($header, $line);
+
+            // Apply defaults for missing NOT NULL fields
+            foreach ($defaults as $key => $value) {
+                if (!isset($data[$key]) || $data[$key] === "") {
+                    $data[$key] = $value;
+                }
+            }
+
+            $wpdb->insert($table, $data);
+        }
+
+        fclose($file);
+
+        wp_redirect(admin_url('admin.php?page=greenpeace/donations.php&import=success'));
+        exit;
+    }
+
+    // === ADDED: CLEANUP BY DATE ===
+    public function cleanupByDate() {
+        if (!isset($_POST['cleanup_date'])) wp_die("Missing date");
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'green_donations';
+
+        $date = sanitize_text_field($_POST['cleanup_date']);
+
+        $wpdb->query(
+            $wpdb->prepare("DELETE FROM $table WHERE `date` < %s", $date)
+        );
+
+        wp_redirect(admin_url('admin.php?page=greenpeace/donations.php&cleanup=done'));
+        exit;
+    }
+
     
     // Insert to donation table
     public function insertToDonationTable($gform_entry_id, $first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type, $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term){
@@ -576,10 +701,10 @@
                 $data['recurring_settings']['instant_first_payment'] = false;
             }
         }
-// ofer debug 14-11-2025 - start
-        error_log("ofer debug 14-11-2025data: " . print_r($data, true) . "\n");
-//      echo "ofer debug 14-11-2025 data: " . print_r($data, true) . "<br>";
-// ofer debug 14-11-2025 - end
+        // ofer debug 14-11-2025 - start
+        error_log("ofer debug 14-11-2025 data: " . print_r($data, true) . "\n");
+        //      echo "ofer debug 14-11-2025 data: " . print_r($data, true) . "<br>";
+        // ofer debug 14-11-2025 - end
         $iframe_url = $this->api->apiRequest('/PaymentPages/generateLink', $data);
 
         if(isset($iframe_url->results)) {
@@ -650,23 +775,23 @@ function donation_gform_function($entry, $form) {
     $recurring = get_post_meta( $postID, 'p4_israel_donation_type', true );
     $payment_type = ($recurring === "recurring") ? "recurring" : "one-off";
 
-     error_log("donation_gform_function - payment type : " . $payment_type . "\n" );
-     error_log('ENTRY: ' . print_r($entry, true));
-     error_log('Field 27: ' . print_r(rgar($entry, '27'), true));
-     error_log('Field 27.1: ' . print_r(rgar($entry, '27.1'), true));
+    error_log("donation_gform_function - payment type : " . $payment_type . "\n" );
+    error_log('ENTRY: ' . print_r($entry, true));
+    error_log('Field 27: ' . print_r(rgar($entry, '27'), true));
+    error_log('Field 27.1: ' . print_r(rgar($entry, '27.1'), true));
      
     // for debug only
-     // echo "*** Retrieved values:<br>";
-     // echo "*** Record Id: " . $record_id . " <br>";
-     // echo "*** First Name: " . $first_name . " <br>";
-     // echo "*** Last Name: " . $last_name . " <br>";
-     // echo "*** Full Name: " . $name . " <br>";
-     // echo "*** Email: " . $email . " <br>";
-     // echo "*** Phone: " . $phone . " <br>";
-     // echo "*** Amount: " . $amount . " <br>";
-     // echo "*** Page: " . $page . " <br>";
-     // echo "***************************************** <br>";
-     // ... end of debug echo
+    // echo "*** Retrieved values:<br>";
+    // echo "*** Record Id: " . $record_id . " <br>";
+    // echo "*** First Name: " . $first_name . " <br>";
+    // echo "*** Last Name: " . $last_name . " <br>";
+    // echo "*** Full Name: " . $name . " <br>";
+    // echo "*** Email: " . $email . " <br>";
+    // echo "*** Phone: " . $phone . " <br>";
+    // echo "*** Amount: " . $amount . " <br>";
+    // echo "*** Page: " . $page . " <br>";
+    // echo "***************************************** <br>";
+    // ... end of debug echo
 
     $donation1 = new greenpeace_donation();
 
