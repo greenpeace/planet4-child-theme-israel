@@ -23,7 +23,7 @@
         $this->api = new PayPlus();
     } 
 
-    
+
     public function register_my_custom_menu_page() {
         add_menu_page( 'Donations', 'תרומות', 'manage_options', 'greenpeace/donations.php', array($this,'donateTable'), 'dashicons-thumbs-up', 10 );
     }
@@ -72,7 +72,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 9</h1>
+                <h1>תרומות 10</h1>
             </header >
 			<?php
 			$message = get_transient('greenpeace_cleanup_message');
