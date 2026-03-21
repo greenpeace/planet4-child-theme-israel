@@ -72,7 +72,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 18</h1>
+                <h1>תרומות 19</h1>
             </header >
             <div style="
                 margin-top:40px;
@@ -113,15 +113,10 @@
 
             </div>
 
-			<?php
-			$message = get_transient('donation_cleanup_message');
-			if ($message) {
-				$class = $message['type'] === 'success' ? 'notice-success' : 'notice-warning';
-				echo "<div class='notice {$class}' style='padding:10px; margin:15px 0;'><p>{$message['text']}</p></div>";
-				delete_transient('donation_cleanup_message');
-			}
-			?>
-
+            <?php
+                // display the massage from last action.
+                settings_errors('donation_cleanup');
+            ?>
             <div class="content">
                 <table>
                     <thead>
@@ -432,7 +427,20 @@
 
 		fclose($file);
 
-		wp_redirect(admin_url('admin.php?page=greenpeace/donations.php&import=success'));
+		//wp_redirect(admin_url('admin.php?page=greenpeace/donations.php&import=success'));
+        add_settings_error(
+            'donation_import',          // slug
+            'donation_import',     // code
+            ' רשומות התווספו לטבלה',  // message
+            'warning'                    // type: 'error', 'warning', 'success', 'info'
+        );
+    
+        // שמירת ההודעות לסשן הבא (אחרי רידיירקט)
+        set_transient('settings_errors', get_settings_errors(), 30);
+    
+        wp_redirect($_SERVER['HTTP_REFERER']);
+        exit;
+
 		exit;
 	}
 
@@ -453,20 +461,22 @@
 			$wpdb->prepare("SELECT COUNT(*) FROM $table WHERE `date` <= %s", $date)
 		);
 
-		if ($count == 0) {
+        if ($count == 0) {
             error_log("Cleanup Triggered - no records to delete 2\n");
-            // Clear output buffers to ensure transient is saved before redirect
-            while (ob_get_level()) {
-                ob_end_clean();
-            }
-			set_transient('donation_cleanup_message', [
-				'type' => 'warning',
-				'text' => 'לא נמצאו רשומות למחיקה.'
-			], 30);
-			wp_redirect($_SERVER['HTTP_REFERER']);
-			exit;
-		}
-
+            add_settings_error(
+                'donation_cleanup',          // slug
+                'donation_cleanup_none',     // code
+                'לא נמצאו רשומות למחיקה.',  // message
+                'warning'                    // type: 'error', 'warning', 'success', 'info'
+            );
+        
+            // שמירת ההודעות לסשן הבא (אחרי רידיירקט)
+            set_transient('settings_errors', get_settings_errors(), 30);
+        
+            wp_redirect($_SERVER['HTTP_REFERER']);
+            exit;
+        }
+    
 		// === CREATE BACKUP FOLDER ===
 		$upload_dir = wp_upload_dir();
 		$backup_dir = $upload_dir['basedir'] . '/greenpeace-backups';
