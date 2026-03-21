@@ -116,7 +116,7 @@
             </div>
 
 			<?php
-			$message = '***' . get_transient('donation_cleanup_message') . '***\n';
+			$message = get_transient('donation_cleanup_message');
 			if ($message) {
 				$class = $message['type'] === 'success' ? 'notice-success' : 'notice-warning';
 				echo "<div class='notice {$class}' style='padding:10px; margin:15px 0;'><p>{$message['text']}</p></div>";
