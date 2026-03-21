@@ -16,11 +16,11 @@
         //[gpf_username]
         add_action('wp_enqueue_scripts', array($this,'enqueue_script'));
         add_action( 'admin_menu', array($this,'register_my_custom_menu_page'));
-        add_action('admin_post_greenpeace_cleanup', array($this,'cleanupByDate'));
+        add_action('admin_post_donation_cleanup', array($this,'donationCleanupByDate'));
         add_action('admin_post_greenpeace_export', array($this,'exportCSV'));
         add_action('admin_post_greenpeace_import', array($this,'importCSV'));
 
-        error_log("HOOK cleanupByDate REGISTERED: " . (is_callable([$this, 'cleanupByDate']) ? "YES" : "NO") . "\n");
+        error_log("HOOK cleanupByDate REGISTERED: " . (is_callable([$this, 'donationCleanupByDate']) ? "YES" : "NO") . "\n");
 
         $this->api = new PayPlus();
     } 
@@ -74,7 +74,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 15</h1>
+                <h1>תרומות 16</h1>
             </header >
             <div style="
                 margin-top:40px;
@@ -88,7 +88,7 @@
                 <div style="border:1px solid #ccc; padding:15px; background:#fafafa;">
                     <h3 style="margin-top:0;">Cleanup by Date</h3>
                     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
-                        <input type="hidden" name="action" value="greenpeace_cleanup">
+                        <input type="hidden" name="action" value="donation_cleanup">
                         <input type="date" name="cleanup_date" required>
                         <button type="submit" class="button button-danger">Cleanup</button>
                     </form>
@@ -116,11 +116,11 @@
             </div>
 
 			<?php
-			$message = '***' . get_transient('greenpeace_cleanup_message') . '***\n';
+			$message = '***' . get_transient('donation_cleanup_message') . '***\n';
 			if ($message) {
 				$class = $message['type'] === 'success' ? 'notice-success' : 'notice-warning';
 				echo "<div class='notice {$class}' style='padding:10px; margin:15px 0;'><p>{$message['text']}</p></div>";
-				delete_transient('greenpeace_cleanup_message');
+				delete_transient('donation_cleanup_message');
 			}
 			?>
 
@@ -440,8 +440,8 @@
 
 
     // === ADDED: CLEANUP BY DATE ===
-	public function cleanupByDate() {
-        error_log("Cleanup Triggered 1\n");
+	public function donationCleanupByDate() {
+        error_log("donationCleanup Triggered 1\n");
 		if (!isset($_POST['cleanup_date'])) wp_die("Missing date");
 
 		global $wpdb;
@@ -456,7 +456,7 @@
 
 		if ($count == 0) {
             error_log("Cleanup Triggered - no records to delete 2\n");
-			set_transient('greenpeace_cleanup_message', [
+			set_transient('donation_cleanup_message', [
 				'type' => 'warning',
 				'text' => 'לא נמצאו רשומות למחיקה.'
 			], 30);
