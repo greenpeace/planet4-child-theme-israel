@@ -84,16 +84,6 @@
                 flex-wrap:nowrap;
             ">
 
-                <!-- Cleanup -->
-                <div style="border:1px solid #ccc; padding:15px; background:#fafafa;">
-                    <h3 style="margin-top:0;">Cleanup by Date</h3>
-                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
-                        <input type="hidden" name="action" value="donation_cleanup">
-                        <input type="date" name="cleanup_date" required>
-                        <button type="submit" class="button button-danger">Cleanup</button>
-                    </form>
-                </div>
-
                 <!-- Export -->
                 <div style="border:1px solid #ccc; padding:15px; background:#fafafa;">
                     <h3 style="margin-top:0;">Export</h3>
@@ -103,13 +93,23 @@
                     </form>
                 </div>
 
+                <!-- Cleanup -->
+                <div style="border:1px solid #ccc; padding:15px; background:#fafafa;">
+                    <h3 style="margin-top:0;">Cleanup by Date</h3>
+                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                        <input type="hidden" name="action" value="donation_cleanup">
+                        <input type="date" name="cleanup_date" required>
+                        <button type="submit" class="button button-primary">Cleanup</button>
+                    </form>
+                </div>
+
                 <!-- Import -->
                 <div style="border:1px solid #ccc; padding:15px; background:#fafafa;">
                     <h3 style="margin-top:0;">Import</h3>
                     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" enctype="multipart/form-data">
                         <input type="hidden" name="action" value="greenpeace_import">
                         <input type="file" name="csv_file" required>
-                        <button class="button">Import CSV</button>
+                        <button class="button button-primary">Import CSV</button>
                     </form>
                 </div>
                 <br>
