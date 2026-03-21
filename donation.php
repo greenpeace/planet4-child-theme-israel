@@ -15,10 +15,12 @@
         add_shortcode("greenpeace_username", array($this,'printUser'));
         //[gpf_username]
         add_action('wp_enqueue_scripts', array($this,'enqueue_script'));
-        add_action( 'admin_menu', array($this,'register_my_custom_menu_page') );
+        add_action( 'admin_menu', array($this,'register_my_custom_menu_page'));
+        add_action('admin_post_greenpeace_cleanup', array($this,'cleanupByDate'));
         add_action('admin_post_greenpeace_export', array($this,'exportCSV'));
         add_action('admin_post_greenpeace_import', array($this,'importCSV'));
-        add_action('admin_post_greenpeace_cleanup', array($this,'cleanupByDate'));
+
+        error_log("HOOK cleanupByDate REGISTERED: " . (is_callable([$this, 'cleanupByDate']) ? "YES" : "NO") . "\n");
 
         $this->api = new PayPlus();
     } 
@@ -72,7 +74,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 14</h1>
+                <h1>תרומות 15</h1>
             </header >
             <div style="
                 margin-top:40px;
@@ -110,11 +112,11 @@
                         <button class="button">Import CSV</button>
                     </form>
                 </div>
-
+                <br>
             </div>
 
 			<?php
-			$message = get_transient('greenpeace_cleanup_message');
+			$message = '***' . get_transient('greenpeace_cleanup_message') . '***\n';
 			if ($message) {
 				$class = $message['type'] === 'success' ? 'notice-success' : 'notice-warning';
 				echo "<div class='notice {$class}' style='padding:10px; margin:15px 0;'><p>{$message['text']}</p></div>";
