@@ -72,7 +72,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:20px;">
-                <h1>תרומות 22</h1>
+                <h1>תרומות 23</h1>
             </header >
             <div style="
                 margin-top:20px;
@@ -119,7 +119,7 @@
                 if ($saved = get_transient('settings_errors')) {
                     foreach ($saved as $error) {
                         add_settings_error(
-                            $error['setting'],
+                            'donation_cleanup', // slug should be donation_cleanup
                             $error['code'],
                             $error['message'],
                             $error['type']
