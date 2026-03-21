@@ -20,8 +20,6 @@
         add_action('admin_post_greenpeace_export', array($this,'exportCSV'));
         add_action('admin_post_greenpeace_import', array($this,'importCSV'));
 
-        error_log("HOOK cleanupByDate REGISTERED: " . (is_callable([$this, 'donationCleanupByDate']) ? "YES" : "NO") . "\n");
-
         $this->api = new PayPlus();
     } 
 
@@ -74,7 +72,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 17</h1>
+                <h1>תרומות 18</h1>
             </header >
             <div style="
                 margin-top:40px;
@@ -448,6 +446,7 @@
 		$table = $wpdb->prefix . 'green_donations';
 
 		$date = sanitize_text_field($_POST['cleanup_date']);
+        $date = $date . ' 23:59:59';
 
 		// Count rows to delete
 		$count = $wpdb->get_var(
@@ -456,6 +455,10 @@
 
 		if ($count == 0) {
             error_log("Cleanup Triggered - no records to delete 2\n");
+            // Clear output buffers to ensure transient is saved before redirect
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
 			set_transient('donation_cleanup_message', [
 				'type' => 'warning',
 				'text' => 'לא נמצאו רשומות למחיקה.'
