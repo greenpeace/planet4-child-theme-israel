@@ -72,7 +72,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 11</h1>
+                <h1>תרומות 12</h1>
             </header >
 			<?php
 			$message = get_transient('greenpeace_cleanup_message');
@@ -165,7 +165,7 @@
                 <input type="hidden" name="action" value="greenpeace_cleanup">
                 <label>Delete donations before date:</label>
                 <input type="date" name="cleanup_date" required>
-                <button class="button button-danger">Cleanup</button>
+                <button type="submit" class="button button-danger">Cleanup</button>
             </form>
         </div>
         <!-- === END ADDED === -->
