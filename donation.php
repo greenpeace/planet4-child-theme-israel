@@ -70,14 +70,15 @@
                 margin: -1px;
             }
         </style>
-        <div class="wrap about-wrap" >
+        <div class="wrap about-wrap">
             <header style="margin-bottom:20px;">
-                <h1>תרומות 23</h1>
+                <h1>תרומות 24</h1>
             </header >
             <div style="
-                margin-top:20px;
+                margin-top:10px;
+                margin-bottom:10px;"
                 display:flex;
-                gap:15px;
+                gap: 30px;px;
                 align-items:flex-start;
                 flex-wrap:nowrap;
             ">
