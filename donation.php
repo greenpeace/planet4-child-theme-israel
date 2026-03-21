@@ -74,7 +74,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 16</h1>
+                <h1>תרומות 17</h1>
             </header >
             <div style="
                 margin-top:40px;
@@ -112,7 +112,7 @@
                         <button class="button button-primary">Import CSV</button>
                     </form>
                 </div>
-                <br>
+
             </div>
 
 			<?php
@@ -484,31 +484,46 @@
 
 		// === WRITE BACKUP CSV TO SERVER ===
 		if (!empty($rows)) {
-            error_log("Cleanup Triggered - {$count} records to delete 3\n");
+            error_log("Cleanup Triggered - write {$count} records to backup CSV 3\n");
 			$output = fopen($backup_file, 'w');
 			fputcsv($output, array_keys($rows[0]));
 			foreach ($rows as $row) fputcsv($output, $row);
 			fclose($output);
 		}
 
-		// === SEND FILE TO BROWSER ===
-		if (file_exists($backup_file)) {
-            error_log("Cleanup Triggered - sending file to browser 4\n");
-			header('Content-Type: text/csv; charset=utf-8');
-			header('Content-Disposition: attachment; filename="green_donations_BACKUP_' . $timestamp . '.csv"');
-			header('Content-Length: ' . filesize($backup_file));
-			readfile($backup_file);
-		}
-
-		// === DELETE OLD ROWS ===
+   		// === DELETE OLD ROWS ===
 		$wpdb->query(
 			$wpdb->prepare("DELETE FROM $table WHERE `date` <= %s", $date)
 		);
-		set_transient('greenpeace_cleanup_message', [
+        error_log("Cleanup Triggered - {$count} records deleted 4\n");
+
+		// === SEND FILE TO BROWSER ===
+		if (file_exists($backup_file)) {
+            error_log("Cleanup Triggered - sending file to browser 5\n");
+            // === 5. Clean all output buffers BEFORE sending file ===
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+        
+            // === 6. Force file download ===
+            header('Content-Type: text/csv; charset=UTF-8');
+			header('Content-Disposition: attachment; filename="green_donations_BACKUP_' . $timestamp . '.csv"');
+			header('Content-Length: ' . filesize($backup_file));
+            header('Cache-Control: no-cache, must-revalidate');
+            header('Expires: 0');
+        
+			readfile($backup_file);
+        
+            // === 7. Stop WordPress from adding HTML ===
+            exit;
+		}
+
+        // if somehow no file exists (rare), fallback to redirect
+        set_transient('greenpeace_cleanup_message', [
 			'type' => 'success',
 			'text' => "נמחקו {$count} רשומות בהצלחה."
 		], 30);
-        error_log("Cleanup Triggered - set message 5\n");
+
 		wp_redirect($_SERVER['HTTP_REFERER']);
 		exit;
 	}
