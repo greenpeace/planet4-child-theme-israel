@@ -72,16 +72,9 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 12</h1>
+                <h1>תרומות 13</h1>
             </header >
-			<?php
-			$message = get_transient('greenpeace_cleanup_message');
-			if ($message) {
-				$class = $message['type'] === 'success' ? 'notice-success' : 'notice-warning';
-				echo "<div class='notice {$class}' style='padding:10px; margin:15px 0;'><p>{$message['text']}</p></div>";
-				delete_transient('greenpeace_cleanup_message');
-			}
-			?>
+			
             <div class="content">
                 <table>
                     <thead>
