@@ -72,7 +72,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 19</h1>
+                <h1>תרומות 20</h1>
             </header >
             <div style="
                 margin-top:40px;
@@ -115,6 +115,7 @@
 
             <?php
                 // display the massage from last action.
+                echo "******* כאן צריכה להופיע הודעה *******<br>";
                 settings_errors('donation_cleanup');
             ?>
             <div class="content">
