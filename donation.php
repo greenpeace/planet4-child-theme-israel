@@ -71,19 +71,19 @@
             }
         </style>
         <div class="wrap about-wrap" >
-            <header style="margin-bottom:40px;">
-                <h1>תרומות 21</h1>
+            <header style="margin-bottom:20px;">
+                <h1>תרומות 22</h1>
             </header >
             <div style="
-                margin-top:40px;
+                margin-top:20px;
                 display:flex;
-                gap:20px;
+                gap:15px;
                 align-items:flex-start;
                 flex-wrap:nowrap;
             ">
 
                 <!-- Export -->
-                <div style="border:1px solid #ccc; padding:15px; background:#fafafa;">
+                <div style="border:1px solid #ccc; padding:10px; background:#fafafa;">
                     <h3 style="margin-top:0;">Export</h3>
                     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
                         <input type="hidden" name="action" value="greenpeace_export">
@@ -92,7 +92,7 @@
                 </div>
 
                 <!-- Cleanup -->
-                <div style="border:1px solid #ccc; padding:15px; background:#fafafa;">
+                <div style="border:1px solid #ccc; padding:10px; background:#fafafa;">
                     <h3 style="margin-top:0;">Cleanup by Date</h3>
                     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
                         <input type="hidden" name="action" value="donation_cleanup">
@@ -102,7 +102,7 @@
                 </div>
 
                 <!-- Import -->
-                <div style="border:1px solid #ccc; padding:15px; background:#fafafa;">
+                <div style="border:1px solid #ccc; padding:10px; background:#fafafa;">
                     <h3 style="margin-top:0;">Import</h3>
                     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" enctype="multipart/form-data">
                         <input type="hidden" name="action" value="greenpeace_import">
