@@ -72,7 +72,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 10</h1>
+                <h1>תרומות 11</h1>
             </header >
 			<?php
 			$message = get_transient('greenpeace_cleanup_message');
@@ -426,6 +426,7 @@
 
     // === ADDED: CLEANUP BY DATE ===
 	public function cleanupByDate() {
+        error_log("Cleanup Triggered 1\n")
 		if (!isset($_POST['cleanup_date'])) wp_die("Missing date");
 
 		global $wpdb;
@@ -439,6 +440,7 @@
 		);
 
 		if ($count == 0) {
+            error_log("Cleanup Triggered - no records to delete 2\n")
 			set_transient('greenpeace_cleanup_message', [
 				'type' => 'warning',
 				'text' => 'לא נמצאו רשומות למחיקה.'
@@ -467,6 +469,7 @@
 
 		// === WRITE BACKUP CSV TO SERVER ===
 		if (!empty($rows)) {
+            error_log("Cleanup Triggered - {$count} records to delete 3\n")
 			$output = fopen($backup_file, 'w');
 			fputcsv($output, array_keys($rows[0]));
 			foreach ($rows as $row) fputcsv($output, $row);
@@ -475,6 +478,7 @@
 
 		// === SEND FILE TO BROWSER ===
 		if (file_exists($backup_file)) {
+            error_log("Cleanup Triggered - sending file to browser\n")
 			header('Content-Type: text/csv; charset=utf-8');
 			header('Content-Disposition: attachment; filename="green_donations_BACKUP_' . $timestamp . '.csv"');
 			header('Content-Length: ' . filesize($backup_file));
@@ -489,7 +493,7 @@
 			'type' => 'success',
 			'text' => "נמחקו {$count} רשומות בהצלחה."
 		], 30);
-
+        error_log("Cleanup Triggered - set message\n")
 		wp_redirect($_SERVER['HTTP_REFERER']);
 		exit;
 	}
