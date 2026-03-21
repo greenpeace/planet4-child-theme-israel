@@ -72,9 +72,56 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 13</h1>
+                <h1>תרומות 14</h1>
             </header >
-			
+            <div style="
+                margin-top:40px;
+                display:flex;
+                gap:20px;
+                align-items:flex-start;
+                flex-wrap:nowrap;
+            ">
+
+                <!-- Cleanup -->
+                <div style="border:1px solid #ccc; padding:15px; background:#fafafa;">
+                    <h3 style="margin-top:0;">Cleanup by Date</h3>
+                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                        <input type="hidden" name="action" value="greenpeace_cleanup">
+                        <input type="date" name="cleanup_date" required>
+                        <button type="submit" class="button button-danger">Cleanup</button>
+                    </form>
+                </div>
+
+                <!-- Export -->
+                <div style="border:1px solid #ccc; padding:15px; background:#fafafa;">
+                    <h3 style="margin-top:0;">Export</h3>
+                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                        <input type="hidden" name="action" value="greenpeace_export">
+                        <button class="button button-primary">Export CSV</button>
+                    </form>
+                </div>
+
+                <!-- Import -->
+                <div style="border:1px solid #ccc; padding:15px; background:#fafafa;">
+                    <h3 style="margin-top:0;">Import</h3>
+                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" enctype="multipart/form-data">
+                        <input type="hidden" name="action" value="greenpeace_import">
+                        <input type="file" name="csv_file" required>
+                        <button class="button">Import CSV</button>
+                    </form>
+                </div>
+
+            </div>
+
+			<?php
+			$message = get_transient('greenpeace_cleanup_message');
+			if ($message) {
+				$class = $message['type'] === 'success' ? 'notice-success' : 'notice-warning';
+				echo "<div class='notice {$class}' style='padding:10px; margin:15px 0;'><p>{$message['text']}</p></div>";
+				delete_transient('greenpeace_cleanup_message');
+			}
+			?>
+
             <div class="content">
                 <table>
                     <thead>
@@ -135,33 +182,6 @@
                 }
             </style>
 
-		<!-- === ADDED: EXPORT / IMPORT / CLEANUP UI === -->
-        <div style="margin-top:40px; padding:20px; border:1px solid #ccc; background:#fafafa;">
-            <h2>Export / Import / Cleanup</h2>
-
-            <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
-                <input type="hidden" name="action" value="greenpeace_export">
-                <button class="button button-primary">Export CSV</button>
-            </form>
-
-            <br>
-
-            <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" enctype="multipart/form-data">
-                <input type="hidden" name="action" value="greenpeace_import">
-                <input type="file" name="csv_file" required>
-                <button class="button">Import CSV</button>
-            </form>
-
-            <br>
-
-            <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
-                <input type="hidden" name="action" value="greenpeace_cleanup">
-                <label>Delete donations before date:</label>
-                <input type="date" name="cleanup_date" required>
-                <button type="submit" class="button button-danger">Cleanup</button>
-            </form>
-        </div>
-        <!-- === END ADDED === -->
 		<?php
     }
 
