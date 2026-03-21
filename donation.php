@@ -72,7 +72,7 @@
         </style>
         <div class="wrap about-wrap" >
             <header style="margin-bottom:40px;">
-                <h1>תרומות 20</h1>
+                <h1>תרומות 21</h1>
             </header >
             <div style="
                 margin-top:40px;
@@ -114,10 +114,24 @@
             </div>
 
             <?php
-                // display the massage from last action.
-                echo "******* כאן צריכה להופיע הודעה *******<br>";
+                // read and display the massage from the last action is exists
+                // Load saved settings errors after redirect and display them
+                if ($saved = get_transient('settings_errors')) {
+                    foreach ($saved as $error) {
+                        add_settings_error(
+                            $error['setting'],
+                            $error['code'],
+                            $error['message'],
+                            $error['type']
+                        );
+                    }
+                    delete_transient('settings_errors');
+                }
+
+                // Display the message
                 settings_errors('donation_cleanup');
             ?>
+
             <div class="content">
                 <table>
                     <thead>
