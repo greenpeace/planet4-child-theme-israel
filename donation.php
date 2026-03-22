@@ -76,7 +76,7 @@
             </header >
             <div style="
                 margin-top:10px;
-                margin-bottom:10px;"
+                margin-bottom:10px;
                 display:flex;
                 gap: 30px;px;
                 align-items:flex-start;
