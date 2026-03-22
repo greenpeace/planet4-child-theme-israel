@@ -33,7 +33,10 @@ function ppparams_register_settings() {
         'sanitize_callback' => 'ppparams_masked_password_sanitizer'
     ]);
 
-    register_setting('ppparams_settings_group', 'pp_debug_level');
+    register_setting('ppparams_settings_group', 'pp_debug_level', [
+        'sanitize_callback' => 'ppparams_sanitize_debug_level',
+        'default'           => 'none',
+    ]);
 
     // NEW: Payment Page UID
     register_setting('ppparams_settings_group', 'pp_payment_page_uid');
@@ -54,6 +57,12 @@ function ppparams_masked_password_sanitizer($value) {
     return $value;
 }
 
+function ppparams_sanitize_debug_level($value) {
+    $allowed = array('none', 'debug', 'panic');
+    $value   = is_string($value) ? strtolower(sanitize_text_field($value)) : '';
+    return in_array($value, $allowed, true) ? $value : 'none';
+}
+
 // ------------------------------------------------------
 // 4. Settings Page HTML
 // ------------------------------------------------------
@@ -66,7 +75,7 @@ function ppparams_settings_page_html() {
     ?>
 
     <div class="wrap">
-        <h1>PayPlus API Parameters</h1>
+        <h1>PayPlus API Parameters 1</h1>
 
         <form method="post" action="options.php">
             <?php settings_fields('ppparams_settings_group'); ?>
@@ -89,20 +98,28 @@ function ppparams_settings_page_html() {
                     </td>
                 </tr>
 
-                <tr>
-                    <th><label for="pp_debug_level">Debug Level</label></th>
-                    <td>
-                        <input type="text" id="pp_debug_level" name="pp_debug_level"
-                               value="<?php echo esc_attr(get_option('pp_debug_level')); ?>" />
-                    </td>
-                </tr>
-
-                <!-- NEW: Payment Page UID -->
-                <tr>
+                 <tr>
                     <th><label for="pp_payment_page_uid">Payment Page UID</label></th>
                     <td>
                         <input type="text" id="pp_payment_page_uid" name="pp_payment_page_uid"
                                value="<?php echo esc_attr(get_option('pp_payment_page_uid')); ?>" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <th><label for="pp_debug_level">Debug Level</label></th>
+                    <td>
+                        <?php
+                        $pp_debug_level = get_option('pp_debug_level', 'none');
+                        if (!in_array($pp_debug_level, array('none', 'debug', 'panic'), true)) {
+                            $pp_debug_level = 'none';
+                        }
+                        ?>
+                        <select id="pp_debug_level" name="pp_debug_level">
+                            <option value="none" <?php selected($pp_debug_level, 'none'); ?>><?php echo esc_html__('None', 'planet4-child-theme-israel'); ?></option>
+                            <option value="debug" <?php selected($pp_debug_level, 'debug'); ?>><?php echo esc_html__('Debug', 'planet4-child-theme-israel'); ?></option>
+                            <option value="panic" <?php selected($pp_debug_level, 'panic'); ?>><?php echo esc_html__('Panic', 'planet4-child-theme-israel'); ?></option>
+                        </select>
                     </td>
                 </tr>
 
@@ -126,7 +143,8 @@ function getPayPlusParams() {
 }
 
 function getDebugLevelParam() {
-    return (int) get_option('pp_debug_level');
+    $v = get_option('pp_debug_level', 'none');
+    return in_array($v, array('none', 'debug', 'panic'), true) ? $v : 'none';
 }
 
 // NEW: Payment Page UID getter
