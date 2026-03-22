@@ -11,6 +11,7 @@
 // *******************************************************
 include 'Helpers.php';
 include 'salesforce-parameters.php';
+include 'payplus-parameters.php';
 include 'PayPlus.php';
 include 'donation.php'; // build and handle donations table and UI
 
