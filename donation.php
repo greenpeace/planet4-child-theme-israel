@@ -70,9 +70,12 @@
                 margin: -1px;
             }
         </style>
-        <div class="wrap about-wrap">
+        <?php
+        // Do not use class "about-wrap": core admin CSS hides .about-wrap .notice (Trac #32625), so feedback never appears.
+        ?>
+        <div class="wrap gp-donations-admin">
             <header style="margin-bottom:20px;">
-                <h1>תרומות 26</h1>
+                <h1>תרומות 27</h1>
             </header >
             <div style="
                 margin-top:10px;
@@ -95,7 +98,8 @@
                 <!-- Cleanup -->
                 <div style="border:1px solid #ccc; padding:10px; background:#fafafa;">
                     <h3 style="margin-top:0;">Cleanup by Date</h3>
-                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <?php wp_nonce_field('donation_cleanup_action', 'donation_cleanup_nonce'); ?>
                         <input type="hidden" name="action" value="donation_cleanup">
                         <input type="date" name="cleanup_date" required>
                         <button type="submit" class="button button-primary">Cleanup</button>
@@ -115,7 +119,21 @@
             </div>
 
             <?php
-                // Post-redirect notices (reliable; avoids generic transient name + settings API edge cases on admin-post.php)
+                // URL flag (works even when transients/object cache fail); values are whitelisted, not echoed from user input.
+                $gp_don_notice_key = isset($_GET['gp_don_notice']) ? sanitize_key(wp_unslash($_GET['gp_don_notice'])) : '';
+                $gp_don_notice_map = array(
+                    'cleanup_none' => array('type' => 'warning', 'message' => 'לא נמצאו רשומות למחיקה.'),
+                );
+                if ($gp_don_notice_key !== '' && isset($gp_don_notice_map[$gp_don_notice_key])) {
+                    $gp_nm = $gp_don_notice_map[$gp_don_notice_key];
+                    printf(
+                        '<div class="notice notice-%1$s is-dismissible"><p>%2$s</p></div>',
+                        esc_attr($gp_nm['type']),
+                        esc_html($gp_nm['message'])
+                    );
+                }
+
+                // Post-redirect notices (backup if redirect used transient only)
                 $gp_notice = get_transient('gp_il_donations_notice');
                 if (is_array($gp_notice) && !empty($gp_notice['message'])) {
                     delete_transient('gp_il_donations_notice');
@@ -484,7 +502,15 @@
     // === ADDED: CLEANUP BY DATE ===
 	public function donationCleanupByDate() {
         error_log("donationCleanup Triggered 1\n");
-		if (!isset($_POST['cleanup_date'])) wp_die("Missing date");
+		if (!isset($_POST['cleanup_date'])) {
+			wp_die(__('Missing date.', 'planet4-child-theme-israel'));
+		}
+		if (!isset($_POST['donation_cleanup_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['donation_cleanup_nonce'])), 'donation_cleanup_action')) {
+			wp_die(__('Invalid cleanup request.', 'planet4-child-theme-israel'));
+		}
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to run cleanup.', 'planet4-child-theme-israel'));
+		}
 
 		global $wpdb;
 		$table = $wpdb->prefix . 'green_donations';
@@ -499,15 +525,12 @@
 
         if ((int) $count === 0) {
             error_log("Cleanup Triggered - no records to delete 2\n");
-            set_transient(
-                'gp_il_donations_notice',
-                array(
-                    'type'    => 'warning',
-                    'message' => 'לא נמצאו רשומות למחיקה.',
-                ),
-                30
+            $redirect = add_query_arg(
+                'gp_don_notice',
+                'cleanup_none',
+                admin_url('admin.php?page=greenpeace/donations.php')
             );
-            wp_safe_redirect(wp_get_referer() ? wp_get_referer() : admin_url('admin.php?page=greenpeace/donations.php'));
+            wp_safe_redirect($redirect);
             exit;
         }
     
