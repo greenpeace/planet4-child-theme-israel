@@ -75,7 +75,7 @@
         ?>
         <div class="wrap gp-donations-admin">
             <header style="margin-bottom:20px;">
-                <h1>תרומות 27</h1>
+                <h1>תרומות 28</h1>
             </header >
             <div style="
                 margin-top:10px;
@@ -455,6 +455,8 @@
 			"transmited_to_sf" => 0
 		);
 
+		$imported_count = 0;
+
 		while (($line = fgetcsv($file)) !== false) {
 
 			// Convert each field to UTF‑8 (supports Hebrew)
@@ -476,7 +478,9 @@
 				}
 			}
 
-			$wpdb->insert($table, $data);
+			if (false !== $wpdb->insert($table, $data)) {
+				$imported_count++;
+			}
 		}
 
 		fclose($file);
@@ -485,7 +489,11 @@
         add_settings_error(
             'donation_import',          // slug
             'donation_import',     // code
-            ' רשומות התווספו לטבלה',  // message
+            sprintf(
+                /* translators: %s: number of CSV rows successfully inserted */
+                __('התווספו %s רשומות לטבלה.', 'planet4-child-theme-israel'),
+                number_format_i18n($imported_count)
+            ),
             'warning'                    // type: 'error', 'warning', 'success', 'info'
         );
     
