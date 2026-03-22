@@ -72,7 +72,7 @@
         </style>
         <div class="wrap about-wrap">
             <header style="margin-bottom:20px;">
-                <h1>תרומות 25</h1>
+                <h1>תרומות 26</h1>
             </header >
             <div style="
                 margin-top:10px;
@@ -115,6 +115,21 @@
             </div>
 
             <?php
+                // Post-redirect notices (reliable; avoids generic transient name + settings API edge cases on admin-post.php)
+                $gp_notice = get_transient('gp_il_donations_notice');
+                if (is_array($gp_notice) && !empty($gp_notice['message'])) {
+                    delete_transient('gp_il_donations_notice');
+                    $n_type = isset($gp_notice['type']) ? $gp_notice['type'] : 'info';
+                    if (!in_array($n_type, array('error', 'warning', 'success', 'info'), true)) {
+                        $n_type = 'info';
+                    }
+                    printf(
+                        '<div class="notice notice-%1$s is-dismissible"><p>%2$s</p></div>',
+                        esc_attr($n_type),
+                        esc_html($gp_notice['message'])
+                    );
+                }
+
                 // read and display the massage from the last action is exists
                 // Load saved settings errors after redirect and display them
                 if ($saved = get_transient('settings_errors')) {
@@ -131,29 +146,34 @@
 
                 // Display the message
                 settings_errors('donation_cleanup');
+                settings_errors('donation_import');
             ?>
 
             <div class="content">
+                <?php if (empty($donations)) : ?>
+                    <p><?php echo esc_html__('No donation records in the table.', 'planet4-child-theme-israel'); ?></p>
+                <?php else : ?>
                 <table>
                     <thead>
                     <?php
-                    foreach($donations[0] as $key => $value){
-                        echo "<th>" . $key . "</th>";
+                    foreach ($donations[0] as $key => $value) {
+                        echo "<th>" . esc_html($key) . "</th>";
                     }
                     ?>
                     </thead>
                     <tbody>
                     <?php
-                    foreach($donations as $donation){
+                    foreach ($donations as $donation) {
                         echo "<tr>";
-                        foreach($donation as $field){
-                            echo "<td>" . $field . "</td>";
+                        foreach ($donation as $field) {
+                            echo "<td>" . esc_html((string) $field) . "</td>";
                         }
                         echo "</tr>";
                     }
                     ?>
                     </tbody>
                 </table>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -477,19 +497,17 @@
 			$wpdb->prepare("SELECT COUNT(*) FROM $table WHERE `date` <= %s", $date)
 		);
 
-        if ($count == 0) {
+        if ((int) $count === 0) {
             error_log("Cleanup Triggered - no records to delete 2\n");
-            add_settings_error(
-                'donation_cleanup',          // slug
-                'donation_cleanup_none',     // code
-                'לא נמצאו רשומות למחיקה.',  // message
-                'warning'                    // type: 'error', 'warning', 'success', 'info'
+            set_transient(
+                'gp_il_donations_notice',
+                array(
+                    'type'    => 'warning',
+                    'message' => 'לא נמצאו רשומות למחיקה.',
+                ),
+                30
             );
-        
-            // שמירת ההודעות לסשן הבא (אחרי רידיירקט)
-            set_transient('settings_errors', get_settings_errors(), 30);
-        
-            wp_redirect($_SERVER['HTTP_REFERER']);
+            wp_safe_redirect(wp_get_referer() ? wp_get_referer() : admin_url('admin.php?page=greenpeace/donations.php'));
             exit;
         }
     
