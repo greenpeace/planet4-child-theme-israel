@@ -75,7 +75,7 @@
         ?>
         <div class="wrap gp-donations-admin">
             <header style="margin-bottom:20px;">
-                <h1>תרומות 28</h1>
+                <h1>תרומות</h1>
             </header >
             <div style="
                 margin-top:10px;
