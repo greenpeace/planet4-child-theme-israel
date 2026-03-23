@@ -642,6 +642,11 @@
             throw new Exception('PayPlus payment_page_uid missing (pp_payment_page_uid).');
         }
 
+        $post_id = (int) $page;
+        $thank_you_page_url = esc_url_raw(
+            get_post_meta($post_id, 'p4_israel_donation_thank_you_page_url', true)
+        );
+
         $data = [
             "payment_page_uid" => $payment_page_uid,
             "expiry_datetime" => "30",
@@ -649,8 +654,8 @@
             "language_code" => $language_code,
             'create_token' => true,
             'charge_method' => $recurring ? 3 : 1,
-            "refURL_success" => 'https://www-dev.greenpeace.org/israel/joinus-thankyou/',
-            "refURL_failure" => 'https://www-dev.greenpeace.org/israel/joinus-thankyou/',
+            "refURL_success" => $thank_you_page_url,
+            "refURL_failure" => $thank_you_page_url,
             "refURL_callback" => 'https://www-dev.greenpeace.org/israel/payplus-callback/',
             "customer" => [
                 "customer_name" => $clientName,
