@@ -81,7 +81,7 @@ class PayPlus
         $params = getPayPlusParams();
         if (empty($params['api_key']) || empty($params['secret_key'])) {
             // Fail loudly: never call PayPlus with missing credentials.
-            error_log('PayPlus API credentials missing: pp_api_key and/or pp_secret_key.');
+            debug_log('Error', 'ERROR: PayPlus API credentials missing: pp_api_key and/or pp_secret_key.');
             throw new Exception('PayPlus API credentials missing (pp_api_key / pp_secret_key).');
         }
 

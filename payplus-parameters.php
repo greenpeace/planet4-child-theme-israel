@@ -151,3 +151,33 @@ function getDebugLevelParam() {
 function getPaymentPageUidParam() {
     return get_option('pp_payment_page_uid');
 }
+
+/**
+ * Global logger used to replace legacy error_log(...) calls.
+ *
+ * Rules (based on pp_debug_level):
+ * - level=panic -> log only when setting=panic
+ * - level=debug -> log when setting=debug OR setting=panic
+ * - level other -> always log
+ *
+ * @param string $level
+ * @param mixed  $message
+ */
+function debug_log($level, $message) {
+    $setting = getDebugLevelParam();
+    $level_key = strtolower(is_string($level) ? sanitize_key($level) : '');
+
+    $log_it = false;
+    if ($level_key === 'panic') {
+        $log_it = ($setting === 'panic');
+    } elseif ($level_key === 'debug') {
+        $log_it = ($setting === 'debug' || $setting === 'panic');
+    } elseif ($level_key !== 'panic' && $level_key !== 'debug') {
+        $log_it = true;
+    }
+
+    if ($log_it) {
+        $line = is_string($message) ? $message : print_r($message, true);
+        error_log($line . PHP_EOL);
+    }
+}

@@ -12,17 +12,17 @@ require_once 'SalesForce.php';
 
 const SALESFORCE_LOGIN_URI = 'https://test.salesforce.com'; // 'https://login.salesforce.com';
 
-error_log("payplus-callback.php  start .... 001 \n");
+debug_log('Panic', "payplus-callback.php  start .... 001 ");
 
 /* $get_string = http_build_query($_GET);
-error_log(" payplus-callback.php get_string = {" . $get_string . "}\n"); // Log it to the error log
+debug_log('Panic', " payplus-callback.php get_string = {" . $get_string . "}"); // Log it to the error log
 $post_string = http_build_query($_POST);
-error_log(" payplus-callback.php post_string = {" . $post_string . "}\n"); // Log it to the error log
-error_log("payplus-callback.php  start .... 002 \n");  
+debug_log('Panic', " payplus-callback.php post_string = {" . $post_string . "}\n"); // Log it to the error log
+debug_log('Panic', "payplus-callback.php  start .... 002 \n");  
 */
 
 do_payplus_ipn_min();
-error_log("payplus-callback.php  end .... 001   \n");
+debug_log('Panic', "payplus-callback.php  end .... 001 ");
 
 
 function do_payplus_ipn_min() {
@@ -30,29 +30,29 @@ function do_payplus_ipn_min() {
     $data = (object) json_decode($request_data);
 
 	$logMessage = "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (1)";
-    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (1): \n" . print_r($data, true) . "\n");
+    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (1): " . print_r($data, true) );
 
     if(!is_object($data) || empty($data) || !isset($data->data, $data->transaction)) {
         return false;
     }
-    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (2)");
+    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (2)");
 
     $transaction = $data->transaction;
     $invoice = $data->invoice;
     $data = $data->data;
 
-    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (3)");
+    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (3)");
 
-    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 transaction (4): \n" . print_r($transaction, true) . "\n");
-    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 invoice (4): \n" . print_r($invoice, true) . "\n");
-    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (4): \n" . print_r($data, true) . "\n");
+    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 transaction (4): " . print_r($transaction, true) );
+    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 invoice (4): " . print_r($invoice, true) );
+    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (4): " . print_r($data, true) );
 
 
     if(!isset($transaction->uid)) {
         return false;
     }
 	
-    error_log("payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 (5) \n");
+    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 (5) ");
 
     $id = intval(trim( $transaction->more_info ));
     $amount = $transaction->amount;
@@ -91,8 +91,8 @@ function do_payplus_ipn_min() {
         )
     );
 
-    error_log(" payplus-callback.php befor update DB: id = " . $id . " *****\n"); // Log it to the error log
-    error_log(" payplus-callback.php befor update DB: amount = " . $amount . " *****\n"); // Log it to the error log
+    debug_log('Panic', " payplus-callback.php befor update DB: id = " . $id . " *****"); // Log it to the error log
+    debug_log('Panic', " payplus-callback.php befor update DB: amount = " . $amount . " *****"); // Log it to the error log
 
     $test = $wpdb->query(
         $wpdb->prepare(
@@ -104,11 +104,11 @@ function do_payplus_ipn_min() {
     // skip SalesForce update - Donation monitor will do that if needed - Ofer Or 16-Mar-2026
     /*    // Uptade SalesForce 
         if( empty($transaction_exists->sale_f_id) ) { //Transaction not transmitted to SalesForce yet
-            error_log("ofer debug 13-12-2025 : transaction sent to sf right now. \n");
+            debug_log('Panic', "ofer debug 13-12-2025 : transaction sent to sf right now. ");
             salesForce($id, $invoice_url, $invoice_id, $data, $transaction);
             echo ' transaction sent to sf right now. ';
         } else {
-            error_log("ofer debug 13-12-2025 : transaction already transmitted to sf, ignoring.  \n");
+            debug_log('Panic', "ofer debug 13-12-2025 : transaction already transmitted to sf, ignoring.  ");
             echo ' transaction already transmitted to sf, ignoring. ';
         }
     */
@@ -119,11 +119,11 @@ function do_payplus_ipn_min() {
 function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
 
     $params = getSalesforceParams_new();
-    error_log(" payplus-callback.php salesForce 1 *** ** **\n"); // Log it to the error log
+    debug_log('Panic', " payplus-callback.php salesForce 1 "); // Log it to the error log
     // Ensure it's a string
     if (!is_string($params)) {
         $type = gettype($params);
-        error_log("SF ERROR: Expected string, got: $type\n");
+        debug_log('Error', "SF ERROR: Expected string, got: $type");
         return;
     }
     // Split into key=value pairs
@@ -133,9 +133,9 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
         $value = urldecode($value); // decode for readability
         $first3 = substr($value, 0, 3);
         $last3  = substr($value, -3);
-        error_log("SF Param Preview - $key: {$first3}...{$last3}\n");
+        debug_log('Panic', "SF Param Preview - $key: {$first3}...{$last3}");
     }
-    error_log(" payplus-callback.php salesForce 2 *** ** **\n"); // Log it to the error log
+    debug_log('Panic', " payplus-callback.php salesForce 2 "); // Log it to the error log
     $token_url = SALESFORCE_LOGIN_URI . "/services/oauth2/token";
     $curl = curl_init(SALESFORCE_LOGIN_URI . "/services/oauth2/token");
     curl_setopt($curl, CURLOPT_HEADER, false);
@@ -160,14 +160,14 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
         );
 
         // 2. Send to the system logger
-        error_log($log_message);
+        debug_log('Error', 'ERROR: ' . $log_message);
 
         //die("Error: call to token URL $token_url failed with status $status, response $json_response, curl_error " . curl_error($curl) . ", curl_errno " . curl_errno($curl));
         //errAdmin("Error: couldn't get auth-url. response $json_response, curl_error " . curl_error($curl) . ", curl_errno " . curl_errno($curl) . " ID:" . $_SESSION["donation"]->id);
         //echo '<script> window.top.location = "'.get_permalink(33). "?username=" .  $_SESSION["donation"]->first_name  .'"; </script>';
         exit();
     }
-    error_log(" payplus-callback.php salesForce  2 *****\n"); // Log it to the error log
+    debug_log('Panic', " payplus-callback.php salesForce  2 *****"); // Log it to the error log
 
     curl_close($curl);
 
@@ -182,7 +182,7 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
         // echo '<script> window.top.location = "'.get_permalink(33). "?username=" .  $_SESSION["donation"]->first_name  .'"; </script>';
         exit();
     }
-    error_log(" payplus-callback.php salesForce 3 *****\n"); // Log it to the error log
+    debug_log('Panic', " payplus-callback.php salesForce 3 *****"); // Log it to the error log
 
     if (!isset($instance_url) || $instance_url == "") {
         //die("Error - instance URL missing from response!");
@@ -203,7 +203,7 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
             $rowId
         )
     );
-    error_log(" payplus-callback.php salesForce 4 *****  id= " . $rowId ."\n"); // Log it to the error log
+    debug_log('Panic', " payplus-callback.php salesForce 4 *****  id= " . $rowId ); // Log it to the error log
 
     $url = "$instance_url/services/data/v54.0/sobjects/Case/";
 
@@ -271,7 +271,7 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
         echo 'success??';
     }
 
-    error_log(" payplus-callback.php salesForce 5 *****\n"); // Log it to the error log
+    debug_log('Panic', " payplus-callback.php salesForce 5 *****"); // Log it to the error log
 
     curl_close($curl);
 
@@ -284,7 +284,7 @@ function salesForce($rowId, $link, $invoiceNum, $data, $transaction) {
 
     if(!$response["success"]) errAdmin("DB record ".$arr->{"id"}." not set. Raw response: " . $json_response);
 
-    error_log(" payplus-callback.php salesForce 10 *****  salesForceId= " . $salesForceId ."\n"); // Log it to the error log
+    debug_log('Panic', " payplus-callback.php salesForce 10 *****  salesForceId= " . $salesForceId ); // Log it to the error log
 
     $wpdb->query(
         $wpdb->prepare(

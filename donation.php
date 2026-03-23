@@ -37,9 +37,9 @@
         $current_url = esc_url_raw(add_query_arg(null, null)); // Get current URL
         $table_name = $wpdb->prefix . 'green_donations';
 
-        error_log('green donation table name is: ' . $table_name );
+        debug_log('Panic', 'green donation table name is: ' . $table_name );
         $total_items = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
-        error_log('green donation table has ' . $total_items . ' items');
+        debug_log('Panic', 'green donation table has ' . $total_items . ' items');
 
         if ( $show_all ) {
             $donations = $wpdb->get_results( "SELECT * FROM $table_name" ); // Fetch all items
@@ -319,7 +319,7 @@
 
         // Check if the table exists
         if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) != $table_name ) {
-            error_log($table_name . ' table does not exist, creating it.' . "\n");
+            debug_log('Info', 'INFO: ' . $table_name . ' table does not exist, creating it.');
             // Table does not exist, so create it
             $sql = "CREATE TABLE $table_name (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -509,7 +509,7 @@
 
     // === ADDED: CLEANUP BY DATE ===
 	public function donationCleanupByDate() {
-        error_log("donationCleanup Triggered 1\n");
+        debug_log('Panic', "donationCleanup Triggered 1");
 		if (!isset($_POST['cleanup_date'])) {
 			wp_die(__('Missing date.', 'planet4-child-theme-israel'));
 		}
@@ -532,7 +532,7 @@
 		);
 
         if ((int) $count === 0) {
-            error_log("Cleanup Triggered - no records to delete 2\n");
+            debug_log('Panic', "Cleanup Triggered - no records to delete 2");
             $redirect = add_query_arg(
                 'gp_don_notice',
                 'cleanup_none',
@@ -562,7 +562,7 @@
 
 		// === WRITE BACKUP CSV TO SERVER ===
 		if (!empty($rows)) {
-            error_log("Cleanup Triggered - write {$count} records to backup CSV 3\n");
+            debug_log('Panic', "Cleanup Triggered - write {$count} records to backup CSV 3");
 			$output = fopen($backup_file, 'w');
 			fputcsv($output, array_keys($rows[0]));
 			foreach ($rows as $row) fputcsv($output, $row);
@@ -573,11 +573,11 @@
 		$wpdb->query(
 			$wpdb->prepare("DELETE FROM $table WHERE `date` <= %s", $date)
 		);
-        error_log("Cleanup Triggered - {$count} records deleted 4\n");
+        debug_log('Panic', "Cleanup Triggered - {$count} records deleted 4");
 
 		// === SEND FILE TO BROWSER ===
 		if (file_exists($backup_file)) {
-            error_log("Cleanup Triggered - sending file to browser 5\n");
+            debug_log('Panic', "Cleanup Triggered - sending file to browser 5");
             // === 5. Clean all output buffers BEFORE sending file ===
             while (ob_get_level()) {
                 ob_end_clean();
@@ -615,7 +615,7 @@
         global $wpdb;
         $table_name = $wpdb->prefix . 'green_donations';
 
-        error_log("insertToDonationTable: green donation table name is: " . $table_name . "\n");
+        debug_log('Panic', "insertToDonationTable: green donation table name is: " . $table_name );
 
         $wpdb->query(
             $wpdb->prepare(
@@ -630,7 +630,7 @@
 
 
     public function getIframe($unique, $amount, $clientName, $email, $phone, $page, $payment_type){
-        error_log("*** get Iframe start ......\n");
+        debug_log('Panic', "*** get Iframe start ......");
 
         $language_code = 'he-il';
 
@@ -638,8 +638,8 @@
 
         $payment_page_uid = getPaymentPageUidParam();
         if (empty($payment_page_uid)) {
-            error_log('PayPlus payment_page_uid is missing (pp_payment_page_uid option is empty).');
-            throw new Exception('PayPlus payment_page_uid missing (pp_payment_page_uid).');
+            debug_log('Error', 'ERROR: PayPlus payment_page_uid is missing (pp_payment_page_uid option is empty).');
+            throw new Exception('ERROR: PayPlus payment_page_uid missing (pp_payment_page_uid).');
         }
 
         $post_id = (int) $page;
@@ -689,7 +689,7 @@
             }
         }
         // ofer debug 14-11-2025 - start
-        error_log("ofer debug 14-11-2025 data: " . print_r($data, true) . "\n");
+        debug_log('Panic', "ofer debug 14-11-2025 data: " . print_r($data, true) );
         //      echo "ofer debug 14-11-2025 data: " . print_r($data, true) . "<br>";
         // ofer debug 14-11-2025 - end
         $iframe_url = $this->api->apiRequest('/PaymentPages/generateLink', $data);
@@ -731,7 +731,7 @@
 
 function donation_gform_function($entry, $form) {
 
-    error_log("2******** donation_gform_function called **********\n" );
+    debug_log('Panic', "********* donation_gform_function called **********" );
     // echo "2******** donation_gform_function called **********<br>";
 
     // Debug echo at function start
@@ -761,10 +761,10 @@ function donation_gform_function($entry, $form) {
     $recurring = get_post_meta( $postID, 'p4_israel_donation_type', true );
     $payment_type = ($recurring === "recurring") ? "recurring" : "one-off";
 
-    error_log("donation_gform_function - payment type : " . $payment_type . "\n" );
-    error_log('ENTRY: ' . print_r($entry, true));
-    error_log('Field 27: ' . print_r(rgar($entry, '27'), true));
-    error_log('Field 27.1: ' . print_r(rgar($entry, '27.1'), true));
+    debug_log('Panic', "donation_gform_function - payment type : " . $payment_type );
+    debug_log('Panic', 'ENTRY: ' . print_r($entry, true));
+    debug_log('Panic', 'Field 27: ' . print_r(rgar($entry, '27'), true));
+    debug_log('Panic', 'Field 27.1: ' . print_r(rgar($entry, '27.1'), true));
      
     // for debug only
     // echo "*** Retrieved values:<br>";

@@ -7,28 +7,7 @@ trait Helpers
         $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     
         // כתיבה ל‑debug.log
-        error_log("SalesForce Log: " . $json);
-    }
-
-    /**
-     * Log via error_log according to pp_debug_level:
-     * none — no output. debug — only messages with level "debug". panic — all messages.
-     */
-    protected function debug_log($level, $message) {
-        $setting   = getDebugLevelParam();
-        $level_key = strtolower(is_string($level) ? sanitize_key($level) : '');
-
-        $log_it = false;
-        if ($setting === 'panic') {
-            $log_it = true;
-        } elseif ($setting === 'debug' && $level_key === 'debug') {
-            $log_it = true;
-        }
-
-        if ($log_it) {
-            $line = is_string($message) ? $message : print_r($message, true);
-            error_log($line . PHP_EOL);
-        }
+        debug_log('Panic', "SalesForce Log: " . $json);
     }
 
     public function httpRequest($url, $data = [], $headers = null, $raw = false, $auth = null, $method = 'POST', $cert = false) {

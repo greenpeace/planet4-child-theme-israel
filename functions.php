@@ -74,9 +74,9 @@ function set_radio_choices_from_shortcode( $form ) {
      $donation_type = get_post_meta( $post_id, 'p4_israel_donation_type', true );
      
      // Debug logging
-     error_log( "Post ID used: " . $post_id );
-     error_log( "Radio button values : amount1={$values['amount1']} | amount2={$values['amount2']} | amount3={$values['amount3']}" );
-     error_log( "Donation type: " . $donation_type );
+    debug_log('Panic', "Post ID used: " . $post_id );
+    debug_log('Panic', "Radio button values : amount1={$values['amount1']} | amount2={$values['amount2']} | amount3={$values['amount3']}" );
+    debug_log('Panic', "Donation type: " . $donation_type );
 
     // Now set radio choices
     foreach ( $form['fields'] as &$field ) {
@@ -117,21 +117,21 @@ function set_radio_choices_from_shortcode( $form ) {
 add_filter( 'gform_field_validation_60_25', 'validate_other_choice', 10, 4 );
 function validate_other_choice( $result, $value, $form, $field ) {
 
-    error_log("********* validate_other_choice function called **********\n" );
+    debug_log('Panic', "********* validate_other_choice function called **********" );
 
     $field_id_radio = 25;
-     // Get current post/page ID
-     global $post;
-     $post_id = $post ? $post->ID : get_the_ID();
-     
-     // If no post ID, try to get it from the form's page ID
-     if ( empty( $post_id ) && isset( $form['pageId'] ) ) {
-         $post_id = $form['pageId'];
-     }
-     
-     // Read native WordPress custom fields
-     $min_amount = get_post_meta( $post_id, 'p4_israel_donation_min_amount', true );
-     error_log("********* Min amount: " . $min_amount . " **********\n" );
+    // Get current post/page ID
+    global $post;
+    $post_id = $post ? $post->ID : get_the_ID();
+    
+    // If no post ID, try to get it from the form's page ID
+    if ( empty( $post_id ) && isset( $form['pageId'] ) ) {
+        $post_id = $form['pageId'];
+    }
+    
+    // Read native WordPress custom fields
+    $min_amount = get_post_meta( $post_id, 'p4_israel_donation_min_amount', true );
+    debug_log('Panic', "********* Min amount: " . $min_amount . " **********" );
 
     if ( intval( $value ) < intval( $min_amount ) ) {
         $result['is_valid'] = false;

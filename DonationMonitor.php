@@ -12,22 +12,22 @@ class DonationMonitor
         $this->table_name = $wpdb->prefix . 'green_donations';
         $this->SalesForce = $SalesForce;
 
-        error_log("DonationMonitor __construct loaded at " . date('Y-m-d H:i:s'));
+        debug_log('Panic', "DonationMonitor __construct loaded at " . date('Y-m-d H:i:s'));
     }
 
     public function scheduler() {
-        error_log("scheduler() triggered at " . date('Y-m-d H:i:s'));
+        debug_log('Panic', "scheduler() triggered at " . date('Y-m-d H:i:s'));
 
         if (!wp_next_scheduled('send_incomplete_leads_to_sf')) {
             wp_schedule_event(time(), 'every_ten_minute', 'send_incomplete_leads_to_sf');
-            error_log("Cron event 'send_incomplete_leads_to_sf' scheduled at " . date('Y-m-d H:i:s'));
+            debug_log('Panic', "Cron event 'send_incomplete_leads_to_sf' scheduled at " . date('Y-m-d H:i:s'));
         } else {
-            error_log("Cron event already scheduled");
+            debug_log('Panic', "Cron event already scheduled");
         }
     }
 
     public function add_custom_schedules($schedules) {
-        error_log("add_custom_schedules() executed at " . date('Y-m-d H:i:s'));
+        debug_log('Panic', "add_custom_schedules() executed at " . date('Y-m-d H:i:s'));
 
         $schedules['every_ten_minute'] = [
             'interval' => 600,
@@ -37,7 +37,7 @@ class DonationMonitor
     }
 
     public function SendIncompleteLeadsToSF() {
-        error_log("CRON RUN: SendIncompleteLeadsToSF started at " . date('Y-m-d H:i:s'));
+        debug_log('Panic', "CRON RUN: SendIncompleteLeadsToSF started at " . date('Y-m-d H:i:s'));
 
         $query = $this->wpdb->prepare(
             "SELECT * FROM {$this->table_name}
@@ -48,17 +48,17 @@ class DonationMonitor
 
         $donations = $this->wpdb->get_results($query);
 
-        error_log("Found " . count($donations) . " incomplete donations");
+        debug_log('Panic', "Found " . count($donations) . " incomplete donations");
 
         if (count($donations) < 1) {
-            error_log("No donations to process");
+            debug_log('Panic', "No donations to process");
             return false;
         }
 
         foreach ($donations as $donation) {
-            error_log("Processing donation ID: {$donation->id}, email: {$donation->email}");
+            debug_log('Panic', "Processing donation ID: {$donation->id}, email: {$donation->email}");
             // $this->MaybeSendLeadToSF($donation); // skip checking if person already donated - at least till Elad & Dana will decided otherwise
-            error_log("Sending donation {$donation->id} to Salesforce");
+            debug_log('Panic', "Sending donation {$donation->id} to Salesforce");
             $this->SalesForce->SendLeadByDonation($donation->id, $donation, true);
     
         }
@@ -67,7 +67,7 @@ class DonationMonitor
     protected function MaybeSendLeadToSF($donation) {
         global $wpdb;
         if ($this->isPersonAlreadyDonated($donation)) {
-            error_log("Donation {$donation->id} skipped — person already donated (in MaybeSendLeadToSF)");
+            debug_log('Panic', "Donation {$donation->id} skipped — person already donated (in MaybeSendLeadToSF)");
             $wpdb->query(
                 $wpdb->prepare(
                     "UPDATE `{$this->table_name}` SET `transmited_to_sf` = 2  WHERE `id` = %d",
@@ -77,7 +77,7 @@ class DonationMonitor
             return false;
         }
 
-        error_log("Sending donation {$donation->id} to Salesforce");
+        debug_log('Panic', "Sending donation {$donation->id} to Salesforce");
         $this->SalesForce->SendLeadByDonation($donation->id, $donation, true);
     }
 
@@ -94,13 +94,13 @@ class DonationMonitor
         $results = $this->wpdb->get_results($query);
 
         $already = count($results) > 0;
-        error_log("Check existing donor for {$donation->email}: " . ($already ? "YES" : "NO"));
+        debug_log('Panic', "Check existing donor for {$donation->email}: " . ($already ? "YES" : "NO"));
 
         return $already;
     }
 
     public function destroy() {
         wp_clear_scheduled_hook('send_incomplete_leads_to_sf');
-        error_log("Cron event cleared at " . date('Y-m-d H:i:s'));
+        debug_log('Panic', "Cron event cleared at " . date('Y-m-d H:i:s'));
     }
 }
