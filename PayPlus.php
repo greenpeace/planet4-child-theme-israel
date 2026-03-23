@@ -78,10 +78,15 @@ class PayPlus
     }
 
     public function apiRequest($route, $data, $method = 'POST') {
-        $auth = json_encode([
-            'api_key' => '9c66e8ca-d62d-42d9-a2ec-859dd199381a', //test terminal
-            'secret_key' => '64a113f0-34d1-4d16-bfd9-600a65a2f490', //test terminal
-        ]);
+        $params = getPayPlusParams();
+        if (empty($params['api_key']) || empty($params['secret_key'])) {
+            // Fail loudly: never call PayPlus with missing credentials.
+            error_log('PayPlus API credentials missing: pp_api_key and/or pp_secret_key.');
+            throw new Exception('PayPlus API credentials missing (pp_api_key / pp_secret_key).');
+        }
+
+        // Simplified: getPayPlusParams() already returns the exact keys we need.
+        $auth = json_encode($params);
 
         $response = $this->httpRequest('https://restapidev.payplus.co.il/api/v1.0' . $route, json_encode($data), [
             "Content-Type: application/json",

@@ -10,6 +10,27 @@ trait Helpers
         error_log("SalesForce Log: " . $json);
     }
 
+    /**
+     * Log via error_log according to pp_debug_level:
+     * none — no output. debug — only messages with level "debug". panic — all messages.
+     */
+    protected function debug_log($level, $message) {
+        $setting   = getDebugLevelParam();
+        $level_key = strtolower(is_string($level) ? sanitize_key($level) : '');
+
+        $log_it = false;
+        if ($setting === 'panic') {
+            $log_it = true;
+        } elseif ($setting === 'debug' && $level_key === 'debug') {
+            $log_it = true;
+        }
+
+        if ($log_it) {
+            $line = is_string($message) ? $message : print_r($message, true);
+            error_log($line . PHP_EOL);
+        }
+    }
+
     public function httpRequest($url, $data = [], $headers = null, $raw = false, $auth = null, $method = 'POST', $cert = false) {
         try {
             $curl = curl_init($url);

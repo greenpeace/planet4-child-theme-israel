@@ -630,21 +630,20 @@
 
 
     public function getIframe($unique, $amount, $clientName, $email, $phone, $page, $payment_type){
-        // echo("get Iframe start ....... <br>");
-        // error_log("*** get Iframe start ......\n");
+        error_log("*** get Iframe start ......\n");
 
         $language_code = 'he-il';
 
-        // if ($page == 564){    // not in use planet 4
-        //     $language_code = 'en';
-        // }
-
-        // $recurring = (get_field("recurrent", $page)); // ignore the wp field - to be replaced by form field value
         $recurring = ($payment_type == "recurring");
 
+        $payment_page_uid = getPaymentPageUidParam();
+        if (empty($payment_page_uid)) {
+            error_log('PayPlus payment_page_uid is missing (pp_payment_page_uid option is empty).');
+            throw new Exception('PayPlus payment_page_uid missing (pp_payment_page_uid).');
+        }
+
         $data = [
-            "payment_page_uid" => "0b06263c-bc1b-48e2-92f6-bf60cfd38951", //prod terminal: f01f5630-73f7-4955-a4a5-b408247056ca
-            // "payment_page_uid" => "f01f5630-73f7-4955-a4a5-b408247056ca", //test terminal: da8dc348-aae3-43c2-ad9b-6b7a7785a8d2
+            "payment_page_uid" => $payment_page_uid,
             "expiry_datetime" => "30",
             "more_info" => $unique,
             "language_code" => $language_code,
