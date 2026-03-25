@@ -4,7 +4,7 @@
  * Additional code for the child theme goes in here.
  */
 
-// *******************************************************
+// *************************************************************************************************************************
 // Donation functunality code  - add by Ofer Or
 // Mar-2026
 // adupted from old donation site code
@@ -26,103 +26,11 @@ add_action('init', [$donation_monitor, 'scheduler']);
 add_action('send_incomplete_leads_to_sf', [$donation_monitor, 'SendIncompleteLeadsToSF']);
 add_filter('cron_schedules', [$donation_monitor, 'add_custom_schedules']);
 
-/**
- * Gravity Forms: Change radio button options based on native custom fields value - added by Ofer Or 12-01-2026
- */
-
+// Gravity Forms: Change radio button options based on native custom fields value - added by Ofer Or 12-01-2026
 add_filter( 'gform_pre_render_60', 'set_radio_choices_from_shortcode' );
 add_filter( 'gform_pre_validation_60', 'set_radio_choices_from_shortcode' );
-
-function set_radio_choices_from_shortcode( $form ) {
-
-    $field_id_radio = 25;
-     // Get current post/page ID
-     global $post;
-     $post_id = $post ? $post->ID : get_the_ID();
-     
-     // If no post ID, try to get it from the form's page ID
-     if ( empty( $post_id ) && isset( $form['pageId'] ) ) {
-         $post_id = $form['pageId'];
-     }
-     
-     // Read native WordPress custom fields
-     $values = array(
-         'amount1' => get_post_meta( $post_id, 'p4_israel_donation_amount_1', true ),
-         'amount2' => get_post_meta( $post_id, 'p4_israel_donation_amount_2', true ),
-         'amount3' => get_post_meta( $post_id, 'p4_israel_donation_amount_3', true ),
-     );
-     
-     // Read donation type custom field
-     $donation_type = get_post_meta( $post_id, 'p4_israel_donation_type', true );
-     
-     // Debug logging
-    debug_log('Panic', "Post ID used: " . $post_id );
-    debug_log('Panic', "Radio button values : amount1={$values['amount1']} | amount2={$values['amount2']} | amount3={$values['amount3']}" );
-    debug_log('Panic', "Donation type: " . $donation_type );
-
-    // Now set radio choices
-    foreach ( $form['fields'] as &$field ) {
-        if ( $field->id == $field_id_radio ) {
-            
-            // Set field title based on donation type
-            if ( $donation_type === 'recurring' ) {
-                $field->label = 'סכום תרומה חודשי:';
-            } else {
-                $field->label = 'סכום התרומה החד פעמית:';
-            }
-
-            $choices = array();
-
-            if ( ! empty( $values['amount1'] ) ) $choices[] = array( 'text' => $values['amount1'], 'value' => $values['amount1'] );
-            if ( ! empty( $values['amount2'] ) ) $choices[] = array( 'text' => $values['amount2'], 'value' => $values['amount2'] );
-            if ( ! empty( $values['amount3'] ) ) $choices[] = array( 'text' => $values['amount3'], 'value' => $values['amount3'] );
-
-            // fallback defaults if nothing provided
-            if ( empty( $choices ) ) {
-                $choices = array(
-                    array( 'text' => '50', 'value' => '50' ),
-                    array( 'text' => '100', 'value' => '100' ),
-                    array( 'text' => '200', 'value' => '200' ),
-                );
-            }
-
-            $field->choices = $choices;
-        }
-    }
-
-    return $form;
-}
-  
-/**
- * Gravity Forms: donation amount validation based on native custom fields value - added by Ofer Or 12-01-2026
- */ 
+// Gravity Forms: donation amount validation based on native custom fields value - added by Ofer Or 12-01-2026
 add_filter( 'gform_field_validation_60_25', 'validate_other_choice', 10, 4 );
-function validate_other_choice( $result, $value, $form, $field ) {
-
-    debug_log('Panic', "********* validate_other_choice function called **********" );
-
-    $field_id_radio = 25;
-    // Get current post/page ID
-    global $post;
-    $post_id = $post ? $post->ID : get_the_ID();
-    
-    // If no post ID, try to get it from the form's page ID
-    if ( empty( $post_id ) && isset( $form['pageId'] ) ) {
-        $post_id = $form['pageId'];
-    }
-    
-    // Read native WordPress custom fields
-    $min_amount = get_post_meta( $post_id, 'p4_israel_donation_min_amount', true );
-    debug_log('Panic', "********* Min amount: " . $min_amount . " **********" );
-
-    if ( intval( $value ) < intval( $min_amount ) ) {
-        $result['is_valid'] = false;
-        $result['message']  = 'The donation amount must be greater than the minimum amount.';
-        $result['message']  = 'סכום המינימום לתרומה הוא ' . $min_amount . ' שח.';
-    }
-
-    return $result;
-}
 
 // Gravity Forms after-submission hook for form id 60 - added by Ofer Or 13-6-2025
 add_action('gform_after_submission_60', 'donation_gform_function', 10, 2);
@@ -131,7 +39,7 @@ add_action('gform_after_submission_60', 'donation_gform_function', 10, 2);
 //
 // end of Change for donation form functunality code (added by ofer or Mar-2026)
 //
-// *******************************************************
+// *********************************************************************************************************************************
 
 
 
