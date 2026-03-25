@@ -14,7 +14,7 @@
         $this->registerAjax();
         add_shortcode("greenpeace_username", array($this,'printUser'));
         //[gpf_username]
-        add_action('wp_enqueue_scripts', array($this,'enqueue_script'));
+        // add_action('wp_enqueue_scripts', array($this,'enqueue_script'));   // probably not in use
         add_action( 'admin_menu', array($this,'register_my_custom_menu_page'));
         add_action('admin_post_donation_cleanup', array($this,'donationCleanupByDate'));
         add_action('admin_post_greenpeace_export', array($this,'exportCSV'));
@@ -75,7 +75,7 @@
         ?>
         <div class="wrap gp-donations-admin">
             <header style="margin-bottom:20px;">
-                <h1>תרומות 30</h1>
+                <h1>תרומות 31</h1>
             </header >
             <div style="
                 margin-top:10px;
