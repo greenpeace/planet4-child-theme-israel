@@ -7,7 +7,7 @@ set_time_limit(0);
 
 require_once 'SalesForce.php';
 
-const SALESFORCE_LOGIN_URI = 'https://test.salesforce.com'; // 'https://login.salesforce.com';
+// const SALESFORCE_LOGIN_URI = 'https://test.salesforce.com'; // 'https://login.salesforce.com';
 
 debug_log('Panic', "payplus-callback.php  start .... 001 ");
 

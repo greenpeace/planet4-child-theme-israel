@@ -4,18 +4,34 @@ class SalesForce
 {
     use Helpers;
     protected $params;
-    const SALESFORCE_LOGIN_URI = 'https://test.salesforce.com'; // 'https://login.salesforce.com';
 
+	protected function getSalesforceLoginUri() {
+		$env = getSalesforceEnvType();
+
+		if ($env === 'production') {
+			return 'https://login.salesforce.com';
+		}
+
+		// default: testing
+		return 'https://test.salesforce.com';
+	}
     public function __construct() {
-        $this->params = getSalesforceParams_new();
+        $this->params = getSalesforceParams();
     }
 
-    protected function auth() {
-        $authResponse = $this->httpRequest(self::SALESFORCE_LOGIN_URI . "/services/oauth2/token", $this->params);
-        $authParams = (object) json_decode($authResponse);
+	protected function auth() {
 
-        return isset($authParams->access_token) ? $authParams : false;
-    }
+		$loginUri = $this->getSalesforceLoginUri(); // dynamic based on env type
+
+		$authResponse = $this->httpRequest(
+			$loginUri . "/services/oauth2/token",
+			$this->params
+		);
+
+		$authParams = (object) json_decode($authResponse);
+
+		return isset($authParams->access_token) ? $authParams : false;
+	}
 
     public function SendLead($data) {
         $this->log([
