@@ -152,7 +152,14 @@ function api_params_settings_page_html() {
                     <td><input type="text" id="pp_payment_page_uid" name="pp_payment_page_uid"
                                value="<?php echo esc_attr(get_option('pp_payment_page_uid')); ?>"></td>
                 </tr>
-				
+
+            </table>
+
+            <hr>
+
+            <h2>Other Parameters</h2>
+            <table class="form-table">
+
 				<tr>
 					<th><label for="pp_env_type">Environment Type</label></th>
 					<td>
