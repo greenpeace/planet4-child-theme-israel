@@ -75,7 +75,7 @@
         ?>
         <div class="wrap gp-donations-admin">
             <header style="margin-bottom:20px;">
-                <h1>תרומות</h1>
+                <h1>תרומות 30</h1>
             </header >
             <div style="
                 margin-top:10px;
@@ -235,6 +235,7 @@
     }
 
 
+    /* comment this function - probably not in use
     public function enqueue_script(){
 
         // Use unique handle to avoid overwriting the master theme's 'main' script
@@ -265,6 +266,7 @@
         );
         wp_localize_script( $script_handle, 'greenpeace_donation_object', $params );
     }
+    */
 
 
     public function printUser(){
