@@ -859,18 +859,44 @@ function donation_gform_function($entry, $form) {
     
     $iFrame = $donation1->getIframe($unique, $amount, $name, $email, $phone, $page, $payment_type);
 
-    echo 'scrolling to iframe_top anchor & fix width for mobile 3<br> ';
-
-    // present step 2 image and set anchor iframe_top
     echo <<<HTML
-        <div id='iframe_top'>
-            <br>
-            <img src='https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg' alt='step 2'>
+    <style>
+        .donation-center-wrapper {
+            text-align: center;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .donation-center-wrapper img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        .donation-center-wrapper iframe {
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+    
+    <div class="donation-center-wrapper" id="iframe_top">
+        <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
+        
+        <div class="donation-thanks">
+            תודה רבה על התמיכה שלך!  1
         </div>
-    HTML;
 
-    // present payplus iframe
-    echo $iFrame;
+        $iFrame
+    </div>
+    
+    <script>
+    // Smooth scroll to the image container
+    document.addEventListener("DOMContentLoaded", function() {
+        const el = document.getElementById("iframe_top");
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    });
+    </script>
+    HTML; 
 
-    //exit;
+   
 }
