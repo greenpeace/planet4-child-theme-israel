@@ -11,10 +11,10 @@
     protected $api;
 
     public function __construct() {
+        
         $this->registerAjax();
+        
         add_shortcode("greenpeace_username", array($this,'printUser'));
-        //[gpf_username]
-        // add_action('wp_enqueue_scripts', array($this,'enqueue_script'));   // probably not in use
         add_action( 'admin_menu', array($this,'register_my_custom_menu_page'));
         add_action('admin_post_donation_cleanup', array($this,'donationCleanupByDate'));
         add_action('admin_post_greenpeace_export', array($this,'exportCSV'));
@@ -75,7 +75,7 @@
         ?>
         <div class="wrap gp-donations-admin">
             <header style="margin-bottom:20px;">
-                <h1>תרומות 31</h1>
+                <h1>תרומות</h1>
             </header >
             <div style="
                 margin-top:10px;
@@ -233,40 +233,6 @@
 
 		<?php
     }
-
-
-    /* comment this function - probably not in use
-    public function enqueue_script(){
-
-        // Use unique handle to avoid overwriting the master theme's 'main' script
-        $script_handle = 'gp-israel-donation';
-
-        if ( is_page(564) ){
-            wp_enqueue_script( $script_handle, get_stylesheet_directory_uri() ."/mainen.js", array('jquery'), filemtime(__DIR__ ."/main.js"), true );
-        }
-        else{
-            wp_enqueue_script( $script_handle, get_stylesheet_directory_uri() ."/main.js", array('jquery'), filemtime(__DIR__ ."/main.js"), true );
-        }
-
-
-        wp_enqueue_style( "fonts", 'https://fonts.googleapis.com/earlyaccess/opensanshebrew.css');
-
-        global $post;
-        $postID = $post->ID;
-        // temp $recurring = (!get_field("recurrent"))? "one-off" : "recurring";
-        $recurring = "recurring"; // ignore the wp field
-        $recurring = get_post_meta( $postID, 'p4_israel_donation_type', true );
-
-        $params = array(
-            'ajaxurl' => admin_url('admin-ajax.php'),
-            'ajax_nonce' => wp_create_nonce('greenpeace_donation'),
-            'id' => $postID,
-            'minSum' => 50, //get_post_meta($postID, "min_sum" )[0],
-            'payment_type' => $recurring
-        );
-        wp_localize_script( $script_handle, 'greenpeace_donation_object', $params );
-    }
-    */
 
 
     public function printUser(){

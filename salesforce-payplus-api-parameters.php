@@ -95,6 +95,26 @@ function api_params_settings_page_html() {
     $mask = '**************';
     ?>
 
+    <style>
+        /* Reduce vertical spacing between rows */
+        .form-table th,
+        .form-table td {
+            padding-top: 4px !important;
+            padding-bottom: 4px !important;
+        }
+
+        /* Reduce spacing above/below section titles */
+        .wrap h2 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        /* Reduce spacing around <hr> */
+        .wrap hr {
+            margin: 15px 0;
+        }
+    </style>
+
     <div class="wrap">
         <h1>SalesForce & PayPlus Parameters</h1>
 

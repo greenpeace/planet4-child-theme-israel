@@ -35,7 +35,7 @@ function do_payplus_ipn_min() {
     debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (2)");
 
     $transaction = $data->transaction;
-    $invoice = $data->invoice;
+    // $invoice = $data->invoice; // not used
     $data = $data->data;
 
     debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (3)");
@@ -61,8 +61,9 @@ function do_payplus_ipn_min() {
     $tourist = $data->card_information->card_foreign;
     $cType = $transaction->credit_terms;
     $shovar = $transaction->voucher_number;
-    $invoice_url = isset($invoice->original_url) ? $invoice->original_url : '';
-    $invoice_id = isset($invoice->docu_number) ? $invoice->docu_number : '';
+    $invoice_url = ''; //isset($invoice->original_url) ? $invoice->original_url : '';
+    $invoice_id = ''; // isset($invoice->docu_number) ? $invoice->docu_number : '';
+    $response = 0; // default to 0 - not really used
 
     $ccArr = array(
         "1" => "ישראכרד",
