@@ -668,30 +668,17 @@
             if($iframe_url->results->status === 'success') {
                 // error_log("*** iframe_url_results_status_success....\n");
 
-                // Adjust iframe size based on screen size
-                $screen_width = $_SESSION['viewport_width'] ?? 1024;
-                if ($screen_width < 768) {
-                    $iframe_width = '100%';
-                    $iframe_height = '600';
-                } else {
-                    $iframe_width = '800';
-                    $iframe_height = '750';
-                }
-
-                return <<<HTML
-                <iframe id="payplus-new-iframe"
-                    src="{$iframe_url->data->payment_page_link}"
-                    width="{$iframe_width}"
-                    height="{$iframe_height}"
-                    name="defrayal"
-                    frameBorder="0"
-                    scrolling="no"
-                    onload="document.getElementById('iframe_top').scrollIntoView({behavior: 'instant', block: 'start'})">
-                </iframe>
-                HTML;
+                return '
+                        <div style="width:100%; max-width:800px; margin:0 auto;">
+                            <iframe id="payplus-new-iframe"
+                                src="' . $iframe_url->data->payment_page_link . '"
+                                style="width:100%; height:750px; border:0;"
+                                name="defrayal"
+                                scrolling="no">
+                            </iframe>
+                        </div>';
             }
         }
-
         return $iframe_url;
     }
 }
