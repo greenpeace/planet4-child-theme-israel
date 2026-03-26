@@ -881,21 +881,30 @@ function donation_gform_function($entry, $form) {
         <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
         
         <div class="donation-thanks">
-            תודה רבה על התמיכה שלך!  2
+            תודה רבה על התמיכה שלך!  3
         </div>
 
         $iFrame
     </div>
     
     <script>
-        // Jump to the image container top
-        document.addEventListener("DOMContentLoaded", function() {
-            const el = document.getElementById("iframe_top");
-            if (el) {
-                el.scrollIntoView();
-            }
-        });
-    </script>   
+    document.addEventListener("DOMContentLoaded", function() {
+        const el = document.getElementById("iframe_top");
+        if (el) {
+            const rect = el.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            // Calculate target position:
+            // element's top position minus 20% of viewport height
+            const targetY = rect.top + scrollTop - (window.innerHeight * 0.20);
+
+            window.scrollTo({
+                top: targetY,
+                behavior: "auto"   // instant jump
+            });
+        }
+    });
+    </script>
     HTML; 
 
    
