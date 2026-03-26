@@ -868,14 +868,16 @@ function donation_gform_function($entry, $form) {
         <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
         
         <div class="donation-thanks">
-            תודה רבה על התמיכה שלך!  3
+            תודה רבה על התמיכה שלך!  5
         </div>
 
         $iFrame
     </div>
     
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
+//    document.addEventListener("DOMContentLoaded", function() {
+    window.addEventListener("load", function() {
+
         const el = document.getElementById("iframe_top");
         if (el) {
             const rect = el.getBoundingClientRect();
