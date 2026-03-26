@@ -875,7 +875,7 @@ function donation_gform_function($entry, $form) {
     </div>
     
     <script>
-//    document.addEventListener("DOMContentLoaded", function() {
+    //    document.addEventListener("DOMContentLoaded", function() {
     window.addEventListener("load", function() {
 
         const el = document.getElementById("iframe_top");
