@@ -776,13 +776,21 @@ function validate_other_choice( $result, $value, $form, $field ) {
 function donation_gform_function($entry, $form) {
 
     debug_log('Panic', "********* donation_gform_function called **********" );
-    // echo "2******** donation_gform_function called **********<br>";
 
-    // Debug echo at function start
-    // echo "*** donation_gform_function started \n";
-    // echo "*** Entry data: " . print_r($entry, true) . " \n";
-    // echo "*** Form data: " . print_r($form, true) . " \n";
-
+    // Output JS to scroll to the top of the form after submission
+    add_action( 'wp_footer', function() use ( $form ) {
+        ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var formElement = document.getElementById('gform_<?php echo $form['id']; ?>');
+                if (formElement) {
+                    formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        </script>
+        <?php
+    });
+    
     // Get the values from the entry
     $record_id = rgar($entry, 'id');
     $page = rgar($entry, 'source_id');
@@ -859,7 +867,7 @@ function donation_gform_function($entry, $form) {
     <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
 
     <div class="donation-thanks">
-        תודה רבה על התמיכה 14!
+        תודה רבה על התמיכה 15!
     </div>
 
     <!-- Iframe wrapper with max-width -->
@@ -869,7 +877,8 @@ function donation_gform_function($entry, $form) {
 
 </div>
 
-<script>
+
+<!-- <script>
 window.addEventListener("load", function() {
 
     const iframe = document.querySelector("#iframe_top iframe");
@@ -894,6 +903,6 @@ window.addEventListener("load", function() {
         });
     }
 });
-</script>
+</script> -->
 HTML;
 }
