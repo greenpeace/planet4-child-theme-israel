@@ -849,48 +849,76 @@ function donation_gform_function($entry, $form) {
     echo <<<HTML
     <style>
         .donation-center-wrapper {
-            text-align: center;
             width: 100%;
             margin: 0 auto;
+            text-align: center;
         }
-        .donation-center-wrapper img {
+    
+        /* Inner container that aligns EVERYTHING */
+        .donation-inner {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    
+        .donation-inner img {
+            display: block;
+            margin: 0 auto 20px auto;
             max-width: 100%;
             height: auto;
-            margin-bottom: 20px;
         }
-        .donation-center-wrapper iframe {
+    
+        .donation-thanks {
+            text-align: center;
+            margin: 0 auto 20px auto;
+            font-size: 1.2em;
+        }
+    
+        .donation-inner iframe {
             display: block;
+            width: 100%;
+            border: 0;
             margin: 0 auto;
         }
     </style>
     
     <div class="donation-center-wrapper" id="iframe_top">
-        <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
-        
-        <div class="donation-thanks">
-            תודה רבה על התמיכה שלך!  5
+        <div class="donation-inner">
+            <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
+    
+            <div class="donation-thanks">
+                תודה רבה על התמיכה שלך! 6
+            </div>
+    
+            $iFrame
         </div>
-
-        $iFrame
     </div>
     
     <script>
-    //    document.addEventListener("DOMContentLoaded", function() {
     window.addEventListener("load", function() {
-
-        const el = document.getElementById("iframe_top");
-        if (el) {
-            const rect = el.getBoundingClientRect();
+        const wrapper = document.getElementById("iframe_top");
+        const iframe = wrapper.querySelector("iframe");
+    
+        function doScroll() {
+            const rect = wrapper.getBoundingClientRect();
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-            // Calculate target position:
-            // element's top position minus 20% of viewport height
-            const targetY = rect.top + scrollTop - (window.innerHeight * 0.20);
-
+    
+            const targetY = Math.max(
+                0,
+                rect.top + scrollTop - (window.innerHeight * 0.20)
+            );
+    
             window.scrollTo({
                 top: targetY,
-                behavior: "auto"   // instant jump
+                behavior: "auto"
             });
+        }
+    
+        // Scroll AFTER iframe loads (most reliable)
+        if (iframe) {
+            iframe.addEventListener("load", doScroll);
+        } else {
+            doScroll();
         }
     });
     </script>
