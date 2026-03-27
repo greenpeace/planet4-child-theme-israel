@@ -782,9 +782,9 @@ function donation_gform_function($entry, $form) {
         ?>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                var formElement = document.getElementById('gform_<?php echo $form['id']; ?>');
-                if (formElement) {
-                    formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                var wrapper = document.getElementById('gform_wrapper_<?php echo $form['id']; ?>');
+                if (wrapper) {
+                    wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
         </script>
@@ -867,7 +867,7 @@ function donation_gform_function($entry, $form) {
     <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
 
     <div class="donation-thanks">
-        תודה רבה על התמיכה 15!
+        תודה רבה על התמיכה 16!
     </div>
 
     <!-- Iframe wrapper with max-width -->
