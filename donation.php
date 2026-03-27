@@ -849,23 +849,27 @@ function donation_gform_function($entry, $form) {
         .donation-wrapper {
             width: 100%;
             max-width: 800px;
-            margin: 0 auto;
+            margin-left: auto !important;
+            margin-right: auto !important;
             text-align: center;
+            display: block !important;
         }
-
+    
         .donation-wrapper img {
-            display: block;
-            margin: 0 auto 20px auto;
+            display: block !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            margin-bottom: 20px;
             max-width: 100%;
             height: auto;
         }
-
+    
         .donation-thanks {
             margin: 0 auto 20px auto;
             font-size: 1.2em;
             text-align: center;
         }
-
+    
         .donation-wrapper iframe {
             width: 100%;
             border: 0;
@@ -873,23 +877,36 @@ function donation_gform_function($entry, $form) {
             margin: 0 auto;
         }
     </style>
-
+    
     <div class="donation-wrapper" id="iframe_top">
         <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
-
+    
         <div class="donation-thanks">
-            תודה רבה על התמיכה שלך! 12
+            תודה רבה על התמיכה שלך! 13
         </div>
-
+    
         $iFrame
     </div>
-
+    
     <script>
     window.addEventListener("load", function() {
-        window.scrollTo({
-            top: -100,
-            behavior: "smooth"
-        });
+    
+        const iframe = document.querySelector("#iframe_top iframe");
+    
+        function scrollToTop() {
+            setTimeout(function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                });
+            }, 50);
+        }
+    
+        if (iframe) {
+            iframe.addEventListener("load", scrollToTop);
+        } else {
+            scrollToTop();
+        }
     });
     </script>
 HTML;
