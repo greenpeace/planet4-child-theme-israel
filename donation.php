@@ -810,19 +810,6 @@ function donation_gform_function($entry, $form) {
     debug_log('Panic', 'Field 27: ' . print_r(rgar($entry, '27'), true));
     debug_log('Panic', 'Field 27.1: ' . print_r(rgar($entry, '27.1'), true));
      
-    // for debug only
-    // echo "*** Retrieved values:<br>";
-    // echo "*** Record Id: " . $record_id . " <br>";
-    // echo "*** First Name: " . $first_name . " <br>";
-    // echo "*** Last Name: " . $last_name . " <br>";
-    // echo "*** Full Name: " . $name . " <br>";
-    // echo "*** Email: " . $email . " <br>";
-    // echo "*** Phone: " . $phone . " <br>";
-    // echo "*** Amount: " . $amount . " <br>";
-    // echo "*** Page: " . $page . " <br>";
-    // echo "***************************************** <br>";
-    // ... end of debug echo
-
     $donation1 = new greenpeace_donation();
 
     $unique = $donation1->insertToDonationTable(
