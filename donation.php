@@ -846,20 +846,14 @@ function donation_gform_function($entry, $form) {
 
     echo <<<HTML
     <style>
-        .donation-center-wrapper {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
-        .donation-inner {
+        .donation-wrapper {
             width: 100%;
             max-width: 800px;
             margin: 0 auto;
             text-align: center;
         }
 
-        .donation-inner img {
+        .donation-wrapper img {
             display: block;
             margin: 0 auto 20px auto;
             max-width: 100%;
@@ -872,7 +866,7 @@ function donation_gform_function($entry, $form) {
             text-align: center;
         }
 
-        .donation-inner iframe {
+        .donation-wrapper iframe {
             width: 100%;
             border: 0;
             display: block;
@@ -880,27 +874,22 @@ function donation_gform_function($entry, $form) {
         }
     </style>
 
-    <div class="donation-center-wrapper" id="iframe_top">
-        <div class="donation-inner">
-            <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
+    <div class="donation-wrapper" id="iframe_top">
+        <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
 
-            <div class="donation-thanks">
-                תודה רבה על התמיכה שלך! 11
-            </div>
-
-            $iFrame
+        <div class="donation-thanks">
+            תודה רבה על התמיכה שלך! 12
         </div>
+
+        $iFrame
     </div>
 
     <script>
     window.addEventListener("load", function() {
-
-        // Smooth scroll slightly above the top (header-safe)
         window.scrollTo({
-            top: -100,   // scroll a bit above 0 so the header doesn't hide the content
+            top: -100,
             behavior: "smooth"
         });
-
     });
     </script>
 HTML;
