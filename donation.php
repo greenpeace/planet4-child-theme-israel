@@ -780,17 +780,50 @@ function donation_gform_function($entry, $form) {
     // Output JS to scroll to the top of the form after submission
     add_action( 'wp_footer', function() use ( $form ) {
         ?>
+        <style>
+            /* Fade-in animation */
+            #iframe_top {
+                opacity: 0;
+                transition: opacity 0.8s ease-in-out;
+            }
+            #iframe_top.visible {
+                opacity: 1;
+            }
+        </style>
+    
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                var wrapper = document.getElementById('gform_wrapper_<?php echo $form['id']; ?>');
-                if (wrapper) {
-                    wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            jQuery(document).on('gform_confirmation_loaded', function(event, formId){
+                if (formId == <?php echo $form['id']; ?>) {
+    
+                    // Delay to allow iframe to render
+                    setTimeout(function() {
+    
+                        var topBlock = document.getElementById('iframe_top');
+    
+                        if (topBlock) {
+    
+                            // Add fade-in class
+                            topBlock.classList.add('visible');
+    
+                            // Scroll with offset (e.g., sticky header height)
+                            var offset = 120; // adjust as needed
+    
+                            var elementPosition = topBlock.getBoundingClientRect().top + window.pageYOffset;
+                            var scrollTo = elementPosition - offset;
+    
+                            window.scrollTo({
+                                top: scrollTo,
+                                behavior: 'smooth'
+                            });
+                        }
+    
+                    }, 400); // delay in ms
                 }
             });
         </script>
         <?php
     });
-    
+
     // Get the values from the entry
     $record_id = rgar($entry, 'id');
     $page = rgar($entry, 'source_id');
@@ -867,7 +900,7 @@ function donation_gform_function($entry, $form) {
     <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
 
     <div class="donation-thanks">
-        תודה רבה על התמיכה 16!
+        תודה רבה על התמיכה 17!
     </div>
 
     <!-- Iframe wrapper with max-width -->
