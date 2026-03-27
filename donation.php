@@ -15,7 +15,7 @@
         $this->registerAjax();
         
         add_shortcode("greenpeace_username", array($this,'printUser'));
-        add_action( 'admin_menu', array($this,'register_my_custom_menu_page'));
+        add_action('admin_menu', array($this,'register_my_custom_menu_page'));
         add_action('admin_post_donation_cleanup', array($this,'donationCleanupByDate'));
         add_action('admin_post_greenpeace_export', array($this,'exportCSV'));
         add_action('admin_post_greenpeace_import', array($this,'importCSV'));
@@ -70,9 +70,7 @@
                 margin: -1px;
             }
         </style>
-        <?php
-        // Do not use class "about-wrap": core admin CSS hides .about-wrap .notice (Trac #32625), so feedback never appears.
-        ?>
+        <!-- Do not use class "about-wrap": core admin CSS hides .about-wrap .notice (Trac #32625), so feedback never appears. -->
         <div class="wrap gp-donations-admin">
             <header style="margin-bottom:20px;">
                 <h1>תרומות</h1>
@@ -887,7 +885,7 @@ function donation_gform_function($entry, $form) {
             <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
     
             <div class="donation-thanks">
-                תודה רבה על התמיכה שלך! 7
+                תודה רבה על התמיכה שלך! 8
             </div>
     
             $iFrame
@@ -911,7 +909,7 @@ function donation_gform_function($entry, $form) {
             console.log("targetY:", targetY);
 
             // Log to PHP debug_log()
-            <?php debug_log("targetY JS value: " . '" + targetY + "'); ?>
+            <?php debug_log('Debug', "targetY JS value: " . '" + targetY + "'); ?>
     
             window.scrollTo({
                 top: targetY,
