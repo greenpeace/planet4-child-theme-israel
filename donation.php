@@ -885,7 +885,7 @@ function donation_gform_function($entry, $form) {
             <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
     
             <div class="donation-thanks">
-                תודה רבה על התמיכה שלך! 8
+                תודה רבה על התמיכה שלך! 9
             </div>
     
             $iFrame
@@ -894,38 +894,13 @@ function donation_gform_function($entry, $form) {
     
     <script>
     window.addEventListener("load", function() {
-        const wrapper = document.getElementById("iframe_top");
-        const iframe = wrapper.querySelector("iframe");
-    
-        function doScroll() {
-            const rect = wrapper.getBoundingClientRect();
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    
-            const targetY = Math.max(
-                0,
-                rect.top + scrollTop - (window.innerHeight * 0.20)
-            );
-            // Log to browser console
-            console.log("targetY:", targetY);
 
-            // Log to PHP debug_log()
-            <?php debug_log('Debug', "targetY JS value: " . '" + targetY + "'); ?>
-    
-            window.scrollTo({
-                top: targetY,
-                behavior: "auto"
-            });
-        }
-    
-        // Scroll AFTER iframe loads (most reliable)
-        if (iframe) {
-            iframe.addEventListener("load", doScroll);
-        } else {
-            doScroll();
-        }
+        // Scroll instantly to the top of the page
+        window.scrollTo({
+            top: 0,
+            behavior: "auto"
+        });
+
     });
-    </script>
-    HTML; 
-
-   
+    </script>    HTML; 
 }
