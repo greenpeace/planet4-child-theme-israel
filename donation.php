@@ -885,7 +885,7 @@ function donation_gform_function($entry, $form) {
             <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
 
             <div class="donation-thanks">
-                תודה רבה על התמיכה שלך! 10
+                תודה רבה על התמיכה שלך! 11
             </div>
 
             $iFrame
@@ -894,11 +894,13 @@ function donation_gform_function($entry, $form) {
 
     <script>
     window.addEventListener("load", function() {
-        // Scroll to top
+
+        // Smooth scroll slightly above the top (header-safe)
         window.scrollTo({
-            top: 0,
-            behavior: "auto"
+            top: -100,   // scroll a bit above 0 so the header doesn't hide the content
+            behavior: "smooth"
         });
+
     });
     </script>
 HTML;
