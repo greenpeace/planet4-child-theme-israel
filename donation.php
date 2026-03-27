@@ -848,59 +848,58 @@ function donation_gform_function($entry, $form) {
     <style>
         .donation-center-wrapper {
             width: 100%;
-            margin: 0 auto;
-            text-align: center;
+            display: flex;
+            justify-content: center;
         }
-    
-        /* Inner container that aligns EVERYTHING */
+
         .donation-inner {
             width: 100%;
             max-width: 800px;
             margin: 0 auto;
+            text-align: center;
         }
-    
+
         .donation-inner img {
             display: block;
             margin: 0 auto 20px auto;
             max-width: 100%;
             height: auto;
         }
-    
+
         .donation-thanks {
-            text-align: center;
             margin: 0 auto 20px auto;
             font-size: 1.2em;
+            text-align: center;
         }
-    
+
         .donation-inner iframe {
-            display: block;
             width: 100%;
             border: 0;
+            display: block;
             margin: 0 auto;
         }
     </style>
-    
+
     <div class="donation-center-wrapper" id="iframe_top">
         <div class="donation-inner">
             <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
-    
+
             <div class="donation-thanks">
-                תודה רבה על התמיכה שלך! 9
+                תודה רבה על התמיכה שלך! 10
             </div>
-    
+
             $iFrame
         </div>
     </div>
-    
+
     <script>
     window.addEventListener("load", function() {
-
-        // Scroll instantly to the top of the page
+        // Scroll to top
         window.scrollTo({
             top: 0,
             behavior: "auto"
         });
-
     });
-    </script>    HTML; 
+    </script>
+HTML;
 }
