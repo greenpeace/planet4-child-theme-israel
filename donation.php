@@ -859,7 +859,7 @@ function donation_gform_function($entry, $form) {
     <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
 
     <div class="donation-thanks">
-        תודה רבה על התמיכה 13!
+        תודה רבה על התמיכה 14!
     </div>
 
     <!-- Iframe wrapper with max-width -->
@@ -871,10 +871,28 @@ function donation_gform_function($entry, $form) {
 
 <script>
 window.addEventListener("load", function() {
-    window.scrollTo({
-        top: 100,
-        behavior: "smooth"
-    });
+
+    const iframe = document.querySelector("#iframe_top iframe");
+
+    function scrollUpByIframeHeight() {
+        if (!iframe) return;
+
+        // Get the iframe height
+        const iframeHeight = iframe.offsetHeight || 0;
+
+        // Scroll up by iframe height + 100px
+        window.scrollBy({
+            top: -(iframeHeight + 10),
+            behavior: "smooth"
+        });
+    }
+
+    // Wait for iframe to load fully
+    if (iframe) {
+        iframe.addEventListener("load", function() {
+            setTimeout(scrollUpByIframeHeight, 50);
+        });
+    }
 });
 </script>
 HTML;
