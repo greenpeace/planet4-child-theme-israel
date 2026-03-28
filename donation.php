@@ -826,41 +826,9 @@ function donation_gform_function($confirmation, $form, $entry, $ajax ) {
     $iFrame = $donation1->getIframe($unique, $amount, $name, $email, $phone, $page, $payment_type);
 
     $confirmation_html = <<<HTML
-    <style>
-        /* Wrapper ONLY for the iframe area */
-        .donation-iframe-wrapper {
-            width: 100%;
-            max-width: 800px;
-            margin: 20px auto 0 auto; /* space under the image */
-        }
-
-        .donation-iframe-wrapper iframe {
-            width: 100%;
-            border: 0;
-            display: block;
-        }
-
-        .donation-thanks {
-            text-align: center;
-            margin: 15px 0;
-            font-size: 1.2em;
-        }
-    </style>
-
     <div id="iframe_top">
-
-        <!-- Image stays as-is, theme controls it -->
         <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
-
-        <div class="donation-thanks">
-            תודה רבה על התמיכה 1!
-        </div>
-
-        <!-- Iframe wrapper with max-width -->
-        <div class="donation-iframe-wrapper">
-            $iFrame
-        </div>
-
+        $iFrame
     </div>
 HTML;
 
