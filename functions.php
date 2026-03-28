@@ -34,7 +34,7 @@ add_filter( 'gform_field_validation_60_25', 'validate_other_choice', 10, 4 );
 
 // Gravity Forms after-submission hook for form id 60 - added by Ofer Or 13-6-2025
 //add_action('gform_after_submission_60', 'donation_gform_function', 10, 2);
-add_filter( 'gform_confirmation_60', 'donation_form_confirmation', 10, 4 );
+add_filter( 'gform_confirmation_60', 'donation_gform_function', 10, 4 );
 
 
 // *******************************************************
