@@ -827,7 +827,7 @@ function donation_gform_function($confirmation, $form, $entry, $ajax ) {
 
     $confirmation_html = <<<HTML
     <div id="iframe_top">
-        <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
+        $confirmation
         $iFrame
     </div>
 HTML;
