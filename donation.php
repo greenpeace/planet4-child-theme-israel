@@ -773,56 +773,9 @@ function validate_other_choice( $result, $value, $form, $field ) {
 
 
 // Gravity Forms after-submission function for form id 60 - added by Ofer Or 13-6-2025
-function donation_gform_function($entry, $form) {
+function donation_gform_function($confirmation, $form, $entry, $ajax ) {
 
     debug_log('Panic', "********* donation_gform_function called **********" );
-
-    // Output JS to scroll to the top of the form after submission
-    add_action( 'wp_footer', function() use ( $form ) {
-        ?>
-        <style>
-            /* Fade-in animation */
-            #iframe_top {
-                opacity: 0;
-                transition: opacity 0.8s ease-in-out;
-            }
-            #iframe_top.visible {
-                opacity: 1;
-            }
-        </style>
-    
-        <script>
-            jQuery(document).on('gform_confirmation_loaded', function(event, formId){
-                if (formId == <?php echo $form['id']; ?>) {
-    
-                    // Delay to allow iframe to render
-                    setTimeout(function() {
-    
-                        var topBlock = document.getElementById('iframe_top');
-    
-                        if (topBlock) {
-    
-                            // Add fade-in class
-                            topBlock.classList.add('visible');
-    
-                            // Scroll with offset (e.g., sticky header height)
-                            var offset = 120; // adjust as needed
-    
-                            var elementPosition = topBlock.getBoundingClientRect().top + window.pageYOffset;
-                            var scrollTo = elementPosition - offset;
-    
-                            window.scrollTo({
-                                top: scrollTo,
-                                behavior: 'smooth'
-                            });
-                        }
-    
-                    }, 400); // delay in ms
-                }
-            });
-        </script>
-        <?php
-    });
 
     // Get the values from the entry
     $record_id = rgar($entry, 'id');
@@ -872,70 +825,44 @@ function donation_gform_function($entry, $form) {
     
     $iFrame = $donation1->getIframe($unique, $amount, $name, $email, $phone, $page, $payment_type);
 
-    echo <<<HTML
-<style>
-    /* Wrapper ONLY for the iframe area */
-    .donation-iframe-wrapper {
-        width: 100%;
-        max-width: 800px;
-        margin: 20px auto 0 auto; /* space under the image */
-    }
+    $confirmation_html = <<<HTML
+    <style>
+        /* Wrapper ONLY for the iframe area */
+        .donation-iframe-wrapper {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto 0 auto; /* space under the image */
+        }
 
-    .donation-iframe-wrapper iframe {
-        width: 100%;
-        border: 0;
-        display: block;
-    }
+        .donation-iframe-wrapper iframe {
+            width: 100%;
+            border: 0;
+            display: block;
+        }
 
-    .donation-thanks {
-        text-align: center;
-        margin: 15px 0;
-        font-size: 1.2em;
-    }
-</style>
+        .donation-thanks {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.2em;
+        }
+    </style>
 
-<div id="iframe_top">
+    <div id="iframe_top">
 
-    <!-- Image stays as-is, theme controls it -->
-    <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
+        <!-- Image stays as-is, theme controls it -->
+        <img src="https://www.greenpeace.org/static/planet4-israel-stateless-develop/2026/03/8fc58e66-stage2.jpg" alt="step 2">
 
-    <div class="donation-thanks">
-        תודה רבה על התמיכה 17!
+        <div class="donation-thanks">
+            תודה רבה על התמיכה 1!
+        </div>
+
+        <!-- Iframe wrapper with max-width -->
+        <div class="donation-iframe-wrapper">
+            $iFrame
+        </div>
+
     </div>
-
-    <!-- Iframe wrapper with max-width -->
-    <div class="donation-iframe-wrapper">
-        $iFrame
-    </div>
-
-</div>
-
-
-<!-- <script>
-window.addEventListener("load", function() {
-
-    const iframe = document.querySelector("#iframe_top iframe");
-
-    function scrollUpByIframeHeight() {
-        if (!iframe) return;
-
-        // Get the iframe height
-        const iframeHeight = iframe.offsetHeight || 0;
-
-        // Scroll up by iframe height + 100px
-        window.scrollBy({
-            top: -(iframeHeight + 10),
-            behavior: "smooth"
-        });
-    }
-
-    // Wait for iframe to load fully
-    if (iframe) {
-        iframe.addEventListener("load", function() {
-            setTimeout(scrollUpByIframeHeight, 50);
-        });
-    }
-});
-</script> -->
 HTML;
+
+return $confirmation_html;
 }
