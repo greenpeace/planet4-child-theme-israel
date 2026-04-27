@@ -181,7 +181,16 @@
                     <?php
                     foreach ($donations as $donation) {
                         echo "<tr>";
-                        foreach ($donation as $field) {
+                        foreach ($donation as $key => $field) {
+                            // Convert MySQL timestamp → WordPress local time
+                            if ($key === 'date' && !empty($field)) {
+                                $timestamp = strtotime($field);
+                                // Format using WP timezone + WP date/time format
+                                $field = wp_date(
+                                    get_option('date_format') . ' ' . get_option('time_format'),
+                                    $timestamp
+                                );
+                            }
                             echo "<td>" . esc_html((string) $field) . "</td>";
                         }
                         echo "</tr>";
