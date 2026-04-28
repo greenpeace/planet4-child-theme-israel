@@ -233,6 +233,23 @@ function getPaymentPageUidParam() {
     return get_option('pp_payment_page_uid');
 }
 
+function getApiParamsEnvType() {
+    $env = get_option('pp_env_type', 'testing');
+    return $env === 'production' ? 'production' : 'testing';
+}
+
+function getPayPlusApiBaseUrl() {
+    if (getApiParamsEnvType() === 'production') {
+        return 'https://restapi.payplus.co.il/api/v1.0';
+    }
+
+    return 'https://restapidev.payplus.co.il/api/v1.0';
+}
+
+function getPayPlusCallbackUrl() {
+    return esc_url_raw(home_url('/payplus-callback/'));
+}
+
 /**
  * Global logger used to replace legacy error_log(...) calls.
  *
@@ -276,5 +293,5 @@ function getSalesforceParams() {
 }
 
 function getSalesforceEnvType() {
-    return get_option('pp_env_type', 'testing'); // default: testing
+    return getApiParamsEnvType();
 }

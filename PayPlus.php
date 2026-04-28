@@ -88,7 +88,7 @@ class PayPlus
         // Simplified: getPayPlusParams() already returns the exact keys we need.
         $auth = json_encode($params);
 
-        $response = $this->httpRequest('https://restapidev.payplus.co.il/api/v1.0' . $route, json_encode($data), [
+        $response = $this->httpRequest(getPayPlusApiBaseUrl() . $route, json_encode($data), [
             "Content-Type: application/json",
             "Authorization: " . $auth,
         ], true, null, $method);

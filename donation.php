@@ -631,7 +631,7 @@
             'charge_method' => $recurring ? 3 : 1,
             "refURL_success" => $thank_you_page_url,
             "refURL_failure" => $thank_you_page_url,
-            "refURL_callback" => 'https://www-dev.greenpeace.org/israel/payplus-callback/',
+            "refURL_callback" => getPayPlusCallbackUrl(),
             "customer" => [
                 "customer_name" => $clientName,
                 "email" => $email,
