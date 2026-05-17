@@ -843,3 +843,168 @@ HTML;
 
 return $confirmation_html;
 }
+
+function gp_israel_request_value(array $keys): string {
+    foreach ($keys as $key) {
+        if (isset($_GET[$key]) && !is_array($_GET[$key])) {
+            return sanitize_text_field(wp_unslash($_GET[$key]));
+        }
+    }
+
+    foreach ($keys as $key) {
+        if (isset($_POST[$key]) && !is_array($_POST[$key])) {
+            return sanitize_text_field(wp_unslash($_POST[$key]));
+        }
+    }
+
+    return '';
+}
+
+function gp_israel_donation_id_from_payplus_return(): int {
+    $direct_value = gp_israel_request_value([
+        'more_info',
+        'moreInfo',
+        'transaction_more_info',
+        'transaction_moreInfo',
+    ]);
+
+    if ($direct_value !== '') {
+        return absint($direct_value);
+    }
+
+    foreach (['transaction', 'data'] as $container) {
+        if (isset($_GET[$container]) && is_array($_GET[$container])) {
+            $nested = wp_unslash($_GET[$container]);
+            foreach (['more_info', 'moreInfo'] as $key) {
+                if (!empty($nested[$key]) && !is_array($nested[$key])) {
+                    return absint($nested[$key]);
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+function gp_israel_transaction_id_from_payplus_return(int $donation_id): string {
+    $transaction_id = gp_israel_request_value([
+        'transaction_uid',
+        'transactionUID',
+        'uid',
+        'payment_request_uid',
+        'paymentRequestUID',
+        'voucher_number',
+        'voucher_num',
+        'approval_num',
+    ]);
+
+    if ($transaction_id !== '') {
+        return $transaction_id;
+    }
+
+    return 'donation-' . $donation_id;
+}
+
+function gp_israel_amount_from_payplus_return(object $donation): float {
+    $amount = gp_israel_request_value(['amount', 'sum', 'total']);
+
+    if ($amount !== '' && is_numeric($amount)) {
+        return (float) $amount;
+    }
+
+    return (float) $donation->amount;
+}
+
+function gp_israel_render_purchase_event_script(): void {
+    if (is_admin()) {
+        return;
+    }
+
+    $donation_id = gp_israel_donation_id_from_payplus_return();
+
+    if ($donation_id <= 0) {
+        return;
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'green_donations';
+    $donation = $wpdb->get_row(
+        $wpdb->prepare(
+            "SELECT * FROM $table_name WHERE id = %d",
+            $donation_id
+        )
+    );
+
+    if (!$donation || empty($donation->email)) {
+        return;
+    }
+
+    $amount = gp_israel_amount_from_payplus_return($donation);
+
+    if ($amount <= 0) {
+        return;
+    }
+
+    $payment_type = strtolower((string) $donation->payment_type);
+    $purchase_data = [
+        'currency' => 'ILS',
+        'value' => $amount,
+        'transaction_id' => gp_israel_transaction_id_from_payplus_return($donation_id),
+        'item_id' => 'donation',
+        'item_name' => $payment_type === 'recurring' ? 'RECURRING' : 'ONE_TIME',
+    ];
+
+    ?>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function hashEmailToGpUserId(email) {
+      var encoder = new TextEncoder();
+      var data = encoder.encode(email);
+
+      return crypto.subtle.digest('SHA-256', data).then(function(hashBuffer) {
+        var hashArray = Array.from(new Uint8Array(hashBuffer));
+        var base64String = btoa(String.fromCharCode.apply(null, hashArray));
+        return base64String.replace(/\//g, '');
+      });
+    }
+
+    function pushPurchase(email, purchaseData) {
+      if (!email) return;
+
+      hashEmailToGpUserId(email).then(function(gp_user_id) {
+        window.dataLayer.push({
+          event: 'purchase',
+          gp_user_id: gp_user_id,
+          ecommerce: {
+            currency: purchaseData.currency,
+            value: purchaseData.value,
+            transaction_id: purchaseData.transaction_id,
+            items: [{
+              item_id: purchaseData.item_id,
+              item_name: purchaseData.item_name
+            }]
+          }
+        });
+      });
+    }
+
+    (function() {
+      var purchaseData = <?php echo wp_json_encode($purchase_data); ?>;
+      var purchaseKey = 'gp_purchase_' + purchaseData.transaction_id;
+
+      if (window.sessionStorage && window.sessionStorage.getItem(purchaseKey)) {
+        return;
+      }
+
+      pushPurchase(<?php echo wp_json_encode((string) $donation->email); ?>, purchaseData);
+
+      if (window.sessionStorage) {
+        window.sessionStorage.setItem(purchaseKey, '1');
+      }
+    })();
+    </script>
+    <?php
+}
+
+add_action('wp_footer', 'gp_israel_render_purchase_event_script', 20);
