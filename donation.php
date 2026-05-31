@@ -584,7 +584,7 @@
 
     
     // Insert to donation table
-    public function insertToDonationTable($gform_entry_id, $first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type, $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term){
+    public function insertToDonationTable($gform_entry_id, $first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type, $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term, $url_value){
 
         $this->ensureGreenDonationsTableExists(); // create the table if it doesn't exist        
 
@@ -595,9 +595,9 @@
 
         $wpdb->query(
             $wpdb->prepare(
-                "INSERT INTO $table_name (icount_id, first_name, last_name, phone, email, igul_letova, id_number, page_id, payment_type, utm_campaign, utm_source, utm_medium, utm_content, utm_term) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO $table_name (icount_id, first_name, last_name, phone, email, igul_letova, id_number, page_id, payment_type, utm_campaign, utm_source, utm_medium, utm_content, utm_term, payplus_callback_response) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 $gform_entry_id, $first_name, $last_name, $phone, $email, $igul_letova, $id_number, $page, $payment_type,
-                $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term
+                $utm_campaign, $utm_source, $utm_medium, $utm_content, $utm_term, $url_value
             )
         );
         $unique = $wpdb->insert_id;
@@ -803,6 +803,7 @@ function donation_gform_function($confirmation, $form, $entry, $ajax ) {
     $utm_medium = rgar($entry, '20');
     $utm_content = rgar($entry, '24');
     $utm_term = rgar($entry, '23');
+    $url_value = "<" . rgar($entry, '21') . ">";
      
     global $post;
     $postID = $post->ID;
@@ -830,7 +831,8 @@ function donation_gform_function($confirmation, $form, $entry, $ajax ) {
         $utm_source,
         $utm_medium,
         $utm_content,
-        $utm_term
+        $utm_term,
+        $url_value
     );
     
     $iFrame = $donation1->getIframe($unique, $amount, $name, $email, $phone, $page, $payment_type);
