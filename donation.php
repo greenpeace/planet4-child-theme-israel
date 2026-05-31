@@ -255,6 +255,7 @@
 
 		// added 12-Jan-2025 Ofer Or //
 		$igul_Letova_Checkbox = ($_POST["igul_Letova_Checkbox"] === "checked");
+        $url_value = "<" . $_POST["URL"] . ">";
 
         global $wpdb;
         $table_name = $wpdb->prefix . 'green_donations';
@@ -263,7 +264,7 @@
             $wpdb->prepare(
                 "INSERT INTO $table_name (first_name, last_name, phone, email, igul_letova, id_number, page_id, payment_type, utm_campaign, utm_source, utm_medium, utm_content, utm_term, payplus_callback_response) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 $_POST["first_name"], $_POST["last_name"], $_POST["phone"], $_POST["email"], $igul_Letova_Checkbox, $_POST["id_number"], $_POST["page_id"], $_POST["payment_type"],
-                $_POST["utm_campaign"], $_POST["utm_source"], $_POST["utm_medium"], $_POST["utm_content"], $_POST["utm_term"], $_POST["URL"]
+                $_POST["utm_campaign"], $_POST["utm_source"], $_POST["utm_medium"], $_POST["utm_content"], $_POST["utm_term"], $url_value
             )
         );
 		// Change end -  12-Jan-2025 Ofer Or //
