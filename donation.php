@@ -803,7 +803,7 @@ function donation_gform_function($confirmation, $form, $entry, $ajax ) {
     $utm_medium = rgar($entry, '20');
     $utm_content = rgar($entry, '24');
     $utm_term = rgar($entry, '23');
-    $url_value = "<" . rgar($entry, '21') . ">";
+    $url_value = rgar($entry, '30');
      
     global $post;
     $postID = $post->ID;
