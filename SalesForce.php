@@ -81,92 +81,147 @@ class SalesForce
 
     public function SendLeadByDonation($donationID, $donation = null, $send_unsuccessful_transactions = false) {
         global $wpdb;
-		// FIX: use prefixed table name
-		$table_name = $wpdb->prefix . 'green_donations';
-
-
+        
+        $SUCCESS_STATE = 1;
+        $FINAL_FAILURE_STATE = 2;
+        $MAX_RETRY_STATE = 4;
+        
+        // FIX: use prefixed table name
+        $table_name = $wpdb->prefix . 'green_donations';
+    
+    
         $this->log([
             'step' => 'SendLeadByDonation',
             'message' => 'init, $donationID: ' . $donationID,
         ]);
-
-        if($donation == null) {
+    
+        // Load donation if not provided
+        if ($donation === null) {
             $donation = $wpdb->get_row(
                 $wpdb->prepare(
-                "SELECT * FROM `$table_name` WHERE id = %d",
+                    "SELECT * FROM `$table_name` WHERE id = %d",
                     $donationID
                 )
             );
         }
-
-        if( !empty($donation->sale_f_id) ) {
+    
+        if (!$donation) {
+            $this->log([
+                'step' => 'SendLeadByDonation',
+                'message' => "Donation not found: {$donationID}",
+            ]);
+    
+            return 'Donation not found';
+        }
+    
+        // Already successful
+        if (!empty($donation->sale_f_id)) {
             $this->log([
                 'step' => 'SendLeadByDonation',
                 'message' => 'transaction already transmitted to sf, ignoring. (352)',
             ]);
-
-            $wpdb->query(
-                $wpdb->prepare(
-                    "UPDATE `$table_name` SET `transmited_to_sf` = 1  WHERE `id` = %d",
-                    $donationID
-                )
+    
+            $wpdb->update(
+                $table_name,
+                ['transmited_to_sf' => $SUCCESS_STATE],
+                ['id' => $donationID]
             );
-
+    
             return 'transaction already transmitted to sf, ignoring. (352)';
         }
-
+    
+        $state = (int) $donation->transmited_to_sf;
+    
+        // Permanently failed
+        if ($state === $FINAL_FAILURE_STATE) {
+            $this->log([
+                'step' => 'SendLeadByDonation',
+                'message' => 'Max attempts reached, skipping',
+            ]);
+    
+            return 'Max attempts reached';
+        }
+    
+        // Invalid state -> reset to new
+        if ($state < 0 || $state > $MAX_RETRY_STATE) {
+            $state = 0;
+        }
+    
         $PayPlusApi = new PayPlus();
-
+    
         $return_only_successful_transactions = !$send_unsuccessful_transactions;
-
-        $ipn_data = $PayPlusApi->getIpnData($donationID, $return_only_successful_transactions);
-
-        if(isset($ipn_data->status) && $ipn_data->status === 'class-failed') {
-            return false; //$PayPlusApi->getIpnData already logged this error
+    
+        $ipn_data = $PayPlusApi->getIpnData(
+            $donationID,
+            $return_only_successful_transactions
+        );
+    
+        if (isset($ipn_data->status) && $ipn_data->status === 'class-failed') {
+            return false; // already logged
         }
-
+    
         $data = $this->prepareData($ipn_data, $donation);
-
+    
         $SalesForceResponse = $this->SendLead($data);
-
-        if($SalesForceResponse->status !== 'succeeded') {
+    
+        // -----------------------------
+        // HANDLE FAILURE
+        // -----------------------------
+        if (
+            !$SalesForceResponse ||
+            !isset($SalesForceResponse->status) ||
+            $SalesForceResponse->status !== 'succeeded'
+        ) {
+    
+            if ($state === 0) {
+                // First failure
+                $nextState = $MAX_RETRY_STATE;
+            } else {
+                // Count down toward final failure state
+                $nextState = max(
+                    $FINAL_FAILURE_STATE,
+                    $state - 1
+                );
+            }
+    
+            $wpdb->update(
+                $table_name,
+                ['transmited_to_sf' => $nextState],
+                ['id' => $donationID]
+            );
+    
             $this->log([
                 'step' => 'SendLeadByDonation',
-                'message' => 'something went wrong. (354)',
+                'message' => "Salesforce failed, new state: {$nextState}",
                 '$SalesForceResponse' => $SalesForceResponse,
             ]);
-
-            return 'something went wrong. (354)';
+    
+            return "Salesforce failed, new state: {$nextState}";
         }
-
-        $salesForceId = (isset($SalesForceResponse->content->id ) && $SalesForceResponse->content->id)? $SalesForceResponse->content->id : 0;
-
-        if($salesForceId == 0) {
-            $this->log([
-                'step' => 'SendLeadByDonation',
-                'message' => 'something went wrong. (6875)',
-                '$SalesForceResponse' => $SalesForceResponse,
-            ]);
-
-            //return 'something went wrong. (6875)';
-        }
-
+    
+        // -----------------------------
+        // SUCCESS
+        // -----------------------------
+        $salesForceId = !empty($SalesForceResponse->content->id) ? $SalesForceResponse->content->id : 0;
+    
         $this->log([
             'step' => 'SendLeadByDonation',
             'message' => 'Sent to Salesforce',
             '$salesForceId' => $salesForceId,
         ]);
-
-        $wpdb->query(
-            $wpdb->prepare(
-			    "UPDATE `$table_name` SET `sale_f_id` = %s, `transmited_to_sf` = 1  WHERE `id` = %d",
-                $salesForceId, $donation->id
-            )
+    
+        $wpdb->update(
+            $table_name,
+            [
+                'sale_f_id' => $salesForceId,
+                'transmited_to_sf' => $SUCCESS_STATE,
+            ],
+            ['id' => $donationID]
         );
-
+    
         return $SalesForceResponse;
     }
-
+    
     protected function prepareData($transaction, $donation): array
     {
         $this->log([

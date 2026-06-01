@@ -39,12 +39,10 @@ class DonationMonitor
     public function SendIncompleteLeadsToSF() {
         debug_log('Panic', "CRON RUN: SendIncompleteLeadsToSF started at " . date('Y-m-d H:i:s'));
 
-        $query = $this->wpdb->prepare(
-            "SELECT * FROM {$this->table_name}
-             WHERE transmited_to_sf = %d
-             AND date < DATE_SUB(NOW(), INTERVAL 10 MINUTE)",
-            0
-        );  // was date < DATE_SUB(NOW(), INTERVAL 2 HOUR)",
+        $query = "SELECT * FROM {$this->table_name}
+                  WHERE ( transmited_to_sf = 0
+                          OR transmited_to_sf > 2 ) 
+                        AND date < DATE_SUB(NOW(), INTERVAL 10 MINUTE)"; // was date < DATE_SUB(NOW(), INTERVAL 2 HOUR)",
 
         $donations = $this->wpdb->get_results($query);
 
