@@ -156,9 +156,14 @@ class SalesForce
             $return_only_successful_transactions
         );
     
+        debug_log('Panic', "In SendLeadByDonation before ipn_data check");
         if (isset($ipn_data->status) && $ipn_data->status === 'class-failed') {
-            return false; // already logged
+            debug_log('Panic', "In SendLeadByDonation ipn_data check return false");
+            //return false; //$PayPlusApi->getIpnData already logged this error
+            // instead, we will set the ipn_data to an empty object
+            $ipn_data = (object) [];    
         }
+        debug_log('Panic', "In SendLeadByDonation after ipn_data check");
     
         $data = $this->prepareData($ipn_data, $donation);
     
@@ -236,12 +241,14 @@ class SalesForce
         $debit = ( $donation->card_type == 3 );
 		// adding igul letova - Ofer Or 13-1-2025 ( + PERSON_ID__c & Igul_letova__c in the return
         $igul_letova = ( $donation->igul_letova == 1 );
-
+        $timestamp = strtotime($donation->date);
+        $sfDate = $timestamp ? date("Y-m-d\TH:i:s\Z", $timestamp) : null;
+               
         return [
             'Page_Requset_Uid__c' => $transaction->page_request_uid ?? '',
             'recurring_payment_uid__c' => $transaction->uid ?? '',
             "customer_uid__c" => $transaction->customer_uid ?? '',
-            "Web_Date__c" => date("Y-m-d\TH:i:s\Z", strtotime($transaction->date ?? '')),
+            "Web_Date__c" => $sfDate,
             "Subject" => "תרומה חדשה באתר",
             "type" => "תרומה מהאתר",
             "Status" => "New",
