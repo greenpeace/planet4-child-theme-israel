@@ -630,6 +630,7 @@
             "language_code" => $language_code,
             'create_token' => true,
             'charge_method' => $recurring ? 3 : 1,
+            'hide_other_charge_methods' => $recurring ? true : false,
             "refURL_success" => $thank_you_page_url,
             "refURL_failure" => $thank_you_page_url,
             "refURL_callback" => getPayPlusCallbackUrl(),
