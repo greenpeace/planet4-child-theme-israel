@@ -122,3 +122,11 @@ add_filter( 'gform_hubspot_form_object_pre_save_feed', function ( $hs_form, $fee
 
     return $hs_form;
 }, 10, 4 );
+
+add_action('wp_head', 'add_custom_js_to_head');
+function add_custom_js_to_head() {
+    ?>
+        <script type="text/javascript" src=" https://payments.payplus.co.il/statics/applePay/script.js ">
+        </script>
+    <?php
+}
