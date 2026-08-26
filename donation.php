@@ -679,7 +679,7 @@
 
                 return '
                         <div style="width:100%; max-width:800px; margin:0 auto;">
-                            <iframe id="payplus-new-iframe"
+                            <iframe id="pp_iframe"
                                 src="' . $iframe_url->data->payment_page_link . '"
                                 style="width:100%; height:750px; border:0;"
                                 name="defrayal"
