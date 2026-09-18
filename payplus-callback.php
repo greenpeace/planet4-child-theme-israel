@@ -89,8 +89,8 @@ function do_payplus_ipn_min() {
         )
     );
 
-    debug_log('Panic', " payplus-callback.php befor update DB: id = " . $id . " *****"); // Log it to the error log
-    debug_log('Panic', " payplus-callback.php befor update DB: amount = " . $amount . " *****"); // Log it to the error log
+    debug_log('Panic', " payplus-callback.php before update DB: id = " . $id . " *****"); // Log it to the error log
+    debug_log('Panic', " payplus-callback.php before update DB: amount = " . $amount . " *****"); // Log it to the error log
 
     $test = $wpdb->query(
         $wpdb->prepare(
@@ -100,7 +100,7 @@ function do_payplus_ipn_min() {
     );
 
     // skip SalesForce update - Donation monitor will do that if needed - Ofer Or 16-Mar-2026
-    /*    // Uptade SalesForce 
+    /*    // Update SalesForce 
         if( empty($transaction_exists->sale_f_id) ) { //Transaction not transmitted to SalesForce yet
             debug_log('Panic', "ofer debug 13-12-2025 : transaction sent to sf right now. ");
             salesForce($id, $invoice_url, $invoice_id, $data, $transaction);
