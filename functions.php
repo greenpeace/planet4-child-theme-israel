@@ -5,9 +5,9 @@
  */
 
 // *************************************************************************************************************************
-// Donation functunality code  - add by Ofer Or
+// Donation functionality code  - add by Ofer Or
 // Mar-2026
-// adupted from old donation site code
+// adapted from old donation site code
 // *******************************************************
 include 'Helpers.php';
 include 'salesforce-payplus-api-parameters.php';
@@ -39,7 +39,7 @@ add_filter( 'gform_confirmation_60', 'donation_gform_function', 10, 4 );
 
 // *******************************************************
 //
-// end of Change for donation form functunality code (added by ofer or Mar-2026)
+// end of Change for donation form functionality code (added by ofer or Mar-2026)
 //
 // *********************************************************************************************************************************
 

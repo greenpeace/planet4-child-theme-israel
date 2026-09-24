@@ -55,7 +55,7 @@ class DonationMonitor
 
         foreach ($donations as $donation) {
             debug_log('Panic', "Processing donation ID: {$donation->id}, email: {$donation->email}");
-            // $this->MaybeSendLeadToSF($donation); // skip checking if person already donated - at least till Elad & Dana will decided otherwise
+            // $this->MaybeSendLeadToSF($donation); // skip checking if person already donated - at least till Elad & Dana will decide otherwise
             debug_log('Panic', "Sending donation {$donation->id} to Salesforce");
             $this->SalesForce->SendLeadByDonation($donation->id, $donation, true);
         }
