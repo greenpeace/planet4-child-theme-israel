@@ -441,3 +441,12 @@ span.elementor-icon-list-icon i:before {
         float: left;
     }
 }
+
+
+/* RTL case fix: the master theme sets text-transform:lowercase on RTL sites,
+   which lowercases all Latin text. Restore original casing. */
+html[dir=rtl] body,
+html[dir=rtl] body .btn,
+html[dir=rtl] body button {
+  text-transform: none;
+}
