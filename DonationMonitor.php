@@ -54,7 +54,7 @@ class DonationMonitor
         }
 
         foreach ($donations as $donation) {
-            debug_log('Panic', "Processing donation ID: {$donation->id}, email: {$donation->email}");
+            debug_log('Panic', "Processing donation ID: {$donation->id}");
             // $this->MaybeSendLeadToSF($donation); // skip checking if person already donated - at least till Elad & Dana will decided otherwise
             debug_log('Panic', "Sending donation {$donation->id} to Salesforce");
             $this->SalesForce->SendLeadByDonation($donation->id, $donation, true);
@@ -91,7 +91,7 @@ class DonationMonitor
         $results = $this->wpdb->get_results($query);
 
         $already = count($results) > 0;
-        debug_log('Panic', "Check existing donor for {$donation->email}: " . ($already ? "YES" : "NO"));
+        debug_log('Panic', "Check existing donor for donation {$donation->id}: " . ($already ? "YES" : "NO"));
 
         return $already;
     }

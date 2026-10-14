@@ -11,10 +11,7 @@
     protected $api;
 
     public function __construct() {
-        
-        $this->registerAjax();
-        
-        add_shortcode("greenpeace_username", array($this,'printUser'));
+
         add_action('admin_menu', array($this,'register_my_custom_menu_page'));
         add_action('admin_post_donation_cleanup', array($this,'donationCleanupByDate'));
         add_action('admin_post_greenpeace_export', array($this,'exportCSV'));
@@ -87,7 +84,8 @@
                 <!-- Export -->
                 <div style="border:1px solid #ccc; padding:10px; background:#fafafa;">
                     <h3 style="margin-top:0;">Export</h3>
-                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <?php wp_nonce_field('greenpeace_export_action', 'greenpeace_export_nonce'); ?>
                         <input type="hidden" name="action" value="greenpeace_export">
                         <button class="button button-primary">Export CSV</button>
                     </form>
@@ -107,7 +105,8 @@
                 <!-- Import -->
                 <div style="border:1px solid #ccc; padding:10px; background:#fafafa;">
                     <h3 style="margin-top:0;">Import</h3>
-                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" enctype="multipart/form-data">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
+                        <?php wp_nonce_field('greenpeace_import_action', 'greenpeace_import_nonce'); ?>
                         <input type="hidden" name="action" value="greenpeace_import">
                         <input type="file" name="csv_file" required>
                         <button class="button button-primary">Import CSV</button>
@@ -242,51 +241,6 @@
     }
 
 
-    public function printUser(){
-
-        return (isset($_GET["username"]))? $_GET["username"] : "אורח";
-    }
-
-
-    public function dbClient(){
-
-        //Security
-        if ( !wp_verify_nonce( $_POST['nonce'], "greenpeace_donation")) exit("No monkey business");
-
-		// added 12-Jan-2025 Ofer Or //
-		$igul_Letova_Checkbox = ($_POST["igul_Letova_Checkbox"] === "checked");
-        $url_value = "<" . $_POST["URL"] . ">";
-
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'green_donations';
-
-        $wpdb->query(
-            $wpdb->prepare(
-                "INSERT INTO $table_name (first_name, last_name, phone, email, igul_letova, id_number, page_id, payment_type, utm_campaign, utm_source, utm_medium, utm_content, utm_term, payplus_callback_response) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                $_POST["first_name"], $_POST["last_name"], $_POST["phone"], $_POST["email"], $igul_Letova_Checkbox, $_POST["id_number"], $_POST["page_id"], $_POST["payment_type"],
-                $_POST["utm_campaign"], $_POST["utm_source"], $_POST["utm_medium"], $_POST["utm_content"], $_POST["utm_term"], $url_value
-            )
-        );
-		// Change end -  12-Jan-2025 Ofer Or //
-
-        $unique = $wpdb->insert_id;
-        $sum = ($_POST["gpf_sum_radio"] !== "other")? $_POST["gpf_sum_radio"] : $_POST["gpf_other"];
-        $email = $_POST["email"]; //change
-        $name = $_POST["first_name"] ." ". $_POST["last_name"];//change
-        $page = intval($_POST["page_id"]);
-        $iFrame = $this->getIframe($unique, $sum, $name, $email, $_POST["phone"], $page);
-        echo $iFrame;
-        exit;
-    }
-
-
-    public function registerAjax(){
-
-        add_action("wp_ajax_gpf_dbclient", array($this,'dbClient'));
-        add_action("wp_ajax_nopriv_gpf_dbclient", array($this,'dbClient'));
-    }
-
-
     public function ensureGreenDonationsTableExists() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'green_donations';
@@ -341,65 +295,107 @@
 
     // === ADDED: EXPORT CSV (HEBREW SAFE) ===
     public function exportCSV() {
+        if (!isset($_POST['greenpeace_export_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['greenpeace_export_nonce'])), 'greenpeace_export_action')) {
+            wp_die(__('Invalid export request.', 'planet4-child-theme-israel'));
+        }
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to export donations.', 'planet4-child-theme-israel'));
+        }
+
         global $wpdb;
         $table = $wpdb->prefix . 'green_donations';
-    
-        // === 1. Create backup folder ===
-        $upload_dir = wp_upload_dir();
-        $backup_dir = $upload_dir['basedir'] . '/greenpeace-backups';
-    
-        if (!file_exists($backup_dir)) {
-            wp_mkdir_p($backup_dir);
-        }
-    
-        // === 2. Create file path ===
+
         $timestamp = date('Y-m-d_H-i-s');
-        $file_path = $backup_dir . "/donations_export_{$timestamp}.csv";
-    
-        // === 3. Fetch data ===
         $rows = $wpdb->get_results("SELECT * FROM $table ORDER BY id DESC", ARRAY_A);
-    
-        // === 4. Write CSV to server ===
-        $output = fopen($file_path, 'w');
-    
-        // UTF‑8 BOM for Hebrew
-        fwrite($output, "\xEF\xBB\xBF");
-    
-        if (!empty($rows)) {
-            fputcsv($output, array_keys($rows[0]));
-    
-            foreach ($rows as $row) {
-                $row = array_map(function($value) {
-                    return mb_convert_encoding($value, 'UTF-8');
-                }, $row);
-    
-                fputcsv($output, $row);
-            }
-        }
-    
-        fclose($output);
-    
-        // === 5. Clean all output buffers BEFORE sending file ===
+
+        $this->streamCsvDownload("donations_export_{$timestamp}.csv", $rows);
+
+        // Stop WordPress from adding HTML
+        exit;
+    }
+
+
+    /**
+     * Send donor rows to the browser as a CSV download.
+     *
+     * Nothing is written on the server. Exports and cleanup backups used to be
+     * saved under uploads/greenpeace-backups first, and uploads on this
+     * platform are served from a public storage bucket.
+     */
+    protected function streamCsvDownload(string $filename, array $rows) {
+        // Clean all output buffers BEFORE sending file
         while (ob_get_level()) {
             ob_end_clean();
         }
-    
-        // === 6. Force file download ===
+
         header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="donations_export_' . $timestamp . '.csv"');
-        header('Content-Length: ' . filesize($file_path));
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Cache-Control: no-cache, must-revalidate');
         header('Expires: 0');
-    
-        readfile($file_path);
-    
-        // === 7. Stop WordPress from adding HTML ===
-        exit;
+
+        $output = fopen('php://output', 'w');
+
+        // UTF‑8 BOM for Hebrew
+        fwrite($output, "\xEF\xBB\xBF");
+
+        if (!empty($rows)) {
+            fputcsv($output, array_keys($rows[0]));
+
+            foreach ($rows as $row) {
+                fputcsv($output, array_map(array(self::class, 'csvSafeCell'), $row));
+            }
+        }
+
+        fclose($output);
     }
-    
+
+
+    /**
+     * Spreadsheet apps run a cell that starts with = + - or @ as a formula,
+     * and donor rows hold visitor-typed text: names, and UTM tags taken from
+     * the landing page URL. Such a cell gets a leading apostrophe so it opens
+     * as plain text. A + or - followed only by digits and phone punctuation
+     * is a phone number or an amount, not a formula, and is left alone.
+     *
+     * importCSV() removes the apostrophe again (csvUnguardCell), so an export
+     * re-imports exactly as it was.
+     */
+    public static function csvSafeCell($value): string {
+        $value = mb_convert_encoding((string) ($value ?? ''), 'UTF-8');
+
+        if ($value === '') {
+            return $value;
+        }
+
+        if (in_array($value[0], array('=', '@', "\t", "\r"), true)) {
+            return "'" . $value;
+        }
+
+        if (in_array($value[0], array('+', '-'), true) && !preg_match('/^[+-][0-9 ().+-]*$/', $value)) {
+            return "'" . $value;
+        }
+
+        return $value;
+    }
+
+
+    public static function csvUnguardCell(string $value): string {
+        if (strlen($value) > 1 && $value[0] === "'" && in_array($value[1], array('=', '+', '-', '@', "\t", "\r"), true)) {
+            return substr($value, 1);
+        }
+
+        return $value;
+    }
+
 
 	// === ADDED: IMPORT CSV WITH DEFAULT VALUES (HEBREW SAFE) ===
 	public function importCSV() {
+		if (!isset($_POST['greenpeace_import_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['greenpeace_import_nonce'])), 'greenpeace_import_action')) {
+			wp_die(__('Invalid import request.', 'planet4-child-theme-israel'));
+		}
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to import donations.', 'planet4-child-theme-israel'));
+		}
 		if (!isset($_FILES['csv_file'])) wp_die("No file uploaded");
 
 		global $wpdb;
@@ -409,6 +405,12 @@
 
 		// Read header row
 		$header = fgetcsv($file);
+
+		// Exports start with a UTF-8 BOM; left in place it sticks to the first
+		// column name, "id" is no longer recognised, and every row fails to insert.
+		if (isset($header[0])) {
+			$header[0] = preg_replace('/^\xEF\xBB\xBF/', '', $header[0]);
+		}
 
 		// Remove ID column if exists
 		if (strtolower($header[0]) === 'id') {
@@ -435,9 +437,10 @@
 
 		while (($line = fgetcsv($file)) !== false) {
 
-			// Convert each field to UTF‑8 (supports Hebrew)
+			// Convert each field to UTF‑8 (supports Hebrew), and undo the
+			// export's spreadsheet-formula guard
 			$line = array_map(function($value) {
-				return mb_convert_encoding($value, 'UTF-8');
+				return self::csvUnguardCell(mb_convert_encoding($value, 'UTF-8'));
 			}, $line);
 
 			// Remove ID value if exists
@@ -502,12 +505,14 @@
 		$date = sanitize_text_field($_POST['cleanup_date']);
         $date = $date . ' 23:59:59';
 
-		// Count rows to delete
-		$count = $wpdb->get_var(
-			$wpdb->prepare("SELECT COUNT(*) FROM $table WHERE `date` <= %s", $date)
+		// === FETCH ROWS TO BE DELETED ===
+		$rows = $wpdb->get_results(
+			$wpdb->prepare("SELECT * FROM $table WHERE `date` <= %s ORDER BY id", $date),
+			ARRAY_A
 		);
+		$count = count($rows);
 
-        if ((int) $count === 0) {
+        if ($count === 0) {
             debug_log('Panic', "Cleanup Triggered - no records to delete 2");
             $redirect = add_query_arg(
                 'gp_don_notice',
@@ -517,68 +522,33 @@
             wp_safe_redirect($redirect);
             exit;
         }
-    
-		// === CREATE BACKUP FOLDER ===
-		$upload_dir = wp_upload_dir();
-		$backup_dir = $upload_dir['basedir'] . '/greenpeace-backups';
 
-		if (!file_exists($backup_dir)) {
-			wp_mkdir_p($backup_dir);
-		}
-
-		// === BACKUP FILE NAME ===
+		// === SEND BACKUP TO BROWSER, THEN DELETE ===
+		// The backup is no longer kept on the server (see streamCsvDownload), so
+		// rows are deleted only after it has been sent. An error while writing it,
+		// or a disconnect PHP notices, leaves the table untouched and the admin can
+		// simply run cleanup again. Only rows that went into the backup are
+		// deleted: a donation saved meanwhile has a higher id.
+		$last_backed_up_id = max(array_map('intval', array_column($rows, 'id')));
 		$timestamp = date('Y-m-d_H-i-s');
-		$backup_file = $backup_dir . "/green_donations_BACKUP_{$timestamp}.csv";
 
-		// === FETCH ROWS TO BE DELETED ===
-		$rows = $wpdb->get_results(
-			$wpdb->prepare("SELECT * FROM $table WHERE `date` <= %s", $date),
-			ARRAY_A
-		);
+		debug_log('Panic', "Cleanup Triggered - sending {$count} records as backup CSV 3");
+		ignore_user_abort(true);
+		$this->streamCsvDownload("green_donations_BACKUP_{$timestamp}.csv", $rows);
+		flush();
 
-		// === WRITE BACKUP CSV TO SERVER ===
-		if (!empty($rows)) {
-            debug_log('Panic', "Cleanup Triggered - write {$count} records to backup CSV 3");
-			$output = fopen($backup_file, 'w');
-			fputcsv($output, array_keys($rows[0]));
-			foreach ($rows as $row) fputcsv($output, $row);
-			fclose($output);
+		if (connection_aborted()) {
+			debug_log('Panic', "Cleanup stopped - browser disconnected before the backup finished, nothing deleted");
+			exit;
 		}
 
    		// === DELETE OLD ROWS ===
 		$wpdb->query(
-			$wpdb->prepare("DELETE FROM $table WHERE `date` <= %s", $date)
+			$wpdb->prepare("DELETE FROM $table WHERE `date` <= %s AND `id` <= %d", $date, $last_backed_up_id)
 		);
         debug_log('Panic', "Cleanup Triggered - {$count} records deleted 4");
 
-		// === SEND FILE TO BROWSER ===
-		if (file_exists($backup_file)) {
-            debug_log('Panic', "Cleanup Triggered - sending file to browser 5");
-            // === 5. Clean all output buffers BEFORE sending file ===
-            while (ob_get_level()) {
-                ob_end_clean();
-            }
-        
-            // === 6. Force file download ===
-            header('Content-Type: text/csv; charset=UTF-8');
-			header('Content-Disposition: attachment; filename="green_donations_BACKUP_' . $timestamp . '.csv"');
-			header('Content-Length: ' . filesize($backup_file));
-            header('Cache-Control: no-cache, must-revalidate');
-            header('Expires: 0');
-        
-			readfile($backup_file);
-        
-            // === 7. Stop WordPress from adding HTML ===
-            exit;
-		}
-
-        // if somehow no file exists (rare), fallback to redirect
-        set_transient('greenpeace_cleanup_message', [
-			'type' => 'success',
-			'text' => "נמחקו {$count} רשומות בהצלחה."
-		], 30);
-
-		wp_redirect($_SERVER['HTTP_REFERER']);
+        // === Stop WordPress from adding HTML ===
 		exit;
 	}
 
@@ -666,7 +636,8 @@
             }
         }
         // ofer debug 14-11-2025 - start
-        debug_log('Panic', "ofer debug 14-11-2025 data: " . print_r($data, true) );
+        // Logged without the customer block: name, email and phone do not belong in server logs.
+        debug_log('Panic', "ofer debug 14-11-2025 data: " . print_r(array_diff_key($data, array('customer' => true)), true) );
         //      echo "ofer debug 14-11-2025 data: " . print_r($data, true) . "<br>";
         // ofer debug 14-11-2025 - end
         $iframe_url = $this->api->apiRequest('/PaymentPages/generateLink', $data);
@@ -812,7 +783,8 @@ function donation_gform_function($confirmation, $form, $entry, $ajax ) {
     $payment_type = ($recurring === "recurring") ? "recurring" : "one-off";
 
     debug_log('Panic', "donation_gform_function - payment type : " . $payment_type );
-    debug_log('Panic', 'ENTRY: ' . print_r($entry, true));
+    // The entry itself holds the donor's name, email, phone and ID number, so only its id is logged.
+    debug_log('Panic', 'ENTRY: ' . $record_id);
     debug_log('Panic', 'Field 27: ' . print_r(rgar($entry, '27'), true));
     debug_log('Panic', 'Field 27.1: ' . print_r(rgar($entry, '27.1'), true));
      
@@ -919,6 +891,17 @@ function gp_israel_amount_from_payplus_return(object $donation): float {
     return (float) $donation->amount;
 }
 
+/**
+ * The analytics user id for a donor: base64 of the email's SHA-256, with "/"
+ * removed. This is the value the thank-you page used to compute in the browser,
+ * which meant writing the donor's email into the page source of any URL that
+ * carried a donation id. Computing it here keeps the id identical for GA/GTM
+ * while the email never leaves the server.
+ */
+function gp_israel_gp_user_id(string $email): string {
+    return str_replace('/', '', base64_encode(hash('sha256', $email, true)));
+}
+
 function gp_israel_render_purchase_event_script(): void {
     if (is_admin()) {
         return;
@@ -962,34 +945,21 @@ function gp_israel_render_purchase_event_script(): void {
     <script>
     window.dataLayer = window.dataLayer || [];
 
-    function hashEmailToGpUserId(email) {
-      var encoder = new TextEncoder();
-      var data = encoder.encode(email);
+    function pushPurchase(gp_user_id, purchaseData) {
+      if (!gp_user_id) return;
 
-      return crypto.subtle.digest('SHA-256', data).then(function(hashBuffer) {
-        var hashArray = Array.from(new Uint8Array(hashBuffer));
-        var base64String = btoa(String.fromCharCode.apply(null, hashArray));
-        return base64String.replace(/\//g, '');
-      });
-    }
-
-    function pushPurchase(email, purchaseData) {
-      if (!email) return;
-
-      hashEmailToGpUserId(email).then(function(gp_user_id) {
-        window.dataLayer.push({
-          event: 'purchase',
-          gp_user_id: gp_user_id,
-          ecommerce: {
-            currency: purchaseData.currency,
-            value: purchaseData.value,
-            transaction_id: purchaseData.transaction_id,
-            items: [{
-              item_id: purchaseData.item_id,
-              item_name: purchaseData.item_name
-            }]
-          }
-        });
+      window.dataLayer.push({
+        event: 'purchase',
+        gp_user_id: gp_user_id,
+        ecommerce: {
+          currency: purchaseData.currency,
+          value: purchaseData.value,
+          transaction_id: purchaseData.transaction_id,
+          items: [{
+            item_id: purchaseData.item_id,
+            item_name: purchaseData.item_name
+          }]
+        }
       });
     }
 
@@ -1001,7 +971,7 @@ function gp_israel_render_purchase_event_script(): void {
         return;
       }
 
-      pushPurchase(<?php echo wp_json_encode((string) $donation->email); ?>, purchaseData);
+      pushPurchase(<?php echo wp_json_encode(gp_israel_gp_user_id((string) $donation->email)); ?>, purchaseData);
 
       if (window.sessionStorage) {
         window.sessionStorage.setItem(purchaseKey, '1');

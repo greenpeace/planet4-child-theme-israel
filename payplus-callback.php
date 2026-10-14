@@ -27,7 +27,8 @@ function do_payplus_ipn_min() {
     $data = (object) json_decode($request_data);
 
 	$logMessage = "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (1)";
-    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (1): " . print_r($data, true) );
+    // The callback body carries the card token, expiry and holder name, so it is never logged whole.
+    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (1)");
 
     if(!is_object($data) || empty($data) || !isset($data->data, $data->transaction)) {
         return false;
@@ -40,9 +41,7 @@ function do_payplus_ipn_min() {
 
     debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (3)");
 
-    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 transaction (4): " . print_r($transaction, true) );
-    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 invoice (4): " . print_r($invoice, true) );
-    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 data (4): " . print_r($data, true) );
+    debug_log('Panic', "payplus-callback.php in do_payplus_ipn_min() ofer debug 14-12-2025 (4) transaction uid present: " . (isset($transaction->uid) ? 'yes' : 'no') . ", more_info: " . (isset($transaction->more_info) && is_scalar($transaction->more_info) ? intval($transaction->more_info) : 'missing') );
 
 
     if(!isset($transaction->uid)) {
