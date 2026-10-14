@@ -39,10 +39,29 @@ class DonationMonitor
     public function SendIncompleteLeadsToSF() {
         debug_log('Panic', "CRON RUN: SendIncompleteLeadsToSF started at " . date('Y-m-d H:i:s'));
 
-        $query = "SELECT * FROM {$this->table_name}
-                  WHERE ( transmited_to_sf = 0
-                          OR transmited_to_sf > 2 ) 
-                        AND date < DATE_SUB(NOW(), INTERVAL 10 MINUTE)"; // was date < DATE_SUB(NOW(), INTERVAL 2 HOUR)",
+        // Ask PayPlus again about callbacks it could not confirm earlier, so the
+        // donations below go out with their verified payment details.
+        $payments = new GreenDonationPayments(new PayPlus());
+        $payments->resolvePending();
+
+        if (GreenDonationPayments::ensureSchema()) {
+            // A verified payment goes as soon as it is verified. An unpaid donation
+            // goes as a lead only once its payment page has expired (30 minutes):
+            // sending it at 10 minutes recorded donors who were still paying as
+            // leads, and Salesforce never heard about their payment. A donation
+            // whose signed callback is pending or rejected waits (see notHeldSql).
+            $query = "SELECT d.* FROM {$this->table_name} d
+                      WHERE ( d.transmited_to_sf = 0
+                              OR d.transmited_to_sf > 2 )
+                            AND ( d.payment_verified_at IS NOT NULL
+                                  OR d.date < DATE_SUB(NOW(), INTERVAL " . GreenDonationPayments::UNPAID_LEAD_AFTER_MINUTES . " MINUTE) )
+                            AND " . GreenDonationPayments::notHeldSql('d');
+        } else {
+            $query = "SELECT * FROM {$this->table_name}
+                      WHERE ( transmited_to_sf = 0
+                              OR transmited_to_sf > 2 ) 
+                            AND date < DATE_SUB(NOW(), INTERVAL 10 MINUTE)"; // was date < DATE_SUB(NOW(), INTERVAL 2 HOUR)",
+        }
 
         $donations = $this->wpdb->get_results($query);
 

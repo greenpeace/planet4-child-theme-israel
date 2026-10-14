@@ -230,6 +230,19 @@ class SalesForce
         return $SalesForceResponse;
     }
     
+    /**
+     * The amount column holds shekels and agorot ("50.00") since payments are
+     * verified. Whole amounts go to Salesforce exactly as before ("50"); only a
+     * donation with agorot sends them ("50.5").
+     */
+    protected function amountForSalesforce($amount) {
+        if ($amount === null || $amount === '' || !is_numeric($amount)) {
+            return $amount;
+        }
+
+        return rtrim(rtrim(sprintf('%.2f', (float) $amount), '0'), '.');
+    }
+
     protected function prepareData($transaction, $donation): array
     {
         $this->log([
@@ -261,7 +274,7 @@ class SalesForce
             "Web_last_name__c" => $donation->last_name,
             "Web_Form_Email__c" => $donation->email,
             "Web_Form_Phone__c" => $donation->phone,
-            "Web_amount__c" => $donation->amount,
+            "Web_amount__c" => $this->amountForSalesforce($donation->amount),
             "Web_Token__c" => $donation->token,
             "Web_exp__c" => $donation->exp,
             "Web_response__c" => $donation->response,

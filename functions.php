@@ -12,6 +12,7 @@
 include 'Helpers.php';
 include 'salesforce-payplus-api-parameters.php';
 include 'PayPlus.php';
+include 'DonationPayments.php'; // verifies PayPlus callbacks before they touch a donation
 include 'donation.php'; // build and handle donations table and UI
 require_once 'SalesForce.php';
 require_once 'DonationMonitor.php';
@@ -25,6 +26,7 @@ $donation_monitor = new DonationMonitor($SalesForce);
 add_action('init', [$donation_monitor, 'scheduler']);
 add_action('send_incomplete_leads_to_sf', [$donation_monitor, 'SendIncompleteLeadsToSF']);
 add_filter('cron_schedules', [$donation_monitor, 'add_custom_schedules']);
+GreenDonationPayments::register();
 
 // Gravity Forms: Change radio button options based on native custom fields value - added by Ofer Or 12-01-2026
 add_filter( 'gform_pre_render_60', 'set_radio_choices_from_shortcode' );
