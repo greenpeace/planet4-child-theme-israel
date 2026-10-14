@@ -34,10 +34,13 @@ class SalesForce
 	}
 
     public function SendLead($data) {
+        // Identified by donation id only: the Case payload holds the donor's
+        // name, email, phone, ID number and card token.
         $this->log([
             'step' => 'SendLead',
             'message' => 'init',
-            'data' => $data,
+            'Web_ID__c' => $data['Web_ID__c'] ?? null,
+            'Origin' => $data['Origin'] ?? null,
         ]);
 
         $response = (object) [
@@ -231,10 +234,8 @@ class SalesForce
     {
         $this->log([
             'step' => 'prepareData',
-            'params' => [
-                '$transaction' => $transaction,
-                '$donation' => $donation,
-            ],
+            'donation id' => $donation->id ?? null,
+            'transaction status' => $transaction->status ?? null,
         ]);
 
         $tourist = ( $donation->tourist == 1 );

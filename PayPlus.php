@@ -59,12 +59,12 @@ class PayPlus
     }
 
     protected function prepareIpnData($data, $data2) {
+        // Only the outcome is logged: the IPN responses also carry card and customer details.
         $this->log([
             'step' => 'prepareIpnData',
-            'params' => [
-                '$data' => $data,
-                '$data2' => $data2,
-            ],
+            'status' => $data->data->status ?? null,
+            'more_info' => $data->data->more_info ?? null,
+            'uid present' => !empty($data->data->uid) || !empty($data2->data->uid),
         ]);
 
         $transaction = $data->data;
