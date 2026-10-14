@@ -164,6 +164,46 @@
                 settings_errors('donation_import');
             ?>
 
+            <?php $payment_events = GreenDonationPayments::eventsNeedingAttention(); ?>
+            <?php if (!empty($payment_events)) : ?>
+                <div style="border:1px solid #d63638; padding:10px; background:#fcf0f1; margin-bottom:20px;">
+                    <h3 style="margin-top:0;">PayPlus callbacks not applied (last 30 days)</h3>
+                    <p>
+                        Pending: PayPlus could not be asked yet; the ten-minute job keeps trying for 24 hours.
+                        Rejected: the callback failed a check and was not saved to its donation.
+                        "Signed" means PayPlus sent it; only signed callbacks can be re-checked.
+                        A donation with a signed pending or rejected callback is held back from Salesforce for up to 72 hours.
+                    </p>
+                    <table>
+                        <thead><tr><th>Event</th><th>Received (UTC)</th><th>Donation</th><th>State</th><th>Signed</th><th>Type</th><th>Amount</th><th>Reason</th><th></th></tr></thead>
+                        <tbody>
+                        <?php foreach ($payment_events as $payment_event) : ?>
+                            <tr>
+                                <td><?php echo (int) $payment_event->id; ?></td>
+                                <td><?php echo esc_html($payment_event->received_at); ?></td>
+                                <td><?php echo (int) $payment_event->donation_id; ?></td>
+                                <td><?php echo esc_html($payment_event->state); ?></td>
+                                <td><?php echo $payment_event->signature_ok ? 'yes' : 'no'; ?></td>
+                                <td><?php echo esc_html($payment_event->transaction_type); ?></td>
+                                <td><?php echo esc_html(GreenDonationPayments::formatAgorot($payment_event->amount_agorot === null ? null : (int) $payment_event->amount_agorot)); ?></td>
+                                <td><?php echo esc_html($payment_event->reason); ?></td>
+                                <td>
+                                    <?php if ($payment_event->signature_ok) : ?>
+                                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                                            <input type="hidden" name="donation_payment_recheck_nonce" value="<?php echo esc_attr(wp_create_nonce('donation_payment_recheck_action')); ?>">
+                                            <input type="hidden" name="action" value="donation_payment_recheck">
+                                            <input type="hidden" name="event_id" value="<?php echo (int) $payment_event->id; ?>">
+                                            <button type="submit" class="button">Re-check with PayPlus</button>
+                                        </form>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+
             <div class="content">
                 <?php if (empty($donations)) : ?>
                     <p><?php echo esc_html__('No donation records in the table.', 'planet4-child-theme-israel'); ?></p>
@@ -548,6 +588,15 @@
 		);
         debug_log('Panic', "Cleanup Triggered - {$count} records deleted 4");
 
+		// PayPlus callbacks parked for donations that no longer exist go with them.
+		if (GreenDonationPayments::ensureSchema()) {
+			$events = GreenDonationPayments::eventsTable();
+			$wpdb->query($wpdb->prepare(
+				"DELETE e FROM `$events` e LEFT JOIN $table d ON d.id = e.donation_id WHERE d.id IS NULL AND e.donation_id <= %d",
+				$last_backed_up_id
+			));
+		}
+
         // === Stop WordPress from adding HTML ===
 		exit;
 	}
@@ -647,6 +696,20 @@
 
             if($iframe_url->results->status === 'success') {
                 // error_log("*** iframe_url_results_status_success....\n");
+
+                // Remember this donation's payment page and what it was opened for, so
+                // its PayPlus callback can be checked against both. Never allowed to
+                // stand between the donor and the payment page.
+                try {
+                    GreenDonationPayments::recordPaymentPage(
+                        (int) $unique,
+                        isset($iframe_url->data->page_request_uid) ? (string) $iframe_url->data->page_request_uid : '',
+                        $amount,
+                        $recurring && empty($data['recurring_settings']['instant_first_payment'])
+                    );
+                } catch (Throwable $e) {
+                    debug_log('Error', 'ERROR: could not record the payment page for donation ' . (int) $unique . ': ' . $e->getMessage());
+                }
 
                 return '
                         <div style="width:100%; max-width:800px; margin:0 auto;">
