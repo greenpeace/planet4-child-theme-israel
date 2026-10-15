@@ -962,6 +962,9 @@ function gp_israel_amount_from_payplus_return(object $donation): float {
  * while the email never leaves the server.
  */
 function gp_israel_gp_user_id(string $email): string {
+    if ($email === '') {
+        return ''; // no email, no purchase event, as before
+    }
     return str_replace('/', '', base64_encode(hash('sha256', $email, true)));
 }
 
