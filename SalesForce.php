@@ -251,6 +251,9 @@ class SalesForce
             'transaction status' => $transaction->status ?? null,
         ]);
 
+        // A verified payment or sign-up stands even when PayPlus's lookup has nothing:
+        // a monthly sign-up on the 1st-3rd has no charge for it to find yet.
+        $verified = !empty($donation->payment_verified_at);
         $tourist = ( $donation->tourist == 1 );
         $debit = ( $donation->card_type == 3 );
 		// adding igul letova - Ofer Or 13-1-2025 ( + PERSON_ID__c & Igul_letova__c in the return
@@ -259,14 +262,14 @@ class SalesForce
         $sfDate = $timestamp ? date("Y-m-d\TH:i:s\Z", $timestamp) : null;
                
         return [
-            'Page_Requset_Uid__c' => $transaction->page_request_uid ?? '',
-            'recurring_payment_uid__c' => $transaction->uid ?? '',
+            'Page_Requset_Uid__c' => $transaction->page_request_uid ?? ($verified ? (string) $donation->page_request_uid : ''),
+            'recurring_payment_uid__c' => $transaction->uid ?? ($verified ? (string) $donation->transaction_uid : ''),
             "customer_uid__c" => $transaction->customer_uid ?? '',
             "Web_Date__c" => $sfDate,
             "Subject" => "תרומה חדשה באתר",
             "type" => "תרומה מהאתר",
             "Status" => "New",
-            "Origin" => (isset($transaction->status) && $transaction->status === 'approved') ? "Web Donation" : 'Web Lead',
+            "Origin" => ($verified || (isset($transaction->status) && $transaction->status === 'approved')) ? "Web Donation" : 'Web Lead',
             "Web_ID__c" => $donation->id,
             "Web_Page_ID__c" => $donation->page_id,
             "Web_payment_type__c" => $donation->payment_type,

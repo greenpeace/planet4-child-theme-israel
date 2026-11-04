@@ -186,7 +186,12 @@
                                 <td><?php echo $payment_event->signature_ok ? 'yes' : 'no'; ?></td>
                                 <td><?php echo esc_html($payment_event->transaction_type); ?></td>
                                 <td><?php echo esc_html(GreenDonationPayments::formatAgorot($payment_event->amount_agorot === null ? null : (int) $payment_event->amount_agorot)); ?></td>
-                                <td><?php echo esc_html($payment_event->reason); ?></td>
+                                <td>
+                                    <?php echo esc_html($payment_event->reason); ?>
+                                    <?php if (!empty($payment_event->payload_fields)) : ?>
+                                        <br><small><?php echo esc_html($payment_event->payload_fields); ?></small>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <?php if ($payment_event->signature_ok) : ?>
                                         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">

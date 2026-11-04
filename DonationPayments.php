@@ -19,10 +19,15 @@
  * signed callback fails a check it stays parked, an admin is emailed, and the
  * donation is held back from Salesforce for a while so that a fix (and the
  * "Re-check" button on the donations page) can still apply it.
+ *
+ * A monthly sign-up on the 1st-3rd has no immediate charge: PayPlus only stores
+ * the card and sends a Token callback, with no amount and no donation number.
+ * That callback is matched by its payment page and, with no payment to confirm,
+ * the signature and that match are what make it trustworthy.
  */
 class GreenDonationPayments
 {
-    const SCHEMA_VERSION = 2;
+    const SCHEMA_VERSION = 3;
     const SCHEMA_OPTION = 'gp_il_donation_payments_schema';
 
     // Event states
@@ -169,10 +174,15 @@ class GreenDonationPayments
                 `card_foreign` varchar(5) DEFAULT NULL,
                 `credit_terms` varchar(10) DEFAULT NULL,
                 `voucher_number` varchar(100) DEFAULT NULL,
+                `payload_fields` varchar(500) DEFAULT NULL,
                 PRIMARY KEY (`id`),
                 KEY `donation_id` (`donation_id`),
                 KEY `state` (`state`)
             ) DEFAULT CHARSET=utf8mb4");
+
+            if ($ok && !$wpdb->get_row("SHOW COLUMNS FROM `$events` LIKE 'payload_fields'")) {
+                $ok = false !== $wpdb->query("ALTER TABLE `$events` ADD COLUMN `payload_fields` varchar(500) DEFAULT NULL");
+            }
 
             if (!$ok) {
                 debug_log('Error', 'ERROR: donation payment tables could not be updated: ' . $wpdb->last_error);
@@ -281,14 +291,17 @@ class GreenDonationPayments
             return is_scalar($value) ? mb_substr(trim((string) $value), 0, $max) : '';
         };
 
+        $data = isset($payload['data']) && is_array($payload['data']) ? $payload['data'] : array();
+        $moreInfo = $t['more_info'] ?? ($data['more_info'] ?? ($payload['more_info'] ?? null));
+
         $row = array(
-            'donation_id'      => isset($t['more_info']) && is_scalar($t['more_info']) ? (int) $t['more_info'] : 0,
+            'donation_id'      => is_scalar($moreInfo) ? (int) $moreInfo : 0,
             'received_at'      => current_time('mysql', true),
             'state'            => self::PENDING,
             'signature_ok'     => $signatureOk ? 1 : 0,
             'transaction_type' => $text($payload['transaction_type'] ?? '', 30),
             'transaction_uid'  => $text($t['uid'] ?? '', 64),
-            'page_request_uid' => $text($t['payment_page_request_uid'] ?? ($t['payment_request_uid'] ?? ''), 64),
+            'page_request_uid' => $text($t['payment_page_request_uid'] ?? ($t['payment_request_uid'] ?? ($t['page_request_uid'] ?? ($data['page_request_uid'] ?? ''))), 64),
             'status_code'      => $text($t['status_code'] ?? '', 10),
             'amount_agorot'    => self::toAgorot($t['amount'] ?? null),
             'currency'         => strtoupper($text($t['currency'] ?? '', 3)),
@@ -296,7 +309,7 @@ class GreenDonationPayments
 
         if ($signatureOk) {
             $row += array(
-                'card_token'     => $text($card['token'] ?? '', 64),
+                'card_token'     => $text($card['token'] ?? ($data['token'] ?? ($t['token'] ?? '')), 64),
                 'card_expiry'    => $text(($card['expiry_month'] ?? '') . ($card['expiry_year'] ?? ''), 10),
                 'card_holder'    => $text($card['card_holder_name'] ?? '', 100),
                 'card_last_four' => $text($card['four_digits'] ?? '', 4),
@@ -304,6 +317,7 @@ class GreenDonationPayments
                 'card_foreign'   => $text($card['card_foreign'] ?? '', 5),
                 'credit_terms'   => $text($t['credit_terms'] ?? '', 10),
                 'voucher_number' => $text($t['voucher_number'] ?? '', 100),
+                'payload_fields' => $text(self::fieldNames($payload), 500),
             );
         }
 
@@ -316,9 +330,57 @@ class GreenDonationPayments
     }
 
 
+    /**
+     * The names of the fields in a callback, never their values, so the
+     * donations page can show what PayPlus sent when one cannot be matched.
+     */
+    protected static function fieldNames(array $payload): string {
+        $parts = array();
+        foreach (array('transaction' => $payload['transaction'] ?? null, 'data' => $payload['data'] ?? null, 'card' => $payload['data']['card_information'] ?? null, 'top' => $payload) as $label => $section) {
+            if (is_array($section)) {
+                $parts[] = $label . ': ' . implode(',', array_map('strval', array_keys($section)));
+            }
+        }
+        return implode(' | ', $parts);
+    }
+
+
     // ------------------------------------------------------------------
     // Verifying and applying
     // ------------------------------------------------------------------
+
+    /**
+     * The donation a callback belongs to: by the number we gave PayPlus, or
+     * by the payment page we stored for it when the callback has no number.
+     */
+    protected function donationFor($event) {
+        global $wpdb;
+        $table = self::donationsTable();
+
+        if ((int) $event->donation_id > 0) {
+            return $wpdb->get_row($wpdb->prepare("SELECT * FROM `$table` WHERE id = %d", (int) $event->donation_id));
+        }
+        if ((string) $event->page_request_uid !== '') {
+            return $wpdb->get_row($wpdb->prepare("SELECT * FROM `$table` WHERE page_request_uid = %s LIMIT 1", (string) $event->page_request_uid));
+        }
+        return null;
+    }
+
+    /**
+     * For a callback with neither a number nor a payment page: PayPlus knows
+     * which payment page and number its transaction came from.
+     */
+    protected function donationFromPayPlusAnswer($answer) {
+        if (!is_object($answer) || !isset($answer->data) || !is_object($answer->data)) {
+            return null;
+        }
+
+        $known = (object) array(
+            'donation_id'      => isset($answer->data->more_info) && is_scalar($answer->data->more_info) ? (int) $answer->data->more_info : 0,
+            'page_request_uid' => isset($answer->data->page_request_uid) ? (string) $answer->data->page_request_uid : '',
+        );
+        return $this->donationFor($known);
+    }
 
     /**
      * Check a parked callback and, if everything holds, copy it into the
@@ -342,14 +404,37 @@ class GreenDonationPayments
             return $this->settle($eventId, self::REJECTED, 'not signed with our PayPlus secret key');
         }
 
-        $donation = $wpdb->get_row($wpdb->prepare("SELECT * FROM `" . self::donationsTable() . "` WHERE id = %d", (int) $event->donation_id));
+        $donation = $this->donationFor($event);
+
+        if (!$donation && (int) $event->donation_id <= 0 && (string) $event->page_request_uid === '' && (string) $event->transaction_uid !== '') {
+            try {
+                $donation = $this->donationFromPayPlusAnswer($this->api->apiRequest('/PaymentPages/ipn', array('transaction_uid' => (string) $event->transaction_uid)));
+            } catch (Throwable $e) {
+                return $this->stillPending($event, 'PayPlus lookup failed: ' . $e->getMessage());
+            }
+        }
+
         if (!$donation) {
-            return $this->settle($eventId, self::REJECTED, "no donation {$event->donation_id}");
+            return $this->settle($eventId, self::REJECTED, (int) $event->donation_id > 0
+                ? "no donation {$event->donation_id}"
+                : 'no donation matched (payment page id: ' . ((string) $event->page_request_uid !== '' ? 'yes' : 'no') . ', transaction id: ' . ((string) $event->transaction_uid !== '' ? 'yes' : 'no') . ')');
+        }
+
+        // Matched without a number: record whose it is, so the donations page
+        // and the Salesforce hold both see the right donation.
+        if ((int) $event->donation_id !== (int) $donation->id) {
+            $wpdb->update($events, array('donation_id' => (int) $donation->id), array('id' => $eventId));
+            $event->donation_id = (int) $donation->id;
         }
 
         $type = strtolower(trim((string) $event->transaction_type));
         $isCharge = ($type === '' || $type === 'charge');
         $deferred = !empty($donation->first_charge_deferred);
+        $isTokenSignup = $deferred && $type === 'token';
+
+        if ($isTokenSignup && !empty($donation->payment_verified_at)) {
+            return $this->settle($eventId, self::DUPLICATE, 'sign-up already applied');
+        }
 
         // Already paid: this is a repeat, a refund, or a later recurring charge.
         // Rows from before this change have no transaction_uid but do have a token.
@@ -376,8 +461,8 @@ class GreenDonationPayments
         if ($expected !== null && $expected !== '') {
             $got = $event->amount_agorot === null ? null : (int) $event->amount_agorot;
             // A recurring sign-up on the 1st-3rd has no immediate first charge,
-            // so its callback may carry 0 instead of the monthly amount.
-            if ($got !== (int) $expected && !($deferred && $got === 0)) {
+            // so its callback may carry 0 or nothing instead of the monthly amount.
+            if ($got !== (int) $expected && !($deferred && empty($got))) {
                 return $this->settle($eventId, self::REJECTED, 'amount ' . self::formatAgorot($got) . ', expected ' . self::formatAgorot((int) $expected));
             }
         }
@@ -394,6 +479,10 @@ class GreenDonationPayments
         }
 
         if (!is_object($answer) || !isset($answer->results->status) || $answer->results->status !== 'success' || !isset($answer->data) || !is_object($answer->data)) {
+            // No charge has happened yet, so PayPlus having no payment is expected.
+            if ($isTokenSignup) {
+                return $this->apply($event, $donation);
+            }
             $why = is_object($answer) && isset($answer->results->description) ? (string) $answer->results->description : 'no usable answer';
             return $this->stillPending($event, 'PayPlus lookup: ' . $why);
         }
@@ -403,6 +492,9 @@ class GreenDonationPayments
         $status = isset($d->status) ? strtolower((string) $d->status) : '';
 
         if ($statusCode === '' && $status === '') {
+            if ($isTokenSignup) {
+                return $this->apply($event, $donation);
+            }
             return $this->settle($eventId, self::REJECTED, 'PayPlus answered without a payment status');
         }
         if (($statusCode !== '' && $statusCode !== '000') || ($status !== '' && $status !== 'approved')) {
@@ -411,7 +503,8 @@ class GreenDonationPayments
         if (!empty($d->page_request_uid) && $page !== '' && (string) $d->page_request_uid !== $page) {
             return $this->settle($eventId, self::REJECTED, 'PayPlus has this payment under a different payment page');
         }
-        if (!empty($d->transaction_uid) && $event->transaction_uid !== '' && (string) $d->transaction_uid !== $event->transaction_uid) {
+        // Once the first charge has run, PayPlus's transaction is that charge, not the Token callback.
+        if (!$isTokenSignup && !empty($d->transaction_uid) && $event->transaction_uid !== '' && (string) $d->transaction_uid !== $event->transaction_uid) {
             return $this->settle($eventId, self::REJECTED, 'PayPlus has a different transaction for this payment page');
         }
         if (isset($d->more_info) && is_scalar($d->more_info) && (string) $d->more_info !== '' && (int) $d->more_info !== (int) $donation->id) {
@@ -428,19 +521,22 @@ class GreenDonationPayments
         global $wpdb;
 
         $issuer = (string) $event->card_issuer_id;
-        // prepare() would turn a missing amount into '' rather than NULL.
-        $amountSql = $event->amount_agorot === null
-            ? 'NULL'
-            : $wpdb->prepare('%s', sprintf('%.2f', ((int) $event->amount_agorot) / 100));
+        // A sign-up with no first charge yet says nothing about the amount: keep the donor's.
+        $amountSql = empty($event->amount_agorot) && !empty($donation->first_charge_deferred)
+            ? 'amount'
+            : ($event->amount_agorot === null
+                ? 'NULL' // prepare() would turn a missing amount into '' rather than NULL.
+                : $wpdb->prepare('%s', sprintf('%.2f', ((int) $event->amount_agorot) / 100)));
 
         // Sized to the donation table's existing columns.
         $updated = $wpdb->query($wpdb->prepare(
             "UPDATE `" . self::donationsTable() . "`
-                SET amount = $amountSql, exp = %s, cc_holder = %s, token = %s, shovar = %s, card_type = %s,
+                SET amount = $amountSql, exp = %s, cc_holder = %s, token = IF(%s = '', token, %s), shovar = %s, card_type = %s,
                     last_four = %s, tourist = %d, ccval = %s, transaction_uid = %s, payment_verified_at = %s
               WHERE id = %d AND (transaction_uid IS NULL OR transaction_uid = '')",
             mb_substr((string) $event->card_expiry, 0, 30),
             mb_substr((string) $event->card_holder, 0, 40),
+            (string) $event->card_token,
             (string) $event->card_token,
             mb_substr((string) $event->voucher_number, 0, 100),
             mb_substr((string) $event->credit_terms, 0, 100),
@@ -586,7 +682,7 @@ class GreenDonationPayments
 
         global $wpdb;
         return $wpdb->get_results($wpdb->prepare(
-            "SELECT id, donation_id, received_at, state, reason, signature_ok, transaction_type, amount_agorot
+            "SELECT id, donation_id, received_at, state, reason, signature_ok, transaction_type, amount_agorot, payload_fields
                FROM `" . self::eventsTable() . "`
               WHERE state IN (%s, %s) AND received_at > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)
               ORDER BY id DESC LIMIT 50",
