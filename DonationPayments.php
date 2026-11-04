@@ -48,6 +48,10 @@ class GreenDonationPayments
     const RECORDED = 'recorded';     // genuine, but changes nothing (a decline, a refund, a later recurring charge)
     const DUPLICATE = 'duplicate';   // the payment already applied, sent again
 
+    // A donation PayPlus's lookup calls approved with no signed callback to confirm it
+    const LEAD_HELD = 'held';         // not sent to Salesforce, waiting for a person
+    const LEAD_RELEASED = 'released'; // a person checked, and it may go as a lead
+
     // A payment page expires after 30 minutes (see getIframe), so an unpaid
     // donation is sent to Salesforce as a lead only once it can no longer be paid.
     const UNPAID_LEAD_AFTER_MINUTES = 35;
@@ -83,6 +87,7 @@ class GreenDonationPayments
         });
         add_action('admin_init', array(self::class, 'ensureSchema'));
         add_action('admin_post_donation_payment_recheck', array(self::class, 'recheckFromAdmin'));
+        add_action('admin_post_donation_release_lead', array(self::class, 'releaseLeadFromAdmin'));
     }
 
     public static function eventsTable(): string {
@@ -152,6 +157,7 @@ class GreenDonationPayments
                 'customer_uid'           => "ADD COLUMN `customer_uid` varchar(64) DEFAULT NULL",
                 'registered_at'          => "ADD COLUMN `registered_at` datetime DEFAULT NULL",
                 'sf_origin'              => "ADD COLUMN `sf_origin` varchar(40) DEFAULT NULL",
+                'lead_review'            => "ADD COLUMN `lead_review` varchar(10) DEFAULT NULL",
             );
             foreach ($add as $column => $sql) {
                 if (!in_array($column, $columns, true)) {
@@ -501,12 +507,56 @@ class GreenDonationPayments
             return $this->confirmCharge($event);
         }
 
-        // A Cancel or a Refund changes nothing here; Salesforce keeps the ledger.
+        if ($type === 'cancel' || $type === 'refund') {
+            return $this->reverseCharge($event, $type);
+        }
+
         list($donation) = $this->matchDonation($event);
         if ($donation) {
             $this->attachToDonation($event, $donation);
         }
         return $this->settle($eventId, self::RECORDED, "{$event->transaction_type}; not a first payment");
+    }
+
+    /**
+     * A Cancel or Refund carries the id of the charge it reverses, and usually
+     * nothing else. Salesforce keeps the ledger, so this only matters for the
+     * charge this donation is recorded as paid by: a Cancel that arrives before
+     * Salesforce was told means it must not be told this donation was paid.
+     */
+    protected function reverseCharge($event, string $type): string {
+        global $wpdb;
+        $table = self::donationsTable();
+        $eventId = (int) $event->id;
+        $uid = (string) $event->transaction_uid;
+
+        $donation = $uid === '' ? null : $wpdb->get_row($wpdb->prepare("SELECT * FROM `$table` WHERE transaction_uid = %s LIMIT 1", $uid));
+        if (!$donation) {
+            list($matched) = $this->matchDonation($event);
+            if ($matched) {
+                $this->attachToDonation($event, $matched);
+            }
+            return $this->settle($eventId, self::RECORDED, "{$event->transaction_type} of a charge this site did not confirm");
+        }
+        $this->attachToDonation($event, $donation);
+
+        $undone = $type === 'cancel' && $wpdb->query($wpdb->prepare(
+            "UPDATE `$table`
+                SET payment_verified_at = NULL, transaction_uid = NULL, amount = NULL, shovar = '', card_type = '',
+                    token = IF(registered_at IS NULL, NULL, token), exp = IF(registered_at IS NULL, NULL, exp),
+                    cc_holder = IF(registered_at IS NULL, NULL, cc_holder), last_four = IF(registered_at IS NULL, '', last_four),
+                    tourist = IF(registered_at IS NULL, 0, tourist), ccval = IF(registered_at IS NULL, '', ccval)
+              WHERE id = %d AND transaction_uid = %s AND sf_origin IS NULL AND transmited_to_sf <> 1",
+            (int) $donation->id, $uid
+        ));
+
+        // Either way a person should know: a cancelled first charge has left a monthly
+        // subscription charging, with nothing in Salesforce for it to land on.
+        self::notifyAdmins($undone
+            ? "Donation {$donation->id}: PayPlus cancelled its charge before Salesforce was told about it, so it is no longer treated as paid. If it was monthly, check in PayPlus that the subscription stopped too."
+            : "Donation {$donation->id}: PayPlus reports a {$event->transaction_type} of the charge already sent to Salesforce, so its Payment there needs checking.");
+
+        return $this->settle($eventId, self::RECORDED, $undone ? 'Cancel before Salesforce was told; no longer treated as paid' : "{$event->transaction_type} of a charge Salesforce was told about");
     }
 
     /**
@@ -634,6 +684,14 @@ class GreenDonationPayments
         }
         $this->attachToDonation($event, $donation);
 
+        // Callbacks can cross: a Cancel parked first means this charge never stood.
+        if ((string) $event->transaction_uid !== '' && $GLOBALS['wpdb']->get_var($GLOBALS['wpdb']->prepare(
+            "SELECT id FROM `" . self::eventsTable() . "` WHERE transaction_uid = %s AND signature_ok = 1 AND LOWER(transaction_type) = 'cancel' LIMIT 1",
+            (string) $event->transaction_uid
+        ))) {
+            return $this->settle($eventId, self::RECORDED, 'already cancelled');
+        }
+
         // Already paid: this is a repeat, or a later recurring charge. Rows from
         // before payments were verified have no transaction_uid but do have a
         // token, which on a registered donation only means the card was stored.
@@ -698,6 +756,10 @@ class GreenDonationPayments
         }
         if (!empty($d->transaction_uid) && (string) $d->transaction_uid !== (string) $event->transaction_uid) {
             return $this->settle($eventId, self::REJECTED, 'PayPlus has a different transaction for this payment page');
+        }
+        // A monthly sign-up's page has many charges, so the page says nothing about this one.
+        if (!empty($donation->first_charge_deferred) && empty($d->transaction_uid)) {
+            return $this->settle($eventId, self::REJECTED, 'PayPlus did not confirm this exact transaction');
         }
         if (empty($d->transaction_uid) && empty($d->page_request_uid)) {
             return $this->settle($eventId, self::REJECTED, 'PayPlus answered without saying which payment it means');
@@ -919,6 +981,76 @@ class GreenDonationPayments
               ORDER BY e.id DESC LIMIT 50",
             self::PENDING, self::REJECTED, self::REGISTERED
         ));
+    }
+
+    /**
+     * Keep a donation out of Salesforce until a person has looked at it, and tell
+     * them. The Salesforce job stops selecting it, so this happens once.
+     */
+    public static function holdForLeadReview(int $donationId) {
+        global $wpdb;
+
+        $held = $wpdb->query($wpdb->prepare(
+            "UPDATE `" . self::donationsTable() . "` SET lead_review = %s WHERE id = %d AND lead_review IS NULL",
+            self::LEAD_HELD, $donationId
+        ));
+
+        if ($held) {
+            self::notifyAdmins("Donation {$donationId}: PayPlus's lookup says approved, but no signed callback confirmed a payment. It has not been sent to Salesforce.\n\n"
+                . "Check it in PayPlus, then decide on the donations page:\n" . admin_url('admin.php?page=greenpeace/donations.php'));
+        }
+    }
+
+    /**
+     * Donations from the last 30 days waiting for that person. A callback arriving
+     * later settles it, so those no longer belong here.
+     */
+    public static function leadsAwaitingReview(): array {
+        if (!self::ensureSchema()) {
+            return array();
+        }
+
+        global $wpdb;
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT id, `date`, payment_type, expected_amount_agorot
+               FROM `" . self::donationsTable() . "`
+              WHERE lead_review = %s AND payment_verified_at IS NULL AND registered_at IS NULL
+                AND `date` > DATE_SUB(NOW(), INTERVAL 30 DAY)
+              ORDER BY id DESC LIMIT 50",
+            self::LEAD_HELD
+        ));
+    }
+
+    public static function releaseLead(int $donationId): bool {
+        global $wpdb;
+
+        return (bool) $wpdb->query($wpdb->prepare(
+            "UPDATE `" . self::donationsTable() . "` SET lead_review = %s
+              WHERE id = %d AND lead_review = %s AND payment_verified_at IS NULL AND registered_at IS NULL",
+            self::LEAD_RELEASED, $donationId, self::LEAD_HELD
+        ));
+    }
+
+    public static function releaseLeadFromAdmin() {
+        if (!isset($_POST['donation_release_lead_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['donation_release_lead_nonce'])), 'donation_release_lead_action')) {
+            wp_die(__('Invalid request.', 'planet4-child-theme-israel'));
+        }
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to do this.', 'planet4-child-theme-israel'));
+        }
+
+        $donationId = isset($_POST['donation_id']) ? absint($_POST['donation_id']) : 0;
+        $released = $donationId && self::releaseLead($donationId);
+
+        set_transient('gp_il_donations_notice', array(
+            'type'    => $released ? 'success' : 'warning',
+            'message' => $released
+                ? "Donation {$donationId} will go to Salesforce as a lead on the next ten-minute run."
+                : "Donation {$donationId} was not waiting for review, so nothing changed.",
+        ), 30);
+
+        wp_safe_redirect(admin_url('admin.php?page=greenpeace/donations.php'));
+        exit;
     }
 
     public static function recheckFromAdmin() {

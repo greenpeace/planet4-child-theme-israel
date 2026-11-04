@@ -164,6 +164,39 @@
                 settings_errors('donation_import');
             ?>
 
+            <?php $leads_to_review = GreenDonationPayments::leadsAwaitingReview(); ?>
+            <?php if (!empty($leads_to_review)) : ?>
+                <div style="border:1px solid #d63638; padding:10px; background:#fcf0f1; margin-bottom:20px;">
+                    <h3 style="margin-top:0;">Donations waiting for a decision (last 30 days)</h3>
+                    <p>
+                        PayPlus's lookup says these were approved, but no signed callback confirmed a payment, so they have not been sent to Salesforce.
+                        Check each one in PayPlus. If it was paid, record it in Salesforce by hand and leave it here. If it was not, send it as a lead.
+                        Anything left here is not sent, and drops off this list after 30 days.
+                    </p>
+                    <table>
+                        <thead><tr><th>Donation</th><th>Date</th><th>Type</th><th>Amount</th><th></th></tr></thead>
+                        <tbody>
+                        <?php foreach ($leads_to_review as $lead_to_review) : ?>
+                            <tr>
+                                <td><?php echo (int) $lead_to_review->id; ?></td>
+                                <td><?php echo esc_html($lead_to_review->date); ?></td>
+                                <td><?php echo esc_html($lead_to_review->payment_type); ?></td>
+                                <td><?php echo esc_html(GreenDonationPayments::formatAgorot($lead_to_review->expected_amount_agorot === null ? null : (int) $lead_to_review->expected_amount_agorot)); ?></td>
+                                <td>
+                                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                                        <input type="hidden" name="donation_release_lead_nonce" value="<?php echo esc_attr(wp_create_nonce('donation_release_lead_action')); ?>">
+                                        <input type="hidden" name="action" value="donation_release_lead">
+                                        <input type="hidden" name="donation_id" value="<?php echo (int) $lead_to_review->id; ?>">
+                                        <button type="submit" class="button">Send as lead</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+
             <?php $payment_events = GreenDonationPayments::eventsNeedingAttention(); ?>
             <?php if (!empty($payment_events)) : ?>
                 <div style="border:1px solid #d63638; padding:10px; background:#fcf0f1; margin-bottom:20px;">

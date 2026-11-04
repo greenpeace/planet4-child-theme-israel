@@ -92,11 +92,16 @@ class SalesForce
             $response->status = 'succeeded';
             $response->content = $decoded;
         } elseif (!empty($data['Web_Event_Key__c']) && is_array($decoded) && ($decoded[0]->errorCode ?? '') === 'DUPLICATE_VALUE') {
-            // An earlier attempt got through and only its answer was lost.
-            $response->status = 'succeeded';
-            $response->content = (object) [
-                'id' => preg_match('/record with id: (\w+)/', (string) ($decoded[0]->message ?? ''), $match) ? $match[1] : 0,
-            ];
+            // An earlier attempt may have got through and only its answer been lost. A
+            // duplicate can be on another unique field too, so only that Case proves it.
+            $existing = $this->caseIdWithKey($authParams, $data['Web_Event_Key__c']);
+
+            if ($existing !== '') {
+                $response->status = 'succeeded';
+                $response->content = (object) ['id' => $existing];
+            } else {
+                $response->error = 'Salesforce reported a duplicate, but no Case has this key';
+            }
         } else {
             $response->error = 'unexpected answer from Salesforce';
         }
@@ -111,6 +116,43 @@ class SalesForce
         }
 
         return $response;
+    }
+
+    /**
+     * @return string the id of the Case holding this key, or '' if none could be found
+     */
+    protected function caseIdWithKey($authParams, string $key): string {
+        try {
+            $result = $this->httpRequest(
+                $authParams->instance_url . '/services/data/v54.0/sobjects/Case/Web_Event_Key__c/' . rawurlencode($key) . '?fields=Id,Web_Event_Key__c',
+                '',
+                ["Authorization: {$authParams->token_type} {$authParams->access_token}"],
+                true,
+                null,
+                'GET'
+            );
+        } catch (Exception $e) {
+            return '';
+        }
+
+        $case = json_decode((string) $result);
+
+        return is_object($case) && !empty($case->Id) && ($case->Web_Event_Key__c ?? '') === $key ? (string) $case->Id : '';
+    }
+
+    /**
+     * Whether PayPlus's lookup says this donation was approved. It has said so for
+     * donors with no charge at all, so this is a reason for a person to look, never
+     * proof of a payment. A reused number can bring back another donation's payment.
+     */
+    protected function lookupClaimsPayment($transaction, $donation): bool {
+        if (!isset($transaction->status) || $transaction->status !== 'approved') {
+            return false;
+        }
+
+        $page = (string) ($transaction->page_request_uid ?? '');
+
+        return $page === '' || empty($donation->page_request_uid) || $page === $donation->page_request_uid;
     }
 
     public function SendLeadByDonation($donationID, $donation = null, $send_unsuccessful_transactions = false) {
@@ -205,16 +247,18 @@ class SalesForce
     
         $data = $this->prepareData($ipn_data, $donation);
 
-        // "approved" from this lookup is not proof of a payment: it has also come back
-        // for donors with no charge at all. Without a signed callback it stays a lead,
-        // and someone should look.
+        // Without a signed callback this cannot be sent as a donation, and sending it as
+        // a lead could put a donor who paid on a placeholder Donation and a call list. So
+        // it waits for a person, on the donations page, unless one already released it.
         if (
             $data['Origin'] === 'Web Lead'
             && empty($donation->registered_at)
-            && isset($ipn_data->status)
-            && $ipn_data->status === 'approved'
+            && ($donation->lead_review ?? '') !== GreenDonationPayments::LEAD_RELEASED
+            && $this->lookupClaimsPayment($ipn_data, $donation)
         ) {
-            GreenDonationPayments::notifyAdmins("donation {$donationID}: PayPlus's lookup says approved but no signed callback confirmed a payment, so it went to Salesforce as a lead");
+            GreenDonationPayments::holdForLeadReview((int) $donationID);
+
+            return 'Held for a person to review';
         }
 
         $SalesForceResponse = $this->SendLead($data);
@@ -385,7 +429,7 @@ class SalesForce
             "CC_Debit__c" => $debit,
             "PERSON_ID__c" => $donation->id_number,
             "Igul_letova__c" => $igul_letova,
-            "Web_Shovar__c" => $donation->shovar,
+            "Web_Shovar__c" => $paid ? $donation->shovar : '',
             "Web_Receipt_Number__c" => $transaction->invoice_docu_number ?? '',
             "Web_Receipt__c" => $transaction->invoice_original_url ?? '',
             "utm_campaign__c" => $donation->utm_campaign,

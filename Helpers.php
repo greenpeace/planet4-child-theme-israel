@@ -35,7 +35,9 @@ trait Helpers
 
             //curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+            if ($method !== 'GET') {
+                curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+            }
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 15);
             curl_setopt($curl, CURLOPT_TIMEOUT, 120);
