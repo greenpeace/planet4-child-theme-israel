@@ -45,15 +45,18 @@ class DonationMonitor
         $payments->resolvePending();
 
         if (GreenDonationPayments::ensureSchema()) {
-            // A verified payment goes as soon as it is verified. An unpaid donation
-            // goes as a lead only once its payment page has expired (30 minutes):
-            // sending it at 10 minutes recorded donors who were still paying as
-            // leads, and Salesforce never heard about their payment. A donation
-            // whose signed callback is pending or rejected waits (see notHeldSql).
+            // A verified payment goes as soon as it is verified, and so does a sign-up
+            // with no charge yet, when Salesforce can take one. Anything else goes as
+            // a lead only once its payment page has expired (30 minutes): sending it
+            // at 10 minutes recorded donors who were still paying as leads, and
+            // Salesforce never heard about their payment. A donation whose signed
+            // callback is pending or rejected waits (see notHeldSql).
+            $registered = salesforceHandlesSignups() ? "OR d.registered_at IS NOT NULL" : "";
             $query = "SELECT d.* FROM {$this->table_name} d
                       WHERE ( d.transmited_to_sf = 0
                               OR d.transmited_to_sf > 2 )
                             AND ( d.payment_verified_at IS NOT NULL
+                                  $registered
                                   OR d.date < DATE_SUB(NOW(), INTERVAL " . GreenDonationPayments::UNPAID_LEAD_AFTER_MINUTES . " MINUTE) )
                             AND " . GreenDonationPayments::notHeldSql('d');
         } else {

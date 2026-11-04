@@ -167,11 +167,12 @@
             <?php $payment_events = GreenDonationPayments::eventsNeedingAttention(); ?>
             <?php if (!empty($payment_events)) : ?>
                 <div style="border:1px solid #d63638; padding:10px; background:#fcf0f1; margin-bottom:20px;">
-                    <h3 style="margin-top:0;">PayPlus callbacks not applied (last 30 days)</h3>
+                    <h3 style="margin-top:0;">PayPlus callbacks needing attention (last 30 days)</h3>
                     <p>
                         Pending: PayPlus could not be asked yet; the ten-minute job keeps trying for 24 hours.
                         Rejected: the callback failed a check and was not saved to its donation.
-                        "Signed" means PayPlus sent it; only signed callbacks can be re-checked.
+                        Registered: PayPlus stored the card and created the monthly sign-up, with no charge yet. Salesforce gets only a lead for it, so it needs recording there by hand.
+                        "Signed" means PayPlus sent it; only signed pending or rejected callbacks can be re-checked.
                         A donation with a signed pending or rejected callback is held back from Salesforce for up to 72 hours.
                     </p>
                     <table>
@@ -193,12 +194,12 @@
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if ($payment_event->signature_ok) : ?>
+                                    <?php if ($payment_event->signature_ok && $payment_event->state !== GreenDonationPayments::REGISTERED) : ?>
                                         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                                             <input type="hidden" name="donation_payment_recheck_nonce" value="<?php echo esc_attr(wp_create_nonce('donation_payment_recheck_action')); ?>">
                                             <input type="hidden" name="action" value="donation_payment_recheck">
                                             <input type="hidden" name="event_id" value="<?php echo (int) $payment_event->id; ?>">
-                                            <button type="submit" class="button">Re-check with PayPlus</button>
+                                            <button type="submit" class="button">Re-check</button>
                                         </form>
                                     <?php endif; ?>
                                 </td>

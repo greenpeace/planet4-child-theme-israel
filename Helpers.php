@@ -37,6 +37,8 @@ trait Helpers
             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
             curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 15);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 120);
 
             $response = curl_exec($curl);
 
@@ -47,11 +49,9 @@ trait Helpers
             curl_close($curl);
             return $response;
         } catch(Exception $e) {
-            trigger_error(sprintf(
-                'Curl failed with error #%d: %s',
-                $e->getCode(), $e->getMessage()),
-                E_USER_ERROR
-            );
+            // Thrown, not trigger_error(E_USER_ERROR): that ends the whole request, so a
+            // PayPlus outage killed the ten-minute job before it reached any donation.
+            throw new Exception(sprintf('Curl failed with error #%d: %s', $e->getCode(), $e->getMessage()), (int) $e->getCode());
         }
     }
 }

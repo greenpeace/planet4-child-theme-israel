@@ -30,6 +30,10 @@ function api_params_register_settings() {
     /* Salesforce */
     register_setting('api_params_settings_group', 'sf_client_id');
     register_setting('api_params_settings_group', 'sf_username');
+    register_setting('api_params_settings_group', 'sf_handles_signups', [
+        'sanitize_callback' => 'absint',
+        'default'           => 0,
+    ]);
 
     register_setting('api_params_settings_group', 'sf_client_secret', [
         'sanitize_callback' => 'api_params_masked_password_sanitizer'
@@ -146,6 +150,16 @@ function api_params_settings_page_html() {
                     <th><label for="sf_password">Password</label></th>
                     <td><input type="password" id="sf_password" name="sf_password"
                                value="<?php echo $mask; ?>" autocomplete="new-password"></td>
+                </tr>
+
+                <tr>
+                    <th><label for="sf_handles_signups">Monthly sign-ups with no charge yet</label></th>
+                    <td>
+                        <input type="checkbox" id="sf_handles_signups" name="sf_handles_signups" value="1"
+                               <?php checked((bool) get_option('sf_handles_signups', 0)); ?>>
+                        <label for="sf_handles_signups">Salesforce is ready to receive them</label>
+                        <p class="description">Tick only once the Salesforce changes are live. Unticked, these sign-ups reach Salesforce as leads and are listed on the donations page to record by hand.</p>
+                    </td>
                 </tr>
 
             </table>
@@ -280,6 +294,15 @@ function debug_log($level, $message) {
     }
 }
 
+
+/**
+ * Whether Salesforce has been taught the sign-up Case origin (see SalesForce.php)
+ * and the Web_Event_Key__c field. Until it has, a sign-up with no charge yet can
+ * only reach it as a lead.
+ */
+function salesforceHandlesSignups(): bool {
+    return (bool) get_option('sf_handles_signups', 0);
+}
 
 function getSalesforceParams() {
 
