@@ -52,7 +52,8 @@ class DonationMonitor
             // Salesforce never heard about their payment. A donation whose signed
             // callback is pending or rejected waits (see notHeldSql), and so does one
             // waiting for a person to review it (see holdForLeadReview), until a
-            // callback settles the question.
+            // callback settles the question. One a person resolved as recorded by
+            // hand or as needing nothing is never sent.
             $registered = salesforceHandlesSignups() ? "OR d.registered_at IS NOT NULL" : "";
             $query = "SELECT d.* FROM {$this->table_name} d
                       WHERE ( d.transmited_to_sf = 0
@@ -63,6 +64,7 @@ class DonationMonitor
                             AND ( COALESCE(d.lead_review, '') <> '" . GreenDonationPayments::LEAD_HELD . "'
                                   OR d.payment_verified_at IS NOT NULL
                                   OR d.registered_at IS NOT NULL )
+                            AND COALESCE(d.lead_review, '') NOT IN ('" . GreenDonationPayments::LEAD_PAID . "', '" . GreenDonationPayments::LEAD_CLOSED . "')
                             AND " . GreenDonationPayments::notHeldSql('d');
         } else {
             $query = "SELECT * FROM {$this->table_name}

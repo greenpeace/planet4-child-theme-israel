@@ -35,6 +35,13 @@ function api_params_register_settings() {
         'default'           => 0,
     ]);
 
+    register_setting('api_params_settings_group', 'donation_queue_owner', [
+        'sanitize_callback' => 'sanitize_email',
+    ]);
+    register_setting('api_params_settings_group', 'donation_queue_escalation', [
+        'sanitize_callback' => 'sanitize_email',
+    ]);
+
     register_setting('api_params_settings_group', 'sf_client_secret', [
         'sanitize_callback' => 'api_params_masked_password_sanitizer'
     ]);
@@ -159,6 +166,24 @@ function api_params_settings_page_html() {
                                <?php checked((bool) get_option('sf_handles_signups', 0)); ?>>
                         <label for="sf_handles_signups">Salesforce is ready to receive them</label>
                         <p class="description">Tick only once the Salesforce changes are live. Unticked, these sign-ups reach Salesforce as leads and are listed on the donations page to record by hand.</p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th><label for="donation_queue_owner">Held donations: owner's email</label></th>
+                    <td>
+                        <input type="email" id="donation_queue_owner" name="donation_queue_owner"
+                               value="<?php echo esc_attr(get_option('donation_queue_owner', '')); ?>">
+                        <p class="description">Gets each hold as it happens, and a daily list while anything is waiting. Empty: the site admin email.</p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th><label for="donation_queue_escalation">Held donations: escalation email</label></th>
+                    <td>
+                        <input type="email" id="donation_queue_escalation" name="donation_queue_escalation"
+                               value="<?php echo esc_attr(get_option('donation_queue_escalation', '')); ?>">
+                        <p class="description">Also gets the daily list once a donation has waited <?php echo (int) GreenDonationPayments::QUEUE_ESCALATE_AFTER_DAYS; ?> days. Empty: the site admin email.</p>
                     </td>
                 </tr>
 
@@ -302,6 +327,17 @@ function debug_log($level, $message) {
  */
 function salesforceHandlesSignups(): bool {
     return (bool) get_option('sf_handles_signups', 0);
+}
+
+/**
+ * Who answers for the donations held for review, and who hears when they wait too long.
+ */
+function donationQueueOwner(): string {
+    return get_option('donation_queue_owner') ?: get_option('admin_email');
+}
+
+function donationQueueEscalation(): string {
+    return get_option('donation_queue_escalation') ?: get_option('admin_email');
 }
 
 function getSalesforceParams() {

@@ -50,7 +50,9 @@ class GreenDonationPayments
 
     // A donation PayPlus's lookup calls approved with no signed callback to confirm it
     const LEAD_HELD = 'held';         // not sent to Salesforce, waiting for a person
-    const LEAD_RELEASED = 'released'; // a person checked, and it may go as a lead
+    const LEAD_RELEASED = 'released'; // a person checked: not paid, and it may go as a lead
+    const LEAD_PAID = 'paid';         // a person checked: paid, and recorded in Salesforce by hand. Never sent.
+    const LEAD_CLOSED = 'closed';     // a person checked: no action needed. Never sent.
 
     // A payment page expires after 30 minutes (see getIframe), so an unpaid
     // donation is sent to Salesforce as a lead only once it can no longer be paid.
@@ -60,6 +62,10 @@ class GreenDonationPayments
     // How long a donation with a signed-but-rejected callback waits for a fix
     // before it goes to Salesforce without payment details.
     const HOLD_HOURS = 72;
+    // How long a held donation waits before the daily report also goes to the
+    // escalation contact.
+    const QUEUE_ESCALATE_AFTER_DAYS = 7;
+    const QUEUE_REPORT_HOOK = 'gp_il_donation_queue_report';
 
     const ISSUERS = array(
         "1" => "ישראכרד",
@@ -87,7 +93,9 @@ class GreenDonationPayments
         });
         add_action('admin_init', array(self::class, 'ensureSchema'));
         add_action('admin_post_donation_payment_recheck', array(self::class, 'recheckFromAdmin'));
-        add_action('admin_post_donation_release_lead', array(self::class, 'releaseLeadFromAdmin'));
+        add_action('admin_post_donation_resolve_lead', array(self::class, 'resolveLeadFromAdmin'));
+        add_action('init', array(self::class, 'scheduleQueueReport'));
+        add_action(self::QUEUE_REPORT_HOOK, array(self::class, 'sendQueueReport'));
     }
 
     public static function eventsTable(): string {
@@ -158,6 +166,10 @@ class GreenDonationPayments
                 'registered_at'          => "ADD COLUMN `registered_at` datetime DEFAULT NULL",
                 'sf_origin'              => "ADD COLUMN `sf_origin` varchar(40) DEFAULT NULL",
                 'lead_review'            => "ADD COLUMN `lead_review` varchar(10) DEFAULT NULL",
+                'lead_held_at'           => "ADD COLUMN `lead_held_at` datetime DEFAULT NULL",
+                'lead_resolved_at'       => "ADD COLUMN `lead_resolved_at` datetime DEFAULT NULL",
+                'lead_resolved_by'       => "ADD COLUMN `lead_resolved_by` varchar(60) DEFAULT NULL",
+                'lead_resolution_note'   => "ADD COLUMN `lead_resolution_note` varchar(255) DEFAULT NULL",
             );
             foreach ($add as $column => $sql) {
                 if (!in_array($column, $columns, true)) {
@@ -523,38 +535,57 @@ class GreenDonationPayments
      * nothing else. Salesforce keeps the ledger, so this only matters for the
      * charge this donation is recorded as paid by: a Cancel that arrives before
      * Salesforce was told means it must not be told this donation was paid.
+     *
+     * Only status 000 counts as having happened, as it does for a charge. Any
+     * other code changes nothing. No code at all proves nothing either way, so
+     * it is parked, which also holds the donation (see notHeldSql) for a person.
      */
     protected function reverseCharge($event, string $type): string {
         global $wpdb;
         $table = self::donationsTable();
         $eventId = (int) $event->id;
         $uid = (string) $event->transaction_uid;
+        $code = (string) $event->status_code;
 
         $donation = $uid === '' ? null : $wpdb->get_row($wpdb->prepare("SELECT * FROM `$table` WHERE transaction_uid = %s LIMIT 1", $uid));
-        if (!$donation) {
+        if ($donation) {
+            $this->attachToDonation($event, $donation);
+        } else {
             list($matched) = $this->matchDonation($event);
             if ($matched) {
                 $this->attachToDonation($event, $matched);
             }
+        }
+
+        if ($code === '') {
+            return $this->settle($eventId, self::REJECTED, "{$event->transaction_type} with no status code, so it may not have happened; nothing changed. Check it in PayPlus.");
+        }
+        if ($code !== '000') {
+            if ($donation) {
+                self::notifyAdmins("Donation {$donation->id}: PayPlus reports a {$event->transaction_type} of its charge that did not succeed (code {$code}). The charge stands and nothing changed here. Check in PayPlus whether it still needs reversing.");
+            }
+            return $this->settle($eventId, self::RECORDED, "{$event->transaction_type} did not succeed (code {$code}); nothing changed");
+        }
+        if (!$donation) {
             return $this->settle($eventId, self::RECORDED, "{$event->transaction_type} of a charge this site did not confirm");
         }
-        $this->attachToDonation($event, $donation);
 
+        // A charge a person recorded by hand is in the ledger, even though the job never sent it.
         $undone = $type === 'cancel' && $wpdb->query($wpdb->prepare(
             "UPDATE `$table`
                 SET payment_verified_at = NULL, transaction_uid = NULL, amount = NULL, shovar = '', card_type = '',
                     token = IF(registered_at IS NULL, NULL, token), exp = IF(registered_at IS NULL, NULL, exp),
                     cc_holder = IF(registered_at IS NULL, NULL, cc_holder), last_four = IF(registered_at IS NULL, '', last_four),
                     tourist = IF(registered_at IS NULL, 0, tourist), ccval = IF(registered_at IS NULL, '', ccval)
-              WHERE id = %d AND transaction_uid = %s AND sf_origin IS NULL AND transmited_to_sf <> 1",
-            (int) $donation->id, $uid
+              WHERE id = %d AND transaction_uid = %s AND sf_origin IS NULL AND transmited_to_sf <> 1 AND COALESCE(lead_review, '') <> %s",
+            (int) $donation->id, $uid, self::LEAD_PAID
         ));
 
         // Either way a person should know: a cancelled first charge has left a monthly
         // subscription charging, with nothing in Salesforce for it to land on.
         self::notifyAdmins($undone
             ? "Donation {$donation->id}: PayPlus cancelled its charge before Salesforce was told about it, so it is no longer treated as paid. If it was monthly, check in PayPlus that the subscription stopped too."
-            : "Donation {$donation->id}: PayPlus reports a {$event->transaction_type} of the charge already sent to Salesforce, so its Payment there needs checking.");
+            : "Donation {$donation->id}: PayPlus reports a {$event->transaction_type} of a charge Salesforce was already told about, so its Payment there needs checking.");
 
         return $this->settle($eventId, self::RECORDED, $undone ? 'Cancel before Salesforce was told; no longer treated as paid' : "{$event->transaction_type} of a charge Salesforce was told about");
     }
@@ -641,6 +672,7 @@ class GreenDonationPayments
         if (!empty($donation->sale_f_id) || (int) $donation->transmited_to_sf === 1) {
             self::notifyAdmins("donation {$donation->id}: the monthly sign-up registered after Salesforce was already told about this donation ({$donation->sf_origin}), so it needs recording there by hand");
         }
+        self::noteLateCallback($donation, 'monthly sign-up');
 
         debug_log('Panic', "PayPlus sign-up registered on donation {$donation->id} (event {$eventId}); no charge yet");
         return $this->settle($eventId, self::REGISTERED, 'card and subscription stored; no charge yet');
@@ -684,12 +716,21 @@ class GreenDonationPayments
         }
         $this->attachToDonation($event, $donation);
 
-        // Callbacks can cross: a Cancel parked first means this charge never stood.
-        if ((string) $event->transaction_uid !== '' && $GLOBALS['wpdb']->get_var($GLOBALS['wpdb']->prepare(
-            "SELECT id FROM `" . self::eventsTable() . "` WHERE transaction_uid = %s AND signature_ok = 1 AND LOWER(transaction_type) = 'cancel' LIMIT 1",
-            (string) $event->transaction_uid
-        ))) {
-            return $this->settle($eventId, self::RECORDED, 'already cancelled');
+        // Callbacks can cross: a successful Cancel parked first means this charge never
+        // stood. A failed one means nothing. One with no status code does not stop the
+        // charge, but joins this donation so that it holds it (see notHeldSql).
+        if ((string) $event->transaction_uid !== '') {
+            $wpdb = $GLOBALS['wpdb'];
+            if ($wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM `" . self::eventsTable() . "` WHERE transaction_uid = %s AND signature_ok = 1 AND LOWER(transaction_type) = 'cancel' AND status_code = '000' LIMIT 1",
+                (string) $event->transaction_uid
+            ))) {
+                return $this->settle($eventId, self::RECORDED, 'already cancelled');
+            }
+            $wpdb->query($wpdb->prepare(
+                "UPDATE `" . self::eventsTable() . "` SET donation_id = %d WHERE transaction_uid = %s AND signature_ok = 1 AND LOWER(transaction_type) = 'cancel' AND status_code = ''",
+                (int) $donation->id, (string) $event->transaction_uid
+            ));
         }
 
         // Already paid: this is a repeat, or a later recurring charge. Rows from
@@ -830,6 +871,7 @@ class GreenDonationPayments
         if ((string) $donation->sf_origin === 'Web Lead') {
             self::notifyAdmins("donation {$donation->id}: a charge was confirmed after Salesforce was sent a lead for it, so it needs recording there by hand");
         }
+        self::noteLateCallback($donation, 'charge');
 
         debug_log('Panic', "PayPlus payment verified and applied to donation {$donation->id} (event {$event->id})");
         return $this->settle((int) $event->id, self::APPLIED, 'verified');
@@ -985,25 +1027,30 @@ class GreenDonationPayments
 
     /**
      * Keep a donation out of Salesforce until a person has looked at it, and tell
-     * them. The Salesforce job stops selecting it, so this happens once.
+     * the queue's owner. The Salesforce job stops selecting it, so this happens once.
      */
     public static function holdForLeadReview(int $donationId) {
         global $wpdb;
 
         $held = $wpdb->query($wpdb->prepare(
-            "UPDATE `" . self::donationsTable() . "` SET lead_review = %s WHERE id = %d AND lead_review IS NULL",
-            self::LEAD_HELD, $donationId
+            "UPDATE `" . self::donationsTable() . "` SET lead_review = %s, lead_held_at = %s WHERE id = %d AND lead_review IS NULL",
+            self::LEAD_HELD, current_time('mysql', true), $donationId
         ));
 
         if ($held) {
-            self::notifyAdmins("Donation {$donationId}: PayPlus's lookup says approved, but no signed callback confirmed a payment. It has not been sent to Salesforce.\n\n"
-                . "Check it in PayPlus, then decide on the donations page:\n" . admin_url('admin.php?page=greenpeace/donations.php'));
+            debug_log('Error', "Donation {$donationId} held for a person to review");
+            wp_mail(
+                donationQueueOwner(),
+                'Donations: a donation needs checking in Salesforce',
+                "Donation {$donationId}: PayPlus's lookup says approved, but no signed callback confirmed a payment. It has not been sent to Salesforce.\n\n"
+                . "Check it in PayPlus, then decide on the donations page:\n" . admin_url('admin.php?page=greenpeace/donations.php')
+            );
         }
     }
 
     /**
-     * Donations from the last 30 days waiting for that person. A callback arriving
-     * later settles it, so those no longer belong here.
+     * Every held donation still waiting, oldest first, however old. Each stays until
+     * a person decides or a signed callback settles it.
      */
     public static function leadsAwaitingReview(): array {
         if (!self::ensureSchema()) {
@@ -1012,27 +1059,72 @@ class GreenDonationPayments
 
         global $wpdb;
         return $wpdb->get_results($wpdb->prepare(
-            "SELECT id, `date`, payment_type, expected_amount_agorot
+            "SELECT id, `date`, payment_type, expected_amount_agorot, lead_held_at
                FROM `" . self::donationsTable() . "`
               WHERE lead_review = %s AND payment_verified_at IS NULL AND registered_at IS NULL
-                AND `date` > DATE_SUB(NOW(), INTERVAL 30 DAY)
-              ORDER BY id DESC LIMIT 50",
+              ORDER BY lead_held_at, id",
             self::LEAD_HELD
         ));
     }
 
-    public static function releaseLead(int $donationId): bool {
-        global $wpdb;
+    /**
+     * The latest that left the queue, by a person's decision or by a callback.
+     */
+    public static function leadsRecentlyResolved(): array {
+        if (!self::ensureSchema()) {
+            return array();
+        }
 
-        return (bool) $wpdb->query($wpdb->prepare(
-            "UPDATE `" . self::donationsTable() . "` SET lead_review = %s
-              WHERE id = %d AND lead_review = %s AND payment_verified_at IS NULL AND registered_at IS NULL",
-            self::LEAD_RELEASED, $donationId, self::LEAD_HELD
+        global $wpdb;
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT id, lead_review, lead_resolved_by, lead_resolution_note, payment_verified_at, registered_at,
+                    COALESCE(lead_resolved_at, payment_verified_at, registered_at) AS resolved_at
+               FROM `" . self::donationsTable() . "`
+              WHERE lead_held_at IS NOT NULL
+                AND ( lead_review <> %s OR payment_verified_at IS NOT NULL OR registered_at IS NOT NULL )
+              ORDER BY resolved_at DESC LIMIT 20",
+            self::LEAD_HELD
         ));
     }
 
-    public static function releaseLeadFromAdmin() {
-        if (!isset($_POST['donation_release_lead_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['donation_release_lead_nonce'])), 'donation_release_lead_action')) {
+    public static function leadResolutionLabel($row): string {
+        switch ($row->lead_review) {
+            case self::LEAD_RELEASED:
+                return 'Not paid: send as a lead';
+            case self::LEAD_PAID:
+                return 'Paid: recorded in Salesforce by hand';
+            case self::LEAD_CLOSED:
+                return 'Closed: no action needed';
+        }
+        return !empty($row->payment_verified_at) ? 'A signed charge arrived and settled it' : 'A signed sign-up arrived and settled it';
+    }
+
+    public static function leadDaysWaiting($row): int {
+        return (int) floor((time() - strtotime($row->lead_held_at . ' UTC')) / DAY_IN_SECONDS);
+    }
+
+    /**
+     * Record a person's decision on a held donation. A decision that says it needs
+     * no sending must say why, because that note is the only trace it leaves here.
+     */
+    public static function resolveLead(int $donationId, string $resolution, string $note, string $who): bool {
+        $note = trim($note);
+        if (!in_array($resolution, array(self::LEAD_RELEASED, self::LEAD_PAID, self::LEAD_CLOSED), true)
+            || ($resolution !== self::LEAD_RELEASED && $note === '')) {
+            return false;
+        }
+
+        global $wpdb;
+        return (bool) $wpdb->query($wpdb->prepare(
+            "UPDATE `" . self::donationsTable() . "`
+                SET lead_review = %s, lead_resolved_at = %s, lead_resolved_by = %s, lead_resolution_note = %s
+              WHERE id = %d AND lead_review = %s AND payment_verified_at IS NULL AND registered_at IS NULL",
+            $resolution, current_time('mysql', true), mb_substr($who, 0, 60), mb_substr($note, 0, 255), $donationId, self::LEAD_HELD
+        ));
+    }
+
+    public static function resolveLeadFromAdmin() {
+        if (!isset($_POST['donation_resolve_lead_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['donation_resolve_lead_nonce'])), 'donation_resolve_lead_action')) {
             wp_die(__('Invalid request.', 'planet4-child-theme-israel'));
         }
         if (!current_user_can('manage_options')) {
@@ -1040,17 +1132,70 @@ class GreenDonationPayments
         }
 
         $donationId = isset($_POST['donation_id']) ? absint($_POST['donation_id']) : 0;
-        $released = $donationId && self::releaseLead($donationId);
+        $resolution = isset($_POST['resolution']) ? sanitize_key(wp_unslash($_POST['resolution'])) : '';
+        $note = isset($_POST['note']) ? sanitize_text_field(wp_unslash($_POST['note'])) : '';
+        $resolved = $donationId && self::resolveLead($donationId, $resolution, $note, wp_get_current_user()->user_login);
 
-        set_transient('gp_il_donations_notice', array(
-            'type'    => $released ? 'success' : 'warning',
-            'message' => $released
+        if ($resolved) {
+            $message = $resolution === self::LEAD_RELEASED
                 ? "Donation {$donationId} will go to Salesforce as a lead on the next ten-minute run."
-                : "Donation {$donationId} was not waiting for review, so nothing changed.",
-        ), 30);
+                : "Donation {$donationId} is resolved and will not be sent to Salesforce.";
+        } elseif ($resolution !== self::LEAD_RELEASED && trim($note) === '') {
+            $message = "Donation {$donationId}: nothing changed. Say what you found in the note, then save again.";
+        } else {
+            $message = "Donation {$donationId} was not waiting for a decision, so nothing changed.";
+        }
+        set_transient('gp_il_donations_notice', array('type' => $resolved ? 'success' : 'warning', 'message' => $message), 30);
 
         wp_safe_redirect(admin_url('admin.php?page=greenpeace/donations.php'));
         exit;
+    }
+
+    /**
+     * A signed callback for a donation a person already resolved as needing no
+     * sending. It stays unsent, so someone has to compare it with their decision.
+     */
+    protected static function noteLateCallback($donation, string $what) {
+        if (in_array($donation->lead_review ?? '', array(self::LEAD_PAID, self::LEAD_CLOSED), true)) {
+            self::notifyAdmins("Donation {$donation->id}: PayPlus sent a signed {$what} after it was resolved by hand (" . self::leadResolutionLabel($donation) . "). It will not be sent to Salesforce, so check that the decision still holds.");
+        }
+    }
+
+    public static function scheduleQueueReport() {
+        if (!wp_next_scheduled(self::QUEUE_REPORT_HOOK)) {
+            wp_schedule_event(time(), 'daily', self::QUEUE_REPORT_HOOK);
+        }
+    }
+
+    /**
+     * Once a day, while anything is waiting: the owner gets the list, and once
+     * something has waited too long the escalation contact gets it as well. Only
+     * donation numbers, types and amounts: the list goes to a mailbox.
+     */
+    public static function sendQueueReport() {
+        $open = self::leadsAwaitingReview();
+        if (!$open || get_transient('gp_il_queue_report_sent')) {
+            return;
+        }
+
+        $overdue = 0;
+        $lines = array();
+        foreach ($open as $lead) {
+            $days = self::leadDaysWaiting($lead);
+            $late = $days >= self::QUEUE_ESCALATE_AFTER_DAYS;
+            $overdue += $late ? 1 : 0;
+            $amount = self::formatAgorot($lead->expected_amount_agorot === null ? null : (int) $lead->expected_amount_agorot);
+            $lines[] = "Donation {$lead->id}: waiting {$days} day(s)" . ($late ? ' (overdue)' : '') . ", {$lead->payment_type}, amount {$amount}";
+        }
+
+        $subject = 'Donations: ' . count($open) . ' waiting for a decision' . ($overdue ? ", {$overdue} overdue" : '');
+        $body = "These were not sent to Salesforce, and stay here until someone decides. Check each in PayPlus, then decide on the donations page:\n"
+            . admin_url('admin.php?page=greenpeace/donations.php') . "\n\n"
+            . implode("\n", $lines) . "\n\n"
+            . 'Owner: ' . donationQueueOwner() . '. Overdue means waiting ' . self::QUEUE_ESCALATE_AFTER_DAYS . ' days or more; those also go to ' . donationQueueEscalation() . '.';
+
+        set_transient('gp_il_queue_report_sent', 1, 20 * HOUR_IN_SECONDS);
+        wp_mail(array_unique($overdue ? array(donationQueueOwner(), donationQueueEscalation()) : array(donationQueueOwner())), $subject, $body);
     }
 
     public static function recheckFromAdmin() {
