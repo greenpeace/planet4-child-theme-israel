@@ -3,6 +3,11 @@
 class SalesForce
 {
     use Helpers;
+
+    // A card and subscription with no charge yet. Salesforce must create the
+    // Donation for it but no Payment: its Payment comes with PayPlus's first charge.
+    const SIGNUP_ORIGIN = 'Web Recurring Signup';
+
     protected $params;
 
 	protected function getSalesforceLoginUri() {
@@ -23,10 +28,14 @@ class SalesForce
 
 		$loginUri = $this->getSalesforceLoginUri(); // dynamic based on env type
 
-		$authResponse = $this->httpRequest(
-			$loginUri . "/services/oauth2/token",
-			$this->params
-		);
+		try {
+			$authResponse = $this->httpRequest(
+				$loginUri . "/services/oauth2/token",
+				$this->params
+			);
+		} catch (Exception $e) {
+			return false;
+		}
 
 		$authParams = (object) json_decode($authResponse);
 
@@ -60,14 +69,41 @@ class SalesForce
             return $response;
         }
 
-        $salesforce_result = $this->httpRequest($authParams->instance_url . '/services/data/v54.0/sobjects/Case/', json_encode($data), [
-            'Content-type: application/json',
-            "Authorization: {$authParams->token_type} {$authParams->access_token}",
-        ], true);
+        try {
+            $salesforce_result = $this->httpRequest($authParams->instance_url . '/services/data/v54.0/sobjects/Case/', json_encode($data), [
+                'Content-type: application/json',
+                "Authorization: {$authParams->token_type} {$authParams->access_token}",
+            ], true);
+        } catch (Exception $e) {
+            $response->error = $e->getMessage();
 
-        if($salesforce_result) {
+            $this->log([
+                'step' => 'SendLead',
+                'message' => $response->error,
+            ]);
+
+            return $response;
+        }
+
+        $decoded = json_decode((string) $salesforce_result);
+
+        // Salesforce answers an error with a non-empty body too, so only a record id counts.
+        if (is_object($decoded) && !empty($decoded->id)) {
             $response->status = 'succeeded';
-            $response->content = json_decode($salesforce_result);
+            $response->content = $decoded;
+        } elseif (!empty($data['Web_Event_Key__c']) && is_array($decoded) && ($decoded[0]->errorCode ?? '') === 'DUPLICATE_VALUE') {
+            // An earlier attempt may have got through and only its answer been lost. A
+            // duplicate can be on another unique field too, so only that Case proves it.
+            $existing = $this->caseIdWithKey($authParams, $data['Web_Event_Key__c']);
+
+            if ($existing !== '') {
+                $response->status = 'succeeded';
+                $response->content = (object) ['id' => $existing];
+            } else {
+                $response->error = 'Salesforce reported a duplicate, but no Case has this key';
+            }
+        } else {
+            $response->error = 'unexpected answer from Salesforce';
         }
 
         $this->log([
@@ -80,6 +116,43 @@ class SalesForce
         }
 
         return $response;
+    }
+
+    /**
+     * @return string the id of the Case holding this key, or '' if none could be found
+     */
+    protected function caseIdWithKey($authParams, string $key): string {
+        try {
+            $result = $this->httpRequest(
+                $authParams->instance_url . '/services/data/v54.0/sobjects/Case/Web_Event_Key__c/' . rawurlencode($key) . '?fields=Id,Web_Event_Key__c',
+                '',
+                ["Authorization: {$authParams->token_type} {$authParams->access_token}"],
+                true,
+                null,
+                'GET'
+            );
+        } catch (Exception $e) {
+            return '';
+        }
+
+        $case = json_decode((string) $result);
+
+        return is_object($case) && !empty($case->Id) && ($case->Web_Event_Key__c ?? '') === $key ? (string) $case->Id : '';
+    }
+
+    /**
+     * Whether PayPlus's lookup says this donation was approved. It has said so for
+     * donors with no charge at all, so this is a reason for a person to look, never
+     * proof of a payment. A reused number can bring back another donation's payment.
+     */
+    protected function lookupClaimsPayment($transaction, $donation): bool {
+        if (!isset($transaction->status) || $transaction->status !== 'approved') {
+            return false;
+        }
+
+        $page = (string) ($transaction->page_request_uid ?? '');
+
+        return $page === '' || empty($donation->page_request_uid) || $page === $donation->page_request_uid;
     }
 
     public function SendLeadByDonation($donationID, $donation = null, $send_unsuccessful_transactions = false) {
@@ -98,15 +171,14 @@ class SalesForce
             'message' => 'init, $donationID: ' . $donationID,
         ]);
     
-        // Load donation if not provided
-        if ($donation === null) {
-            $donation = $wpdb->get_row(
-                $wpdb->prepare(
-                    "SELECT * FROM `$table_name` WHERE id = %d",
-                    $donationID
-                )
-            );
-        }
+        // Always the current row: a callback may have landed since the job selected it,
+        // and what Salesforce is told depends on what is true now.
+        $donation = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM `$table_name` WHERE id = %d",
+                $donationID
+            )
+        );
     
         if (!$donation) {
             $this->log([
@@ -154,10 +226,15 @@ class SalesForce
     
         $return_only_successful_transactions = !$send_unsuccessful_transactions;
     
-        $ipn_data = $PayPlusApi->getIpnData(
-            $donationID,
-            $return_only_successful_transactions
-        );
+        try {
+            $ipn_data = $PayPlusApi->getIpnData(
+                $donationID,
+                $return_only_successful_transactions
+            );
+        } catch (Exception $e) {
+            debug_log('Error', 'ERROR: PayPlus lookup failed for donation ' . (int) $donationID . ': ' . $e->getMessage());
+            $ipn_data = (object) [];
+        }
     
         debug_log('Panic', "In SendLeadByDonation before ipn_data check");
         if (isset($ipn_data->status) && $ipn_data->status === 'class-failed') {
@@ -169,7 +246,21 @@ class SalesForce
         debug_log('Panic', "In SendLeadByDonation after ipn_data check");
     
         $data = $this->prepareData($ipn_data, $donation);
-    
+
+        // Without a signed callback this cannot be sent as a donation, and sending it as
+        // a lead could put a donor who paid on a placeholder Donation and a call list. So
+        // it waits for a person, on the donations page, unless one already released it.
+        if (
+            $data['Origin'] === 'Web Lead'
+            && empty($donation->registered_at)
+            && ($donation->lead_review ?? '') !== GreenDonationPayments::LEAD_RELEASED
+            && $this->lookupClaimsPayment($ipn_data, $donation)
+        ) {
+            GreenDonationPayments::holdForLeadReview((int) $donationID);
+
+            return 'Held for a person to review';
+        }
+
         $SalesForceResponse = $this->SendLead($data);
     
         // -----------------------------
@@ -190,6 +281,10 @@ class SalesForce
                     $FINAL_FAILURE_STATE,
                     $state - 1
                 );
+            }
+
+            if ($nextState === $FINAL_FAILURE_STATE) {
+                GreenDonationPayments::notifyAdmins("donation {$donationID}: every attempt to send it to Salesforce failed, so it is not recorded there");
             }
     
             $wpdb->update(
@@ -223,6 +318,7 @@ class SalesForce
             [
                 'sale_f_id' => $salesForceId,
                 'transmited_to_sf' => $SUCCESS_STATE,
+                'sf_origin' => $data['Origin'],
             ],
             ['id' => $donationID]
         );
@@ -243,6 +339,30 @@ class SalesForce
         return rtrim(rtrim(sprintf('%.2f', (float) $amount), '0'), '.');
     }
 
+    /**
+     * What a Case says this donation is. Only what the website itself confirmed
+     * counts: PayPlus's lookup says "approved" for donors who were never charged.
+     */
+    protected function caseOrigin($donation): string {
+        if (!empty($donation->payment_verified_at)) {
+            return 'Web Donation';
+        }
+        if (!empty($donation->registered_at) && salesforceHandlesSignups()) {
+            return self::SIGNUP_ORIGIN;
+        }
+        return 'Web Lead';
+    }
+
+    /**
+     * The same key on every attempt, so Salesforce's unique field refuses a repeat
+     * rather than opening a second Case, and a second Donation with it.
+     */
+    protected function caseKey($donation): string {
+        return 'donation-' . (!empty($donation->page_request_uid)
+            ? $donation->page_request_uid
+            : $donation->id . '-' . strtotime($donation->date));
+    }
+
     protected function prepareData($transaction, $donation): array
     {
         $this->log([
@@ -251,22 +371,47 @@ class SalesForce
             'transaction status' => $transaction->status ?? null,
         ]);
 
+        $origin = $this->caseOrigin($donation);
+        $paid = $origin === 'Web Donation';
+        $signup = $origin === self::SIGNUP_ORIGIN;
+
+        // Salesforce's lead flow puts whatever it is given on a placeholder Donation, and
+        // a payment ID there would attach the donor's real charges to it. So a lead says
+        // nothing about any card or subscription, even for a sign-up PayPlus has registered.
+        $hasCard = $paid || $signup;
+
+        // PayPlus's lookup is keyed by a number that has been reused: only a confirmed
+        // payment's own page is taken from it.
+        $lookupPage = (string) ($transaction->page_request_uid ?? '');
+        if (!$paid || ($lookupPage !== '' && !empty($donation->page_request_uid) && $lookupPage !== $donation->page_request_uid)) {
+            $transaction = (object) [];
+        }
+
+        // Salesforce finds a donor's charges by this id, so it must be the subscription's:
+        // never a transaction's, which is only ever one charge.
+        $subscription = !empty($donation->recurring_uid) ? $donation->recurring_uid : ($transaction->uid ?? '');
+        $customer = !empty($donation->customer_uid) ? $donation->customer_uid : ($transaction->customer_uid ?? '');
+        $page = !empty($donation->page_request_uid) ? $donation->page_request_uid : ($transaction->page_request_uid ?? '');
+        // A sign-up's amount is what the donor chose. Nothing has been paid, so the
+        // amount column, which holds what was paid, stays empty.
+        $amount = $signup ? $donation->expected_amount_agorot / 100 : $donation->amount;
+
         $tourist = ( $donation->tourist == 1 );
         $debit = ( $donation->card_type == 3 );
 		// adding igul letova - Ofer Or 13-1-2025 ( + PERSON_ID__c & Igul_letova__c in the return
         $igul_letova = ( $donation->igul_letova == 1 );
         $timestamp = strtotime($donation->date);
         $sfDate = $timestamp ? date("Y-m-d\TH:i:s\Z", $timestamp) : null;
-               
-        return [
-            'Page_Requset_Uid__c' => $transaction->page_request_uid ?? '',
-            'recurring_payment_uid__c' => $transaction->uid ?? '',
-            "customer_uid__c" => $transaction->customer_uid ?? '',
+
+        $case = [
+            'Page_Requset_Uid__c' => $hasCard ? $page : '',
+            'recurring_payment_uid__c' => $hasCard ? $subscription : '',
+            "customer_uid__c" => $hasCard ? $customer : '',
             "Web_Date__c" => $sfDate,
             "Subject" => "תרומה חדשה באתר",
             "type" => "תרומה מהאתר",
             "Status" => "New",
-            "Origin" => (isset($transaction->status) && $transaction->status === 'approved') ? "Web Donation" : 'Web Lead',
+            "Origin" => $origin,
             "Web_ID__c" => $donation->id,
             "Web_Page_ID__c" => $donation->page_id,
             "Web_payment_type__c" => $donation->payment_type,
@@ -274,17 +419,17 @@ class SalesForce
             "Web_last_name__c" => $donation->last_name,
             "Web_Form_Email__c" => $donation->email,
             "Web_Form_Phone__c" => $donation->phone,
-            "Web_amount__c" => $this->amountForSalesforce($donation->amount),
-            "Web_Token__c" => $donation->token,
-            "Web_exp__c" => $donation->exp,
+            "Web_amount__c" => $this->amountForSalesforce($amount),
+            "Web_Token__c" => $hasCard ? $donation->token : '',
+            "Web_exp__c" => $hasCard ? $donation->exp : '',
             "Web_response__c" => $donation->response,
-            "CC_Last_4_Digits__c" => $donation->last_four,
-            "CC_Card_Type__c" => $donation->ccval,
-            "CC_Tourist__c" => $tourist,
+            "CC_Last_4_Digits__c" => $hasCard ? $donation->last_four : '',
+            "CC_Card_Type__c" => $hasCard ? $donation->ccval : '',
+            "CC_Tourist__c" => $hasCard && $tourist,
             "CC_Debit__c" => $debit,
             "PERSON_ID__c" => $donation->id_number,
             "Igul_letova__c" => $igul_letova,
-            "Web_Shovar__c" => $donation->shovar,
+            "Web_Shovar__c" => $paid ? $donation->shovar : '',
             "Web_Receipt_Number__c" => $transaction->invoice_docu_number ?? '',
             "Web_Receipt__c" => $transaction->invoice_original_url ?? '',
             "utm_campaign__c" => $donation->utm_campaign,
@@ -293,5 +438,11 @@ class SalesForce
             "utm_source__c" => $donation->utm_source,
             "utm_term__c" => $donation->utm_term,
         ];
+
+        if (salesforceHandlesSignups()) {
+            $case['Web_Event_Key__c'] = $this->caseKey($donation);
+        }
+
+        return $case;
     }
 }

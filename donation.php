@@ -164,14 +164,79 @@
                 settings_errors('donation_import');
             ?>
 
+            <?php $leads_to_review = GreenDonationPayments::leadsAwaitingReview(); ?>
+            <?php $leads_resolved = GreenDonationPayments::leadsRecentlyResolved(); ?>
+            <?php if (!empty($leads_to_review)) : ?>
+                <div style="border:1px solid #d63638; padding:10px; background:#fcf0f1; margin-bottom:20px;">
+                    <h3 style="margin-top:0;">Donations waiting for a decision</h3>
+                    <p>
+                        PayPlus's lookup says these were approved, but no signed callback confirmed a payment, so they have not been sent to Salesforce.
+                        Check each one in PayPlus, then choose what you found. Each stays here until someone decides or a signed callback settles it.
+                    </p>
+                    <p>
+                        Owner: <?php echo esc_html(donationQueueOwner()); ?>, emailed the list daily while anything is waiting.
+                        From <?php echo (int) GreenDonationPayments::QUEUE_ESCALATE_AFTER_DAYS; ?> days it is overdue and also goes to <?php echo esc_html(donationQueueEscalation()); ?>.
+                    </p>
+                    <table>
+                        <thead><tr><th>Donation</th><th>Held since (UTC)</th><th>Waiting</th><th>Type</th><th>Amount</th><th>Decision</th></tr></thead>
+                        <tbody>
+                        <?php foreach ($leads_to_review as $lead_to_review) : ?>
+                            <?php $days_waiting = GreenDonationPayments::leadDaysWaiting($lead_to_review); ?>
+                            <tr>
+                                <td><?php echo (int) $lead_to_review->id; ?></td>
+                                <td><?php echo esc_html($lead_to_review->lead_held_at); ?></td>
+                                <td><?php echo $days_waiting; ?> day(s)<?php echo $days_waiting >= GreenDonationPayments::QUEUE_ESCALATE_AFTER_DAYS ? ' <strong>overdue</strong>' : ''; ?></td>
+                                <td><?php echo esc_html($lead_to_review->payment_type); ?></td>
+                                <td><?php echo esc_html(GreenDonationPayments::formatAgorot($lead_to_review->expected_amount_agorot === null ? null : (int) $lead_to_review->expected_amount_agorot)); ?></td>
+                                <td>
+                                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                                        <input type="hidden" name="donation_resolve_lead_nonce" value="<?php echo esc_attr(wp_create_nonce('donation_resolve_lead_action')); ?>">
+                                        <input type="hidden" name="action" value="donation_resolve_lead">
+                                        <input type="hidden" name="donation_id" value="<?php echo (int) $lead_to_review->id; ?>">
+                                        <select name="resolution">
+                                            <option value="<?php echo esc_attr(GreenDonationPayments::LEAD_RELEASED); ?>">Not paid: send as a lead</option>
+                                            <option value="<?php echo esc_attr(GreenDonationPayments::LEAD_PAID); ?>">Paid: recorded in Salesforce by hand</option>
+                                            <option value="<?php echo esc_attr(GreenDonationPayments::LEAD_CLOSED); ?>">Closed: no action needed</option>
+                                        </select>
+                                        <input type="text" name="note" maxlength="255" placeholder="What you found (needed unless sending as a lead)">
+                                        <button type="submit" class="button">Save</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($leads_resolved)) : ?>
+                <details style="margin-bottom:20px;">
+                    <summary>Held donations recently resolved</summary>
+                    <table>
+                        <thead><tr><th>Donation</th><th>Resolved (UTC)</th><th>Resolution</th><th>By</th><th>Note</th></tr></thead>
+                        <tbody>
+                        <?php foreach ($leads_resolved as $lead_resolved) : ?>
+                            <tr>
+                                <td><?php echo (int) $lead_resolved->id; ?></td>
+                                <td><?php echo esc_html($lead_resolved->resolved_at); ?></td>
+                                <td><?php echo esc_html(GreenDonationPayments::leadResolutionLabel($lead_resolved)); ?></td>
+                                <td><?php echo esc_html($lead_resolved->lead_resolved_by); ?></td>
+                                <td><?php echo esc_html($lead_resolved->lead_resolution_note); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </details>
+            <?php endif; ?>
+
             <?php $payment_events = GreenDonationPayments::eventsNeedingAttention(); ?>
             <?php if (!empty($payment_events)) : ?>
                 <div style="border:1px solid #d63638; padding:10px; background:#fcf0f1; margin-bottom:20px;">
-                    <h3 style="margin-top:0;">PayPlus callbacks not applied (last 30 days)</h3>
+                    <h3 style="margin-top:0;">PayPlus callbacks needing attention (last 30 days)</h3>
                     <p>
                         Pending: PayPlus could not be asked yet; the ten-minute job keeps trying for 24 hours.
                         Rejected: the callback failed a check and was not saved to its donation.
-                        "Signed" means PayPlus sent it; only signed callbacks can be re-checked.
+                        Registered: PayPlus stored the card and created the monthly sign-up, with no charge yet. Salesforce gets only a lead for it, so it needs recording there by hand.
+                        "Signed" means PayPlus sent it; only signed pending or rejected callbacks can be re-checked.
                         A donation with a signed pending or rejected callback is held back from Salesforce for up to 72 hours.
                     </p>
                     <table>
@@ -186,14 +251,19 @@
                                 <td><?php echo $payment_event->signature_ok ? 'yes' : 'no'; ?></td>
                                 <td><?php echo esc_html($payment_event->transaction_type); ?></td>
                                 <td><?php echo esc_html(GreenDonationPayments::formatAgorot($payment_event->amount_agorot === null ? null : (int) $payment_event->amount_agorot)); ?></td>
-                                <td><?php echo esc_html($payment_event->reason); ?></td>
                                 <td>
-                                    <?php if ($payment_event->signature_ok) : ?>
+                                    <?php echo esc_html($payment_event->reason); ?>
+                                    <?php if (!empty($payment_event->payload_fields)) : ?>
+                                        <br><small><?php echo esc_html($payment_event->payload_fields); ?></small>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if ($payment_event->signature_ok && $payment_event->state !== GreenDonationPayments::REGISTERED) : ?>
                                         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                                             <input type="hidden" name="donation_payment_recheck_nonce" value="<?php echo esc_attr(wp_create_nonce('donation_payment_recheck_action')); ?>">
                                             <input type="hidden" name="action" value="donation_payment_recheck">
                                             <input type="hidden" name="event_id" value="<?php echo (int) $payment_event->id; ?>">
-                                            <button type="submit" class="button">Re-check with PayPlus</button>
+                                            <button type="submit" class="button">Re-check</button>
                                         </form>
                                     <?php endif; ?>
                                 </td>
