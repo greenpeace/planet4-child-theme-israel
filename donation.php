@@ -208,9 +208,47 @@
                     </table>
                 </div>
             <?php endif; ?>
+            <?php $failed_sends = GreenDonationPayments::failedSends(); ?>
+            <?php if (!empty($failed_sends)) : ?>
+                <div style="border:1px solid #d63638; padding:10px; background:#fcf0f1; margin-bottom:20px;">
+                    <h3 style="margin-top:0;">Donations Salesforce refused (last 30 days)</h3>
+                    <p>
+                        Salesforce refused each of these three times, so nothing about them is recorded there.
+                        Once the cause is fixed in Salesforce, send it again, and it gets three more attempts.
+                        If someone recorded it in Salesforce by hand instead, mark it so, and say where: sending it again as well would record it twice.
+                    </p>
+                    <table>
+                        <thead><tr><th>Donation</th><th>Date</th><th>Payment</th><th>Type</th><th>Amount</th><th>Decision</th></tr></thead>
+                        <tbody>
+                        <?php foreach ($failed_sends as $failed_send) : ?>
+                            <tr>
+                                <td><?php echo (int) $failed_send->id; ?></td>
+                                <td><?php echo esc_html($failed_send->date); ?></td>
+                                <td><?php echo esc_html(GreenDonationPayments::failedSendLabel($failed_send)); ?></td>
+                                <td><?php echo esc_html($failed_send->payment_type); ?></td>
+                                <td><?php echo esc_html(GreenDonationPayments::formatAgorot($failed_send->expected_amount_agorot === null ? null : (int) $failed_send->expected_amount_agorot)); ?></td>
+                                <td>
+                                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                                        <input type="hidden" name="donation_failed_send_nonce" value="<?php echo esc_attr(wp_create_nonce('donation_failed_send_action')); ?>">
+                                        <input type="hidden" name="action" value="donation_failed_send">
+                                        <input type="hidden" name="donation_id" value="<?php echo (int) $failed_send->id; ?>">
+                                        <select name="failed_send_action">
+                                            <option value="resend">Fixed in Salesforce: send again</option>
+                                            <option value="<?php echo esc_attr(GreenDonationPayments::LEAD_PAID); ?>">Recorded in Salesforce by hand</option>
+                                        </select>
+                                        <input type="text" name="note" maxlength="255" placeholder="Where it is recorded (needed if recorded by hand)">
+                                        <button type="submit" class="button">Save</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
             <?php if (!empty($leads_resolved)) : ?>
                 <details style="margin-bottom:20px;">
-                    <summary>Held donations recently resolved</summary>
+                    <summary>Recently resolved</summary>
                     <table>
                         <thead><tr><th>Donation</th><th>Resolved (UTC)</th><th>Resolution</th><th>By</th><th>Note</th></tr></thead>
                         <tbody>

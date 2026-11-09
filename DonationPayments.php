@@ -94,6 +94,7 @@ class GreenDonationPayments
         add_action('admin_init', array(self::class, 'ensureSchema'));
         add_action('admin_post_donation_payment_recheck', array(self::class, 'recheckFromAdmin'));
         add_action('admin_post_donation_resolve_lead', array(self::class, 'resolveLeadFromAdmin'));
+        add_action('admin_post_donation_failed_send', array(self::class, 'failedSendFromAdmin'));
         add_action('init', array(self::class, 'scheduleQueueReport'));
         add_action(self::QUEUE_REPORT_HOOK, array(self::class, 'sendQueueReport'));
     }
@@ -1084,10 +1085,11 @@ class GreenDonationPayments
             "SELECT id, lead_review, lead_resolved_by, lead_resolution_note, payment_verified_at, registered_at,
                     COALESCE(lead_resolved_at, payment_verified_at, registered_at) AS resolved_at
                FROM `" . self::donationsTable() . "`
-              WHERE lead_held_at IS NOT NULL
-                AND ( lead_review <> %s OR payment_verified_at IS NOT NULL OR registered_at IS NOT NULL )
+              WHERE ( lead_held_at IS NOT NULL
+                      AND ( lead_review <> %s OR payment_verified_at IS NOT NULL OR registered_at IS NOT NULL ) )
+                 OR ( lead_held_at IS NULL AND lead_review = %s AND transmited_to_sf = 2 )
               ORDER BY resolved_at DESC LIMIT 20",
-            self::LEAD_HELD
+            self::LEAD_HELD, self::LEAD_PAID
         ));
     }
 
@@ -1150,6 +1152,96 @@ class GreenDonationPayments
             $message = "Donation {$donationId} was not waiting for a decision, so nothing changed.";
         }
         set_transient('gp_il_donations_notice', array('type' => $resolved ? 'success' : 'warning', 'message' => $message), 30);
+
+        wp_safe_redirect(admin_url('admin.php?page=greenpeace/donations.php'));
+        exit;
+    }
+
+    /**
+     * Donations from the last 30 days that Salesforce refused on every attempt,
+     * so nothing was recorded there, and that nobody has decided about yet.
+     * Held donations are left out: they are waiting in their own list.
+     */
+    public static function failedSends(): array {
+        if (!self::ensureSchema()) {
+            return array();
+        }
+
+        global $wpdb;
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT id, `date`, payment_type, expected_amount_agorot, payment_verified_at, registered_at
+               FROM `" . self::donationsTable() . "`
+              WHERE transmited_to_sf = 2 AND COALESCE(sale_f_id, '') = ''
+                AND COALESCE(lead_review, '') NOT IN (%s, %s, %s)
+                AND `date` >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+              ORDER BY `date`, id",
+            self::LEAD_HELD, self::LEAD_PAID, self::LEAD_CLOSED
+        ));
+    }
+
+    public static function failedSendLabel($row): string {
+        if (!empty($row->payment_verified_at)) {
+            return 'Paid';
+        }
+        return !empty($row->registered_at) ? 'Monthly sign-up, no charge yet' : 'Not paid: a lead';
+    }
+
+    /**
+     * A person's decision on a donation Salesforce refused three times: send it
+     * again once the cause is fixed, or say it was recorded in Salesforce by hand.
+     * Recording by hand needs a note, because the note is the only trace it leaves here.
+     */
+    public static function resolveFailedSend(int $donationId, string $action, string $note, string $who): bool {
+        $note = trim($note);
+        if (!in_array($action, array('resend', self::LEAD_PAID), true) || ($action === self::LEAD_PAID && $note === '')) {
+            return false;
+        }
+
+        global $wpdb;
+        $stillFailed = "transmited_to_sf = 2 AND COALESCE(sale_f_id, '') = '' AND COALESCE(lead_review, '') NOT IN (%s, %s, %s)";
+        if ($action === 'resend') {
+            $done = (bool) $wpdb->query($wpdb->prepare(
+                "UPDATE `" . self::donationsTable() . "` SET transmited_to_sf = 0 WHERE id = %d AND $stillFailed",
+                $donationId, self::LEAD_HELD, self::LEAD_PAID, self::LEAD_CLOSED
+            ));
+            if ($done) {
+                debug_log('Panic', "Donation {$donationId}: " . mb_substr($who, 0, 60) . " asked for it to be sent to Salesforce again");
+            }
+            return $done;
+        }
+
+        return (bool) $wpdb->query($wpdb->prepare(
+            "UPDATE `" . self::donationsTable() . "`
+                SET lead_review = %s, lead_resolved_at = %s, lead_resolved_by = %s, lead_resolution_note = %s
+              WHERE id = %d AND $stillFailed",
+            self::LEAD_PAID, current_time('mysql', true), mb_substr($who, 0, 60), mb_substr($note, 0, 255),
+            $donationId, self::LEAD_HELD, self::LEAD_PAID, self::LEAD_CLOSED
+        ));
+    }
+
+    public static function failedSendFromAdmin() {
+        if (!isset($_POST['donation_failed_send_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['donation_failed_send_nonce'])), 'donation_failed_send_action')) {
+            wp_die(__('Invalid request.', 'planet4-child-theme-israel'));
+        }
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to do this.', 'planet4-child-theme-israel'));
+        }
+
+        $donationId = isset($_POST['donation_id']) ? absint($_POST['donation_id']) : 0;
+        $action = isset($_POST['failed_send_action']) ? sanitize_key(wp_unslash($_POST['failed_send_action'])) : '';
+        $note = isset($_POST['note']) ? sanitize_text_field(wp_unslash($_POST['note'])) : '';
+        $done = $donationId && self::resolveFailedSend($donationId, $action, $note, wp_get_current_user()->user_login);
+
+        if ($done) {
+            $message = $action === 'resend'
+                ? "Donation {$donationId} will be sent to Salesforce again on the next ten-minute run, with three more attempts."
+                : "Donation {$donationId} is marked as recorded in Salesforce by hand and will not be sent.";
+        } elseif ($action === self::LEAD_PAID && trim($note) === '') {
+            $message = "Donation {$donationId}: nothing changed. Say where it is recorded in the note, then save again.";
+        } else {
+            $message = "Donation {$donationId} was not waiting for a decision, so nothing changed.";
+        }
+        set_transient('gp_il_donations_notice', array('type' => $done ? 'success' : 'warning', 'message' => $message), 30);
 
         wp_safe_redirect(admin_url('admin.php?page=greenpeace/donations.php'));
         exit;
