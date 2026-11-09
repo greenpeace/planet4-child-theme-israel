@@ -284,7 +284,7 @@ class SalesForce
             }
 
             if ($nextState === $FINAL_FAILURE_STATE) {
-                GreenDonationPayments::notifyAdmins("donation {$donationID}: every attempt to send it to Salesforce failed, so it is not recorded there");
+                GreenDonationPayments::notifyAdmins("donation {$donationID}: every attempt to send it to Salesforce failed, so it is not recorded there. It is listed on the donations page for 30 days: once the cause is fixed in Salesforce, send it again from there, or mark it as recorded by hand.");
             }
     
             $wpdb->update(
