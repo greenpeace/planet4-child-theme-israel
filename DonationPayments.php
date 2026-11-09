@@ -802,7 +802,11 @@ class GreenDonationPayments
         if (!empty($donation->first_charge_deferred) && empty($d->transaction_uid)) {
             return $this->settle($eventId, self::REJECTED, 'PayPlus did not confirm this exact transaction');
         }
-        if (empty($d->transaction_uid) && empty($d->page_request_uid)) {
+        // Asked by this donation's own stored page, the answer is about that page by
+        // construction, and PayPlus's answer for a monthly page names neither id
+        // (production, November 2026). Asked any other way, it must say which payment.
+        $askedByOwnPage = isset($query['payment_request_uid']) && (string) $donation->page_request_uid !== '';
+        if (!$askedByOwnPage && empty($d->transaction_uid) && empty($d->page_request_uid)) {
             return $this->settle($eventId, self::REJECTED, 'PayPlus answered without saying which payment it means');
         }
         if (isset($d->more_info) && is_scalar($d->more_info) && (string) $d->more_info !== '' && (int) $d->more_info !== (int) $donation->id) {
