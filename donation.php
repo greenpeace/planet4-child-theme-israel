@@ -887,6 +887,14 @@ function set_radio_choices_from_shortcode( $form ) {
                 );
             }
 
+            // Pre-select the middle amount. Rebuilding $choices above drops the
+            // "pre-selected" flag set in the form editor, so without this nothing is
+            // actually checked and the form submits with no amount (the CSS only
+            // *looks* selected).
+            $default_index = intdiv( count( $choices ), 2 );
+            if ( count( $choices ) === 2 ) $default_index = 1;
+            $choices[ $default_index ]['isSelected'] = true;
+
             $field->choices = $choices;
         }
     }
